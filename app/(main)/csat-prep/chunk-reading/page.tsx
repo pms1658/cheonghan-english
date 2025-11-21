@@ -58,6 +58,12 @@ export default function ChunkReadingPage() {
         }
     };
 
+    const handleUndo = () => {
+        if (typeof window !== "undefined" && (window as any).__markingFunctions) {
+            (window as any).__markingFunctions.undo();
+        }
+    };
+
     if (!selectedPassageId || !selectedPassage) {
         return (
             <div className="space-y-6">
@@ -137,6 +143,7 @@ export default function ChunkReadingPage() {
                         onMarkAs={handleMarkAs}
                         onClearSelection={handleClearSelection}
                         onShowBackbone={() => setShowBackbone(!showBackbone)}
+                        onUndo={handleUndo}
                         showingBackbone={showBackbone}
                     />
 
