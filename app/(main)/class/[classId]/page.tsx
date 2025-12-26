@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { BookOpen, BookText, ListOrdered } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getClassById, getSetsByClassId } from "@/lib/vocabulary-data";
-import { SetCreator } from "@/components/vocabulary/SetCreator";
+import { SetList } from "@/components/class/SetList";
 import { StudentManager } from "@/components/class/StudentManager";
+import { LearningPolicy } from "@/components/class/LearningPolicy";
 import { useRole } from "@/contexts/RoleContext";
-import Link from "next/link";
+
+type TabType = "sets" | "students" | "policy";
 
 export default function ClassPage() {
     const { role } = useRole();
@@ -17,6 +17,7 @@ export default function ClassPage() {
 
     const [classData, setClassData] = useState(getClassById(classId));
     const [sets, setSets] = useState(getSetsByClassId(classId));
+    const [activeTab, setActiveTab] = useState<TabType>("sets");
 
     // Effect to reload data when classId changes or when returning to this page
     useEffect(() => {
@@ -38,37 +39,18 @@ export default function ClassPage() {
         );
     }
 
-    const getSetIcon = (type: string) => {
-        switch (type) {
-            case "vocabulary": return <BookOpen className="h-5 w-5 text-blue-600" />;
-            case "chunk-reading": return <BookText className="h-5 w-5 text-green-600" />;
-            case "sequence": return <ListOrdered className="h-5 w-5 text-purple-600" />;
-            default: return <BookOpen className="h-5 w-5 text-gray-600" />;
-        }
-    };
+    const tabs = [
+        { id: "sets" as TabType, name: "세트 목록", roles: ["student", "admin"] },
+        { id: "students" as TabType, name: "학생 목록", roles: ["admin"] },
+        { id: "policy" as TabType, name: "학습 정책", roles: ["admin"] },
+    ];
 
-    const getSetTypeLabel = (type: string) => {
-        switch (type) {
-            case "vocabulary": return "어휘학습";
-            case "chunk-reading": return "끊어읽기";
-            case "sequence": return "순서 세트";
-            default: return "세트";
-        }
-    };
-
-    const getSetTypeBadge = (type: string) => {
-        switch (type) {
-            case "vocabulary": return "bg-blue-100 text-blue-700";
-            case "chunk-reading": return "bg-green-100 text-green-700";
-            case "sequence": return "bg-purple-100 text-purple-700";
-            default: return "bg-gray-100 text-gray-700";
-        }
-    };
+    const visibleTabs = tabs.filter(tab => tab.roles.includes(role));
 
     return (
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-8 max-w-7xl mx-auto">
             {/* Class Header */}
-            <div className="mb-8">
+            <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
                     <div
                         className="w-4 h-4 rounded"
@@ -81,60 +63,42 @@ export default function ClassPage() {
                 )}
             </div>
 
-            {/* Sets Grid */}
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">학습 세트</h2>
-                    {role === "admin" && (
-                        <SetCreator classId={classId} onSetCreated={refreshSets} />
-                    )}
-                </div>
-
-                {sets.length === 0 ? (
-                    <Card className="bg-white border-gray-200">
-                        <CardContent className="p-12 text-center">
-                            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                            <p className="text-gray-500">아직 생성된 세트가 없습니다.</p>
-                            <p className="text-sm text-gray-400 mt-1">새 세트를 만들어 학습을 시작하세요.</p>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {sets.map((set) => (
-                            <Link key={set.id} href={`/class/${classId}/set/${set.id}`}>
-                                <Card className="bg-white border-gray-200 hover:border-navy-950 hover:shadow-md transition-all cursor-pointer h-full">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-gray-900">
-                                            {getSetIcon(set.type)}
-                                            <span className="truncate">{set.name}</span>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {set.description && (
-                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{set.description}</p>
-                                        )}
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-500">
-                                                {set.words.length}개 항목
-                                            </span>
-                                            <span className={`px-2 py-1 rounded text-xs ${getSetTypeBadge(set.type)}`}>
-                                                {getSetTypeLabel(set.type)}
-                                            </span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        ))}
-                    </div>
-                )}
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200 mb-6">
+                <nav className="flex gap-8">
+                    {visibleTabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                                    ? "border-navy-950 text-navy-950"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                }`}
+                        >
+                            {tab.name}
+                        </button>
+                    ))}
+                </nav>
             </div>
 
-            {/* Student Management (Admin Only) */}
-            {role === "admin" && (
-                <div className="mt-12">
+            {/* Tab Content */}
+            <div className="mt-6">
+                {activeTab === "sets" && (
+                    <SetList
+                        classId={classId}
+                        sets={sets}
+                        onSetCreated={refreshSets}
+                    />
+                )}
+
+                {activeTab === "students" && role === "admin" && (
                     <StudentManager classId={classId} />
-                </div>
-            )}
+                )}
+
+                {activeTab === "policy" && role === "admin" && (
+                    <LearningPolicy classId={classId} />
+                )}
+            </div>
         </div>
     );
 }

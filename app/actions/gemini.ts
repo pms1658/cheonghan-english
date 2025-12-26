@@ -186,3 +186,20 @@ Return ONLY a JSON object:
         return null;
     }
 }
+
+export async function gradeChunkReading(sentence: string, markingDescription: string) {
+    if (!model) return null;
+    try {
+        const prompt = `영어 문장: ${sentence}
+학생의 구조독해 표시: ${markingDescription}
+
+학생의 구조독해 표시를 채점하고, 반드시 한국어로 피드백을 작성해주세요.
+JSON 형식으로 응답: {"score": 85, "feedback": "한국어 피드백", "correctMarkings": ["잘한 점1", "잘한 점2"], "suggestions": ["개선 제안1"]}`;
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (e) {
+        return null;
+    }
+}

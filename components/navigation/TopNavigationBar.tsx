@@ -11,25 +11,25 @@ export function TopNavigationBar() {
 
     const navItems = [
         {
-            name: "학교내신",
+            name: "?�교?�신",
             href: "/school-exam",
             icon: BookOpen,
             roles: ["student", "admin"],
         },
         {
-            name: "수능대비",
+            name: "?�능?��?,
             href: "/csat-prep",
             icon: Target,
             roles: ["student", "admin"],
         },
         {
-            name: "관리",
+            name: "관�?,
             href: "/admin",
             icon: Settings,
             roles: ["admin"],
         },
         {
-            name: "내정보",
+            name: "?�정�?,
             href: "/profile",
             icon: User,
             roles: ["student", "admin"],
@@ -50,7 +50,7 @@ export function TopNavigationBar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <GraduationCap className="h-8 w-8 text-blue-400" />
-                        <span className="text-xl font-bold">청한영어 LMS</span>
+                        <span className="text-xl font-bold">�?��?�어 LMS</span>
                     </Link>
 
                     {/* Main Navigation */}
@@ -78,13 +78,13 @@ export function TopNavigationBar() {
                     {/* User Role Indicator */}
                     <div className="flex items-center gap-3">
                         <div className="text-sm text-gray-400">
-                            {role === "admin" ? "관리자" : "학생"}
+                            {role === "admin" ? "관리자" : "?�생"}
                         </div>
                         <button
                             onClick={() => setRole(role === "admin" ? "student" : "admin")}
                             className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded transition-colors"
                         >
-                            역할 전환
+                            ??�� ?�환
                         </button>
                     </div>
                 </div>

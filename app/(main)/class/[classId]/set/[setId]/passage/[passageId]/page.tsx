@@ -10,6 +10,7 @@ import { SentenceSelector } from "@/components/chunk-reading/SentenceSelector";
 import { MarkingToolbar } from "@/components/chunk-reading/MarkingToolbar";
 import { InteractiveSentence, InteractiveSentenceRef } from "@/components/chunk-reading/InteractiveSentence";
 import { TranslationPanel } from "@/components/chunk-reading/TranslationPanel";
+import { StatisticsModal } from "@/components/chunk-reading/StatisticsModal";
 
 export default function PassageStudyPage() {
     const params = useParams();
@@ -24,6 +25,15 @@ export default function PassageStudyPage() {
     const [completedSentences, setCompletedSentences] = useState<number[]>([]);
     const [showBackbone, setShowBackbone] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Score tracking
+    const [sentenceScores, setSentenceScores] = useState<{
+        [sentenceIndex: number]: {
+            chunkReading: number | null;
+            translation: number | null;
+        }
+    }>({});
+    const [showStatistics, setShowStatistics] = useState(false);
 
     const interactiveSentenceRef = useRef<InteractiveSentenceRef>(null);
 
@@ -43,6 +53,44 @@ export default function PassageStudyPage() {
     useEffect(() => {
         setGroups([]);
     }, [currentSentenceIndex]);
+
+    // Score update handler
+    const handleScoreUpdate = (type: 'chunkReading' | 'translation', score: number) => {
+        setSentenceScores(prev => ({
+            ...prev,
+            [currentSentenceIndex]: {
+                ...prev[currentSentenceIndex],
+                chunkReading: type === 'chunkReading' ? score : prev[currentSentenceIndex]?.chunkReading || null,
+                translation: type === 'translation' ? score : prev[currentSentenceIndex]?.translation || null
+            }
+        }));
+    };
+
+    // Check if current sentence passed (both scores >= 80)
+    const currentScore = sentenceScores[currentSentenceIndex];
+    const chunkPassed = (currentScore?.chunkReading || 0) >= 80;
+    const translationPassed = (currentScore?.translation || 0) >= 80;
+    const bothPassed = chunkPassed && translationPassed;
+
+    // Auto-advance when both passed
+    useEffect(() => {
+        if (bothPassed && passage && currentSentenceIndex < passage.sentences.length - 1) {
+            const timer = setTimeout(() => {
+                setCurrentSentenceIndex(prev => prev + 1);
+            }, 1500); // 1.5 second delay
+            return () => clearTimeout(timer);
+        } else if (bothPassed && passage && currentSentenceIndex === passage.sentences.length - 1) {
+            // Last sentence completed, show statistics
+            setTimeout(() => setShowStatistics(true), 1500);
+        }
+    }, [bothPassed, currentSentenceIndex, passage]);
+
+    // Handle retry - reset all scores and go back to first sentence
+    const handleRetry = () => {
+        setSentenceScores({});
+        setCurrentSentenceIndex(0);
+        setShowStatistics(false);
+    };
 
     if (isLoading) {
         return <div className="p-8 text-center">로딩 중...</div>;
@@ -164,13 +212,30 @@ export default function PassageStudyPage() {
                     {/* Translation & Grading */}
                     <div className="bg-navy-950 rounded-xl border border-navy-900 p-6 shadow-lg text-white">
                         <TranslationPanel
+                            key={currentSentenceIndex}
                             sentence={passage.sentences[currentSentenceIndex]}
                             groups={groups}
-                            onComplete={handleComplete}
+                            sentenceIndex={currentSentenceIndex}
+                            onScoreUpdate={handleScoreUpdate}
+                            currentScore={currentScore}
+                            chunkPassed={chunkPassed}
+                            translationPassed={translationPassed}
                         />
                     </div>
                 </div>
             </main>
+
+            {/* Statistics Modal */}
+            <StatisticsModal
+                isOpen={showStatistics}
+                onClose={() => {
+                    setShowStatistics(false);
+                    router.push(`/class/${classId}`);
+                }}
+                onRetry={handleRetry}
+                scores={sentenceScores}
+                sentences={passage.sentences}
+            />
         </div>
     );
 }

@@ -75,3 +75,20 @@ export interface StudySession {
     score: number;
     completed: boolean;
 }
+
+// Student management
+export interface Student {
+    id: string;
+    name: string;
+    email: string;
+    joinedAt: Date;
+}
+
+// Student progress tracking
+export interface StudentProgress {
+    studentId: string;
+    studentName: string;
+    completionRate: number;  // 0-100
+    lastStudied?: Date;
+    score?: number;
+}

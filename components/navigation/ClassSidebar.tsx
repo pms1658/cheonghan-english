@@ -21,9 +21,14 @@ export function ClassSidebar() {
         loadClasses();
     }, []);
 
-    const loadClasses = () => {
-        const allClasses = getAllClasses();
-        setClasses(allClasses);
+    const loadClasses = async () => {
+        try {
+            const allClasses = await getAllClasses();
+            setClasses(allClasses || []);
+        } catch (error) {
+            console.error('Failed to load classes:', error);
+            setClasses([]);
+        }
     };
 
     const toggleExpand = (classId: string, e: React.MouseEvent) => {
@@ -38,28 +43,34 @@ export function ClassSidebar() {
         setExpandedClasses(newExpanded);
     };
 
-    const handleCreateClass = () => {
+    const handleCreateClass = async () => {
         if (!newClassName.trim()) {
             alert("클래스 이름을 입력하세요.");
             return;
         }
 
-        createClass({
-            name: newClassName,
-            parentClassId: creatingParentId,
-            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`
-        });
+        try {
+            await createClass({
+                name: newClassName,
+                parentClassId: creatingParentId,
+                color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                createdBy: 'admin' // TODO: Get from auth context
+            });
 
-        setNewClassName("");
-        setShowCreateForm(false);
-        setCreatingParentId(undefined);
-        loadClasses();
+            setNewClassName("");
+            setShowCreateForm(false);
+            setCreatingParentId(undefined);
+            await loadClasses();
 
-        // If creating a subclass, ensure parent is expanded
-        if (creatingParentId) {
-            const newExpanded = new Set(expandedClasses);
-            newExpanded.add(creatingParentId);
-            setExpandedClasses(newExpanded);
+            // If creating a subclass, ensure parent is expanded
+            if (creatingParentId) {
+                const newExpanded = new Set(expandedClasses);
+                newExpanded.add(creatingParentId);
+                setExpandedClasses(newExpanded);
+            }
+        } catch (error) {
+            console.error('Failed to create class:', error);
+            alert('클래스 생성에 실패했습니다.');
         }
     };
 
