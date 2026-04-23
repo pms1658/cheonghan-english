@@ -741,21 +741,24 @@ export function useListeningTTS({
                 setCurrentLineIndex(0);
                 setIsSecondPlay(false);
 
-                // ★ 16~17번 특별 처리: 실제 수능 플로우
+                // ★ 16~17번 특별 처리: 실제 수능 플로우 (원장님 직접 확인)
+                // 딩동 → 안내 → 대본1회 → "다시 한번" → 대본2회 → 딩동+Q16 → 딩동+Q17+딩동 → 마무리
                 if (problem.number === 16) {
-                    // 1. 안내: "16번과 17번은 두 번 들려줍니다. 잘 듣고 물음에 답하시기 바랍니다."
+                    const prob17 = problems.find(p => p.number === 17);
+
+                    // ── Step 1: 딩동 + 안내 멘트 ──
+                    try { await playChime(audioCtxRef.current); } catch {}
+                    await delay(300);
                     try {
                         await speakLines(LONG_SET_INTRO_SCRIPT);
-                        await delay(500);
+                        await delay(800);
                     } catch (e) {
                         console.warn('[TTS] Long set intro failed:', e);
                     }
 
                     onProblemStart?.(idx);
 
-                    // 2. 딩동 → 대본 1회차 재생 → 딩동
-                    try { await playChime(audioCtxRef.current); } catch {}
-                    await delay(300);
+                    // ── Step 2: 대본 1회차 재생 ──
                     setPhase('playing');
                     try {
                         await playProblemScript(problem);
@@ -764,20 +767,17 @@ export function useListeningTTS({
                         const totalChars = (problem.script || []).reduce((sum, line) => sum + (line.text?.length || 0), 0);
                         await delay(Math.max(5000, totalChars * 80));
                     }
-                    try { await playChime(audioCtxRef.current); } catch {}
 
-                    // 3. "다시 한번 들려드립니다"
-                    await delay(500);
+                    // ── Step 3: "다시 한 번 듣겠습니다" ──
+                    await delay(800);
                     try {
                         await speakLines(REPLAY_INTRO_SCRIPT);
                     } catch (e) {
                         console.warn('[TTS] Replay intro failed:', e);
                     }
-                    await delay(500);
+                    await delay(800);
 
-                    // 4. 딩동 → 대본 2회차 재생 → 딩동
-                    try { await playChime(audioCtxRef.current); } catch {}
-                    await delay(300);
+                    // ── Step 4: 대본 2회차 재생 ──
                     setPhase('replay');
                     setIsSecondPlay(true);
                     setCurrentLineIndex(0);
@@ -788,32 +788,29 @@ export function useListeningTTS({
                         const totalChars = (problem.script || []).reduce((sum, line) => sum + (line.text?.length || 0), 0);
                         await delay(Math.max(5000, totalChars * 80));
                     }
-                    try { await playChime(audioCtxRef.current); } catch {}
                     setIsSecondPlay(false);
 
-                    // 5. 10초 대기
+                    // ── Step 5: 딩동 + "16번. [질문]" ──
+                    await delay(500);
+                    try { await playChime(audioCtxRef.current); } catch {}
+                    await delay(300);
+                    const instruction16 = problem.instruction || '두 사람이 하는 말의 주제로 가장 적절한 것을 고르시오.';
+                    await speakLines([{ speaker: 'N', text: `${toSinoKorean(16)}번. ${instruction16}`, lang: 'ko' }]);
                     setPhase('gap');
                     await wait(10, (r) => setGapRemaining(r));
 
-                    // 6. N: "16번. [instruction]" → 10초 대기
-                    const prob16Instruction = problem.script?.find(l => l.speaker === 'N' && l.text?.includes('16번'));
-                    if (prob16Instruction) {
-                        await speakLines([{ speaker: 'N', text: prob16Instruction.text, lang: 'ko' }]);
-                    }
+                    // ── Step 6: 딩동 + "17번. [질문]" + 딩동 ──
+                    try { await playChime(audioCtxRef.current); } catch {}
+                    await delay(300);
+                    const instruction17 = prob17?.instruction || '언급된 내용과 일치하지 않는 것을 고르시오.';
+                    await speakLines([{ speaker: 'N', text: `${toSinoKorean(17)}번. ${instruction17}`, lang: 'ko' }]);
+                    await delay(300);
+                    try { await playChime(audioCtxRef.current); } catch {}
                     setPhase('gap');
                     await wait(10, (r) => setGapRemaining(r));
-
-                    // 7. N: "17번. [instruction]" → 10초 대기
-                    const prob17 = problems.find(p => p.number === 17);
-                    if (prob17) {
-                        const prob17Instruction = prob17.instruction || '언급된 내용과 일치하지 않는 것을 고르시오.';
-                        await speakLines([{ speaker: 'N', text: `17번. ${prob17Instruction}`, lang: 'ko' }]);
-                        setPhase('gap');
-                        await wait(10, (r) => setGapRemaining(r));
-                    }
 
                     onProblemEnd?.(idx);
-                    continue; // 다음 iteration에서 17번으로 감
+                    continue;
                 }
 
                 // 17번: 대본이 16번과 공유되므로 skip (위에서 이미 처리)

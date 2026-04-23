@@ -1869,7 +1869,7 @@ export const LISTENING_START_SCRIPT: ScriptLineShape[] = [
 export const LONG_SET_INTRO_SCRIPT: ScriptLineShape[] = [
     {
         speaker: 'N',
-        text: '이제 16번과 17번입니다. 16번과 17번은 두 번 들려줍니다. 잘 듣고 물음에 답하시기 바랍니다.',
+        text: '16번부터 17번까지는 두 번 들려줍니다. 16번과 17번. 다음을 듣고 물음에 답하시오.',
         lang: 'ko'
     },
 ];
@@ -1878,7 +1878,7 @@ export const LONG_SET_INTRO_SCRIPT: ScriptLineShape[] = [
 export const REPLAY_INTRO_SCRIPT: ScriptLineShape[] = [
     {
         speaker: 'N',
-        text: '다시 한번 들려드립니다.',
+        text: '다시 한 번 듣겠습니다.',
         lang: 'ko'
     },
 ];
