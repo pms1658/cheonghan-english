@@ -1,0 +1,428 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 시스템 기본 폰트 적용 (애플산돌고딕 위주) */
+/* 윈도우(PC) 사용자를 위한 애플산돌고딕 완벽 호환 웹폰트(Pretendard) 폴백용 임포트 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* 스트릿/그래피티 타격감 있는 영문 강렬한 폰트 (Oswald) 임포트 */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap');
+
+:root {
+  --primary-color: #0A0E27;
+  --primary-dark: #06091a;
+  --primary-light: #1e2548;
+  --background-color: #F8FAFC;
+  --surface-color: #FFFFFF;
+}
+
+.dark {
+  --primary-color: #0A0E27;
+  --primary-dark: #020412;
+  --primary-light: #1e2548;
+  --background-color: #020617;
+  --surface-color: #0f172a;
+}
+
+/*
+ * Global Dark Mode Overrides — SAFE VERSION
+ * Flips common light backgrounds to dark equivalents.
+ * Text colors: only inverted INSIDE containers that got flipped.
+ * Component-specific colors handled with dark: Tailwind variants.
+ */
+
+/* === BACKGROUND OVERRIDES === */
+.dark .bg-white {
+  background-color: #0f172a !important;
+}
+.dark .bg-slate-50 {
+  background-color: #0c1222 !important;
+}
+.dark .bg-slate-100 {
+  background-color: #0f172a !important;
+}
+
+/* === SCOPED TEXT INVERSION === */
+/* Inside containers whose bg got flipped, dark text needs to become light */
+.dark .bg-white .text-slate-900,
+.dark .bg-slate-50 .text-slate-900,
+.dark .bg-slate-100 .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+.dark .bg-white .text-slate-800,
+.dark .bg-slate-50 .text-slate-800,
+.dark .bg-slate-100 .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+.dark .bg-white .text-slate-700,
+.dark .bg-slate-50 .text-slate-700,
+.dark .bg-slate-100 .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+.dark .bg-white .text-slate-600,
+.dark .bg-slate-50 .text-slate-600,
+.dark .bg-slate-100 .text-slate-600 {
+  color: #94a3b8 !important;
+}
+.dark .bg-white .text-slate-500,
+.dark .bg-slate-50 .text-slate-500,
+.dark .bg-slate-100 .text-slate-500 {
+  color: #94a3b8 !important;
+}
+/* text-black is always wrong in dark mode */
+.dark .text-black {
+  color: #f1f5f9 !important;
+}
+
+/* === BORDER OVERRIDES === */
+.dark .border-slate-200 {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.dark .border-slate-100 {
+  border-color: rgba(255,255,255,0.05) !important;
+}
+.dark .border-slate-300 {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* === HOVER STATE OVERRIDES === */
+.dark .hover\:bg-slate-50:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+}
+.dark .hover\:bg-slate-100:hover {
+  background-color: rgba(255,255,255,0.08) !important;
+}
+.dark .hover\:bg-white:hover {
+  background-color: #1e293b !important;
+}
+
+/* === SELECTION (DRAG) OVERRIDES === */
+/* Fix: 다크모드에서 텍스트 드래그 시 글씨 안보이는 문제 */
+.dark ::selection {
+  background-color: rgba(59, 130, 246, 0.4) !important;
+  color: #f1f5f9 !important;
+}
+.dark ::-moz-selection {
+  background-color: rgba(59, 130, 246, 0.4) !important;
+  color: #f1f5f9 !important;
+}
+
+/* === INPUT OVERRIDES (global — inputs are always on surfaces) === */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* === MISC === */
+.dark .border-dashed {
+  border-color: rgba(255,255,255,0.15) !important;
+}
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl {
+  --tw-shadow-color: rgba(0,0,0,0.3) !important;
+}
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* === SEMANTIC BG OVERRIDES (result cards, status badges) === */
+.dark .bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.1) !important;
+}
+.dark .bg-cyan-50 {
+  background-color: rgba(6, 182, 212, 0.1) !important;
+}
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+.dark .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+.dark .bg-indigo-50 {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Semantic text colors inside dark semantic backgrounds */
+.dark .text-teal-700 { color: #5eead4 !important; }
+.dark .text-teal-600 { color: #2dd4bf !important; }
+.dark .text-cyan-700 { color: #67e8f9 !important; }
+.dark .text-cyan-600 { color: #22d3ee !important; }
+.dark .text-emerald-800 { color: #6ee7b7 !important; }
+.dark .text-emerald-600 { color: #34d399 !important; }
+.dark .text-red-800 { color: #fca5a5 !important; }
+.dark .text-red-600 { color: #f87171 !important; }
+
+/* Semantic border colors */
+.dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.2) !important; }
+.dark .border-red-200 { border-color: rgba(239, 68, 68, 0.2) !important; }
+
+/* === DETAILS/SUMMARY (result 대본보기 등) === */
+.dark details summary {
+  color: #94a3b8 !important;
+}
+.dark details summary:hover {
+  color: #e2e8f0 !important;
+}
+
+/* === RING/OUTLINE OVERRIDES === */
+.dark .ring-slate-200 {
+  --tw-ring-color: rgba(255,255,255,0.1) !important;
+}
+.dark .outline-slate-200 {
+  outline-color: rgba(255,255,255,0.1) !important;
+}
+
+/* Hide scrollbar visually (sidebar etc.) while keeping scroll */
+.sidebar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "맑은 고딕", arial, sans-serif;
+  background-color: var(--background-color);
+  color: #1e293b;
+  /* Slate 800 */
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* Annotation wavy underline — distinct from verb straight underline */
+.annotation-wavy {
+  text-decoration: underline wavy;
+  text-decoration-color: #d97706; /* amber-600 */
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: none;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Safe Area Support for iOS */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+
+  .animate-premium-fade-in-up {
+    animation: premiumFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-slide-out-right {
+    animation: slideOutRight 0.3s ease-in forwards;
+  }
+}
+
+/* Logo bounce animation for loading states */
+.loading-logo-bounce {
+  animation: logoBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes logoBounce {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-12px) scale(1.05); opacity: 0.85; }
+}
+
+/* Skeleton shimmer loading effect */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Global button click animation — subtle haptic feedback */
+/* :not(:has(:active)) ensures only the deepest clicked element scales, not ancestor buttons */
+button:not(:disabled):active:not(:has(:active)),
+[role="button"]:not(:disabled):active:not(:has(:active)),
+a[class*="rounded"]:not(:disabled):active:not(:has(:active)) {
+  transform: scale(0.985) !important;
+  transition: transform 0.1s ease !important;
+}
+
+@keyframes premiumFadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@layer base {
+
+  input,
+  textarea,
+  select {
+    @apply text-slate-900;
+    color: #0f172a;
+    /* Fallback/Force */
+  }
+}
+
+
+/* Tablet Optimization (641px — 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+
+  /* iOS zoom prevention for tablets too */
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px !important;
+  }
+
+  body {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.5;
+  }
+}
+
+/* Phone Optimization (≤640px) */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  /* Ensure buttons and inputs don't prevent iOS zoom */
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px !important;
+  }
+
+  /* Adjust heading sizes proportionally for phones */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.125rem !important;
+  }
+
+  h4 {
+    font-size: 1rem !important;
+  }
+
+  /* Reduce padding for compact phone UI */
+  .p-8 {
+    padding: 1rem !important;
+  }
+
+  .p-6 {
+    padding: 0.75rem !important;
+  }
+
+  .p-4 {
+    padding: 0.5rem !important;
+  }
+
+  .px-8 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .px-6 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .py-8 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .py-6 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Smaller gaps on phones */
+  .gap-8 {
+    gap: 1rem !important;
+  }
+
+  .gap-6 {
+    gap: 0.75rem !important;
+  }
+
+  /* Body text size */
+  body {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
