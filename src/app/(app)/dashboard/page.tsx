@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -188,17 +188,17 @@ export default function NewDashboardPage() {
             {/* Content */}
             <div className="relative z-10 flex flex-col w-full h-full justify-center items-center px-4 md:px-8">
                 <div className="flex flex-col items-center w-full max-w-4xl">
-                    <span className="text-blue-400 text-xs md:text-sm font-black uppercase mb-6 md:mb-8 italic text-center w-full" style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: "0.2em" }}>
+                    <span className="text-blue-400 text-xs md:text-sm font-black uppercase mb-6 md:mb-8 italic text-center w-full" style={{ letterSpacing: "0.2em" }}>
                         DAILY INSPIRATION
                     </span>
                     
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl text-white leading-[1.6] md:leading-[1.7] tracking-tight mb-10 font-black uppercase italic text-center w-full" style={{ fontFamily: "'Oswald', sans-serif", transform: "skewX(-8deg)" }}>
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl text-white leading-[1.6] md:leading-[1.7] tracking-tight mb-10 font-black uppercase italic text-center w-full" style={{ transform: "skewX(-8deg)" }}>
                         &quot;{quote.text}&quot;
                     </h2>
                     
                     <div className="w-full flex justify-end items-center gap-4 mt-2">
                         <div className="h-[4px] md:h-[6px] w-8 md:w-12 bg-blue-500"></div>
-                        <p className="text-blue-400 text-xs md:text-sm uppercase font-bold italic" style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: "0.15em", transform: "skewX(-8deg)" }}>
+                        <p className="text-blue-400 text-xs md:text-sm uppercase font-bold italic" style={{ letterSpacing: "0.15em", transform: "skewX(-8deg)" }}>
                             {quote.author}
                         </p>
                     </div>

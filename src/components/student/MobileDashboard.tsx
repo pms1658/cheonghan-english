@@ -67,11 +67,43 @@ export default function MobileDashboard({
         else setGreeting("Good Evening");
     }, []);
 
-    // --- SHARED: DAILY QUOTE (Deep Blue Theme - Mobile Optimized) ---
+    // --- SHARED: DAILY QUOTE (날짜 기반 로테이션) ---
+    const QUOTES = [
+        { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+        { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+        { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+        { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+        { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+        { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+        { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+        { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
+        { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+        { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+        { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+        { text: "What we learn with pleasure we never forget.", author: "Alfred Mercier" },
+        { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+        { text: "A journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
+        { text: "Your limitation—it's only your imagination.", author: "Unknown" },
+        { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
+        { text: "Great things never come from comfort zones.", author: "Unknown" },
+        { text: "Dream it. Wish it. Do it.", author: "Unknown" },
+        { text: "Hard work beats talent when talent doesn't work hard.", author: "Tim Notke" },
+        { text: "The pain you feel today will be the strength you feel tomorrow.", author: "Unknown" },
+        { text: "Don't limit your challenges. Challenge your limits.", author: "Unknown" },
+        { text: "Every accomplishment starts with the decision to try.", author: "John F. Kennedy" },
+        { text: "Knowledge is power.", author: "Francis Bacon" },
+        { text: "Fall seven times, stand up eight.", author: "Japanese Proverb" },
+        { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
+        { text: "Strive for progress, not perfection.", author: "Unknown" },
+        { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
+        { text: "Today a reader, tomorrow a leader.", author: "Margaret Fuller" },
+        { text: "Small daily improvements are the key to staggering long-term results.", author: "Unknown" },
+        { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn" },
+    ];
     const QuoteSection = () => {
-        // Mock Quote Logic for Mobile (or shared context if available)
-        // Hardcoding one for now or rotation logic could be duplicated if not in a hook
-        const quote = { text: "The expert in anything was once a beginner.", author: "Helen Hayes" };
+        const today = new Date();
+        const dayIndex = Math.floor((today.getFullYear() * 366 + (today.getMonth() + 1) * 31 + today.getDate())) % QUOTES.length;
+        const quote = QUOTES[dayIndex];
 
         return (
             <div className="relative w-full overflow-hidden rounded-[2rem] bg-slate-900 aspect-[2/1] flex flex-col items-center justify-center text-center p-4 shadow-xl group mb-6">
