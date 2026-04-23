@@ -1,22 +1,27 @@
 @echo off
-title CheongHan English - Deploy & Update
+chcp 65001 > nul
+title CheongHan English - Deploy
 echo ========================================================
-echo  CheongHan English - Cloud Deployment Tool (Vercel)
+echo  CheongHan English - Deploy + Backup
 echo ========================================================
-echo.
-echo [INFO] This will upload your code to Vercel.
-echo [INFO] The website address (URL) will NOT change.
-echo.
-echo 1. If this is your first time, it will ask you to Log In.
-echo 2. Press Enter for default options (Y, Project Name, etc).
 echo.
 
-:: Run Vercel Deployment in Production Mode
+:: Step 1: GitHub Backup
+echo [1/2] GitHub Backup...
+"C:\Program Files\Git\bin\git.exe" add .
+"C:\Program Files\Git\bin\git.exe" commit -m "auto-backup: %date% %time%"
+"C:\Program Files\Git\bin\git.exe" push
+echo [OK] GitHub Backup Done!
+echo.
+
+:: Step 2: Vercel Deploy
+echo [2/2] Vercel Deploy...
 call npx vercel --prod
 
 echo.
 echo ========================================================
-echo  Deployment Complete!
-echo  Your Permanent URL is shown above.
+echo  Deploy + Backup Complete!
+echo  GitHub: https://github.com/pms1658/cheonghan-english
+echo  Website URL is shown above.
 echo ========================================================
 pause
