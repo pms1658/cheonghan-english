@@ -188,7 +188,7 @@ export default function NewDashboardPage() {
             {/* Content */}
             <div className="relative z-10 flex flex-col w-full h-full justify-center items-center px-4 md:px-8">
                 <div className="flex flex-col items-center w-full max-w-4xl">
-                    <span className="text-blue-400 text-xs md:text-sm font-black uppercase mb-6 md:mb-8 italic text-center w-full" style={{ letterSpacing: "0.2em" }}>
+                    <span className="text-blue-400 text-xs md:text-sm font-black uppercase mb-6 md:mb-8 text-center w-full" style={{ letterSpacing: "0.2em" }}>
                         DAILY INSPIRATION
                     </span>
                     
