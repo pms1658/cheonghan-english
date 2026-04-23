@@ -2,6 +2,7 @@ import LoginCard from "@/components/auth/LoginCard";
 import LatestNewsSection from "@/components/home/LatestNewsSection";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import Logo from "@/components/common/Logo";
+import ScrollReveal from "@/components/common/ScrollReveal";
 
 export default function Home() {
     return (
@@ -71,14 +72,17 @@ export default function Home() {
                 </div>
 
                 <div className="max-w-7xl mx-auto relative z-10">
+                    <ScrollReveal>
                     <div className="text-center mb-16">
                         <span className="text-blue-400 font-bold tracking-wider uppercase text-sm">Why Choose Us</span>
                         <h2 className="text-3xl lg:text-5xl font-black text-white mt-3 drop-shadow-lg">청한영어의 차별점</h2>
                         <p className="text-blue-200/60 mt-4 text-lg font-medium">진짜 실력을 만드는 세 가지 핵심 시스템</p>
                     </div>
+                    </ScrollReveal>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Feature 1 */}
+                        <ScrollReveal delay={100}>
                         <div className="group p-8 rounded-[32px] bg-white/5 border border-white/10 hover:bg-white/10 inset-0 hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative z-10">
@@ -91,8 +95,10 @@ export default function Home() {
                                 </p>
                             </div>
                         </div>
+                        </ScrollReveal>
 
                         {/* Feature 2 */}
+                        <ScrollReveal delay={250}>
                         <div className="group p-8 rounded-[32px] bg-white/5 border border-white/10 hover:bg-white/10 inset-0 hover:shadow-2xl hover:shadow-purple-900/20 transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative z-10">
@@ -105,8 +111,10 @@ export default function Home() {
                                 </p>
                             </div>
                         </div>
+                        </ScrollReveal>
 
                         {/* Feature 3 */}
+                        <ScrollReveal delay={400}>
                         <div className="group p-8 rounded-[32px] bg-white/5 border border-white/10 hover:bg-white/10 inset-0 hover:shadow-2xl hover:shadow-green-900/20 transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative z-10">
@@ -119,6 +127,7 @@ export default function Home() {
                                 </p>
                             </div>
                         </div>
+                        </ScrollReveal>
                     </div>
                 </div>
             </section>
@@ -129,6 +138,7 @@ export default function Home() {
 
                 <div className="max-w-7xl mx-auto relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <ScrollReveal direction="left">
                         <div>
                             <span className="text-blue-400 font-bold tracking-wider uppercase text-sm">Core Methodology</span>
                             <h2 className="text-3xl lg:text-5xl font-black mt-3 mb-8 text-white drop-shadow-md">구조독해란?</h2>
@@ -155,6 +165,8 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
+                        </ScrollReveal>
+                        <ScrollReveal direction="right" delay={200}>
                         <div className="relative">
                             {/* Visual representation of Structure Analysis */}
                             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[32px] p-8 lg:p-12 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500 ring-1 ring-white/10 group">
@@ -191,6 +203,7 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
+                        </ScrollReveal>
                     </div>
                 </div>
             </section>
@@ -202,6 +215,7 @@ export default function Home() {
                     <div className="absolute top-[30%] left-[-10%] w-[600px] h-[600px] bg-blue-800/10 rounded-full blur-[120px]"></div>
                 </div>
 
+                <ScrollReveal direction="scale">
                 <div className="max-w-5xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10">
                     <div className="bg-white/5 p-10 lg:p-16 text-white lg:w-1/3 flex flex-col justify-center text-center lg:text-left border-b lg:border-b-0 lg:border-r border-white/10 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-50"></div>
@@ -236,6 +250,7 @@ export default function Home() {
                         </ul>
                     </div>
                 </div>
+                </ScrollReveal>
             </section>
 
             <LatestNewsSection />
