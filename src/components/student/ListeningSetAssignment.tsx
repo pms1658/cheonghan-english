@@ -24,9 +24,10 @@ import PictureRenderer from './PictureRenderer';
 interface ListeningSetAssignmentProps {
     assignment: Assignment;
     onSubmit: (answers: ListeningSetAnswers) => void;
+    onExit?: () => void;
 }
 
-export default function ListeningSetAssignment({ assignment, onSubmit }: ListeningSetAssignmentProps) {
+export default function ListeningSetAssignment({ assignment, onSubmit, onExit }: ListeningSetAssignmentProps) {
     const listeningProblems = assignment.listeningProblems || [];
     const readingProblems = assignment.readingProblems || [];
     const readingOrder = assignment.listeningSetConfig?.readingOrder || DEFAULT_READING_ORDER;
@@ -340,11 +341,11 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
     // ══════════════════════════════════════
     if (phase === 'idle') {
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6">
-                <div className="max-w-md w-full space-y-8 animate-premium-fade-in-up">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
+                <div className="max-w-md w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Header */}
                     <div className="text-center space-y-2">
-                        <div className="w-20 h-20 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                        <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 rounded-full flex items-center justify-center mb-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10">
                             <span className="text-4xl">🎧</span>
                         </div>
                         <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{assignment.title}</h1>
@@ -352,22 +353,22 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                     </div>
 
                     {/* Info Card */}
-                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-5 space-y-4 border border-slate-200 dark:border-slate-700">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 space-y-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10">
                         <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-3">
+                            <div className="bg-blue-600/5 dark:bg-blue-500/10 rounded-xl p-3">
                                 <div className="text-2xl font-black text-blue-600 dark:text-blue-400">{listeningProblems.length}</div>
                                 <div className="text-[10px] text-blue-500/70 dark:text-blue-400/70 mt-0.5">🔊 듣기</div>
                             </div>
-                            <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-xl p-3">
+                            <div className="bg-indigo-600/5 dark:bg-indigo-500/10 rounded-xl p-3">
                                 <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{readingProblems.length}</div>
                                 <div className="text-[10px] text-indigo-500/70 dark:text-indigo-400/70 mt-0.5">📖 독해</div>
                             </div>
-                            <div className="bg-slate-100 dark:bg-slate-700/50 rounded-xl p-3">
+                            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-3">
                                 <div className="text-2xl font-black text-slate-700 dark:text-slate-300">{totalProblems}</div>
                                 <div className="text-[10px] text-slate-500/70 dark:text-slate-400/70 mt-0.5">📋 전체</div>
                             </div>
                         </div>
-                        <hr className="border-slate-200 dark:border-slate-700" />
+                        <hr className="border-slate-200/30 dark:border-white/10" />
                         <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 leading-relaxed">
                             <p>• 시작 후 듣기는 자동 재생되며 멈출 수 없습니다</p>
                             <p>• &quot;문제지를 넘기시기 바랍니다&quot; 이후 독해 미리보기 가능</p>
@@ -375,10 +376,10 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                         </div>
                     </div>
 
-                    {/* ★ 음원 다운로드 버튼 */}
+                    {/* Download Button */}
                     <button
                         onClick={prepareAudio}
-                        className="w-full py-4 bg-[#0A0E27] dark:bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-xl hover:bg-[#1e2548] dark:hover:bg-blue-500 transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-lg shadow-sm hover:shadow active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                         <span className="text-xl">⬇️</span>
                         음원 다운로드
@@ -406,30 +407,38 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
         const formatAnswer = (ans: number | undefined) => ans !== undefined ? `${ans + 1}번` : '미응답';
 
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 pb-20">
-                <div className="max-w-2xl mx-auto space-y-6">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 pb-20">
+                <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Score Header */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg p-6 text-center">
-                        <h1 className="text-xl font-bold text-slate-800 dark:text-white mb-4">📊 듣기세트 결과</h1>
-                        <div className="text-5xl font-black text-teal-600 dark:text-teal-400 mb-2">{totalScore}점</div>
-                        <div className="text-slate-500 dark:text-slate-400">({totalCorrect}/{totalProblems} 정답)</div>
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10 px-8 py-10 text-center relative overflow-hidden">
+                        <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest mb-4">Assessment Complete</h2>
+                        <div className={`text-[64px] font-semibold leading-none tracking-tighter ${totalScore === 100 ? 'text-blue-600' : 'text-slate-900 dark:text-white'}`}>{totalScore}</div>
+                        <div className="text-[13px] font-medium text-slate-500 mt-2">Total Score · {totalCorrect}/{totalProblems} 정답</div>
 
-                        <div className="grid grid-cols-2 gap-4 mt-6">
-                            <div className="bg-teal-50 rounded-2xl p-4">
-                                <div className="text-2xl font-bold text-teal-700">{listeningScore}점</div>
-                                <div className="text-sm text-teal-600">🔊 듣기 ({listeningCorrect}/{listeningProblems.length})</div>
+                        <div className="grid grid-cols-2 gap-4 mt-8">
+                            <div className="bg-blue-600/5 dark:bg-blue-500/10 rounded-xl p-4">
+                                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{listeningScore}</div>
+                                <div className="text-[11px] text-blue-500/70 mt-0.5">🔊 듣기 ({listeningCorrect}/{listeningProblems.length})</div>
                             </div>
-                            <div className="bg-cyan-50 rounded-2xl p-4">
-                                <div className="text-2xl font-bold text-cyan-700">{readingScore}점</div>
-                                <div className="text-sm text-cyan-600">📖 독해 ({readingCorrect}/{readingProblems.length})</div>
+                            <div className="bg-indigo-600/5 dark:bg-indigo-500/10 rounded-xl p-4">
+                                <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{readingScore}</div>
+                                <div className="text-[11px] text-indigo-500/70 mt-0.5">📖 독해 ({readingCorrect}/{readingProblems.length})</div>
                             </div>
                         </div>
-                        <div className="text-sm text-slate-400 mt-4">⏱ 소요시간: {formatTime(elapsedSeconds)}</div>
+                        <div className="text-[11px] text-slate-400 mt-4">⏱ {formatTime(elapsedSeconds)}</div>
+
+                        <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
+                            {onExit && (
+                                <button onClick={onExit} className="px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-300 rounded-full text-[13px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                    과제방으로 돌아가기
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* ── 전체 듣기 해설 ── */}
-                    <div className="bg-white rounded-3xl shadow-md p-6">
-                        <h2 className="text-lg font-bold text-teal-700 mb-4">🔊 듣기 문제 해설 ({listeningCorrect}/{listeningProblems.length})</h2>
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-200/30 dark:border-white/10">
+                        <h2 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-4">🔊 Listening · {listeningCorrect}/{listeningProblems.length}</h2>
                         <div className="space-y-4">
                             {listeningProblems.map(p => {
                                 const myAnswer = listeningAnswers[p.number];
@@ -470,10 +479,10 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                             <button
                                                 onClick={() => replayProblemAudio(p)}
                                                 disabled={replayingProblem !== null}
-                                                className={`mt-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                                className={`mt-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
                                                     replayingProblem === p.number
-                                                        ? 'bg-teal-600 text-white animate-pulse'
-                                                        : 'bg-teal-100 text-teal-700 hover:bg-teal-200 disabled:opacity-50'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-blue-600/10 text-blue-600 hover:bg-blue-600/20 disabled:opacity-50'
                                                 }`}
                                             >
                                                 {replayingProblem === p.number ? '🔊 재생 중...' : '🔊 다시 듣기'}
@@ -487,8 +496,8 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
                     {/* ── 전체 독해 해설 ── */}
                     {readingProblems.length > 0 && (
-                        <div className="bg-white rounded-3xl shadow-md p-6">
-                            <h2 className="text-lg font-bold text-cyan-700 mb-4">📖 독해 문제 해설 ({readingCorrect}/{readingProblems.length})</h2>
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-200/30 dark:border-white/10">
+                            <h2 className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest mb-4">📖 Reading · {readingCorrect}/{readingProblems.length}</h2>
                             <div className="space-y-4">
                                 {readingProblems.map(p => {
                                     const myAnswer = readingAnswers[p.number];
@@ -536,17 +545,17 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
             ? Math.round((preparingProgress.current / preparingProgress.total) * 100)
             : 0;
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6">
-                <div className="text-center space-y-6 max-w-sm w-full animate-premium-fade-in-up">
-                    <div className="w-20 h-20 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                        <span className="text-4xl animate-pulse">🎧</span>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
+                <div className="text-center space-y-6 max-w-sm w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 rounded-full flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10">
+                        <span className="text-4xl">🎧</span>
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">음원 다운로드 중</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">고품질 음성을 불러오고 있습니다</p>
                     <div className="space-y-3 px-4">
-                        <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-[#0A0E27] dark:bg-blue-500 rounded-full transition-all duration-300"
+                                className="h-full bg-blue-600 rounded-full transition-all duration-300"
                                 style={{ width: `${pct}%` }}
                             />
                         </div>
@@ -575,17 +584,17 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
     // ══════════════════════════════════════
     if (phase === 'ready') {
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6">
-                <div className="max-w-md w-full space-y-8 animate-premium-fade-in-up">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
+                <div className="max-w-md w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="text-center space-y-3">
-                        <div className="w-20 h-20 mx-auto bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
+                        <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 rounded-full flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10">
                             <span className="text-4xl">✅</span>
                         </div>
                         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">음원 준비 완료!</h1>
                         <p className="text-emerald-600 dark:text-emerald-400 text-sm">모든 음성 파일이 로딩되었습니다</p>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-5 space-y-3 border border-slate-200 dark:border-slate-700">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 space-y-3 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10">
                         <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 leading-relaxed">
                             <p>• 시작 버튼을 누르면 안내방송이 시작됩니다</p>
                             <p>• 듣기는 자동 재생되며 중단할 수 없습니다</p>
@@ -595,7 +604,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
                     <button
                         onClick={beginExam}
-                        className="w-full py-5 bg-[#0A0E27] dark:bg-blue-600 text-white rounded-2xl font-bold text-xl shadow-xl hover:bg-[#1e2548] dark:hover:bg-blue-500 transition-all active:scale-[0.97] flex items-center justify-center gap-3"
+                        className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-xl shadow-sm hover:shadow active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                     >
                         <span className="text-2xl">▶️</span>
                         테스트 시작
@@ -610,16 +619,16 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
     // ══════════════════════════════════════
     if (phase === 'opening') {
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
                 <div className="text-center space-y-6 max-w-sm">
-                    <div className="w-20 h-20 mx-auto bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <span className="text-4xl animate-pulse">📢</span>
+                    <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 rounded-full flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 dark:border-white/10">
+                        <span className="text-4xl">📢</span>
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">안내방송 중</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">청한영어 모의고사 듣기평가</p>
                     <div className="flex justify-center gap-1.5">
                         {[0, 1, 2].map(i => (
-                            <div key={i} className="w-2 h-2 bg-[#0A0E27] dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                            <div key={i} className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                         ))}
                     </div>
                 </div>
@@ -638,43 +647,44 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
     const showReadingPanel = isMobile ? mobileTab === 'reading' : true;
 
     return (
-        <div className="h-screen flex flex-col bg-slate-100 dark:bg-slate-900">
+        <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
             {/* Top Status Bar */}
-            <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between text-sm flex-shrink-0">
-                <div className="flex items-center gap-4">
+            <div className="bg-[#0A0E27] text-white px-4 py-3 flex items-center justify-between text-sm flex-shrink-0 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl -mr-24 -mt-24"></div>
+                <div className="flex items-center gap-4 relative z-10">
                     <button
                         onClick={() => {
                             if (phase !== 'done') {
                                 if (confirm('듣기를 중단하고 나가시겠습니까?\n진행 상황은 저장되지 않습니다.')) {
                                     stopListening();
-                                    window.history.back();
+                                    onExit ? onExit() : window.history.back();
                                 }
                             } else {
-                                window.history.back();
+                                onExit ? onExit() : window.history.back();
                             }
                         }}
-                        className="text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+                        className="text-white/60 hover:text-white transition-colors flex items-center gap-1 text-xs font-medium"
                     >
                         ← 나가기
                     </button>
-                    <span className="font-mono font-bold text-teal-400">⏱ {formatTime(elapsedSeconds)}</span>
-                    <span className="text-slate-400">{getPhaseLabel()}</span>
+                    <span className="font-mono font-bold text-blue-400 text-xs">⏱ {formatTime(elapsedSeconds)}</span>
+                    <span className="text-white/40 text-xs">{getPhaseLabel()}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs">
-                    <span className="text-teal-300">🔊 {answeredListening}/{listeningProblems.length}</span>
-                    <span className="text-cyan-300">📖 {answeredReading}/{readingProblems.length}</span>
-                    <span className="text-slate-300">{totalAnswered}/{totalProblems}</span>
+                <div className="flex items-center gap-3 text-[10px] font-medium relative z-10">
+                    <span className="text-blue-300">🔊 {answeredListening}/{listeningProblems.length}</span>
+                    <span className="text-indigo-300">📖 {answeredReading}/{readingProblems.length}</span>
+                    <span className="text-white/50">{totalAnswered}/{totalProblems}</span>
                 </div>
             </div>
 
             {/* Mobile Tab Switcher — ★ sticky로 고정 */}
             {isMobile && (
-                <div className="flex bg-white border-b border-slate-200 flex-shrink-0 sticky top-0 z-30">
+                <div className="flex bg-white/80 backdrop-blur-xl border-b border-slate-200/30 flex-shrink-0 sticky top-0 z-30">
                     <button
                         onClick={() => setMobileTab('listening')}
                         className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
                             mobileTab === 'listening'
-                                ? 'text-teal-700 border-b-2 border-teal-600 bg-teal-50'
+                                ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50'
                                 : 'text-slate-400'
                         }`}
                     >
@@ -685,7 +695,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                         disabled={!canViewReading}
                         className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
                             mobileTab === 'reading'
-                                ? 'text-cyan-700 border-b-2 border-cyan-600 bg-cyan-50'
+                                ? 'text-indigo-700 border-b-2 border-indigo-600 bg-indigo-50/50'
                                 : canViewReading
                                 ? 'text-slate-400'
                                 : 'text-slate-300 opacity-50'
@@ -700,7 +710,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
             <div className="flex-1 overflow-hidden flex">
                 {/* ══ Listening Panel — ★ 스크롤 기반 전체 문제 리스트 ══ */}
                 <div
-                    className={`${isMobile ? 'w-full' : 'w-1/2 border-r border-slate-300'} bg-white flex flex-col h-full relative`}
+                    className={`${isMobile ? 'w-full' : 'w-1/2 border-r border-slate-200/30'} bg-slate-50 flex flex-col h-full relative`}
                     style={{ display: showListeningPanel ? 'flex' : 'none' }}
                 >
                     <div
@@ -715,18 +725,18 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                 <div
                                     key={problem.number}
                                     ref={(el) => { problemRefsMap.current[problem.number] = el; }}
-                                    className={`rounded-2xl border-2 p-4 space-y-3 transition-all duration-300 ${
+                                    className={`rounded-2xl p-4 space-y-3 transition-all duration-300 border ${
                                         isCurrent
-                                            ? 'border-teal-400 bg-teal-50/50 shadow-lg shadow-teal-100'
+                                            ? 'border-blue-500/30 bg-white shadow-[0_4px_24px_rgba(59,130,246,0.08)]'
                                             : isAnswered
-                                            ? 'border-teal-200 bg-white'
-                                            : 'border-slate-200 bg-white opacity-80'
+                                            ? 'border-slate-200/30 bg-white'
+                                            : 'border-slate-200/30 bg-white/60'
                                     }`}
                                 >
                                     {/* 문제 헤더 */}
                                     <div className="flex items-center gap-2">
                                         <span className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                                            isCurrent ? 'bg-teal-600 text-white animate-pulse' : isAnswered ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-400'
+                                            isCurrent ? 'bg-blue-600 text-white' : isAnswered ? 'bg-blue-600/10 text-blue-600' : 'bg-slate-200 text-slate-400'
                                         }`}>{problem.number}</span>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-sm font-bold text-slate-800 truncate">{problem.instruction}</div>
@@ -734,7 +744,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                 <span className="text-xs text-amber-600 font-bold">🔁 두 번째 재생 중</span>
                                             )}
                                         </div>
-                                        {isAnswered && <span className="text-teal-500 text-lg flex-shrink-0">✓</span>}
+                                        {isAnswered && <span className="text-blue-500 text-lg flex-shrink-0">✓</span>}
                                     </div>
 
                                     {/* 4번 그림 */}
@@ -766,23 +776,23 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                     )}
 
                                     {/* 선택지 */}
-                                    <div className="space-y-1.5">
+                                    <div className="grid grid-cols-1 gap-2">
                                         {problem.choices?.map((choice, ci) => (
                                             <button
                                                 key={ci}
                                                 onClick={() => selectListeningAnswer(problem.number, ci)}
-                                                className={`w-full flex gap-2.5 items-center px-3.5 py-2.5 rounded-xl text-left transition-all ${
+                                                className={`w-full flex gap-3 items-center p-3 rounded-xl text-left transition-all duration-200 border ${
                                                     listeningAnswers[problem.number] === ci
-                                                        ? 'bg-teal-600 text-white shadow-md'
-                                                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                                                        : 'bg-slate-100 border-transparent text-slate-900 hover:bg-slate-200'
                                                 }`}
                                             >
-                                                <span className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold ${
+                                                <span className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold ${
                                                     listeningAnswers[problem.number] === ci
-                                                        ? 'bg-white/20 text-white'
-                                                        : 'bg-slate-100 text-slate-500'
+                                                        ? 'bg-white text-blue-600'
+                                                        : 'bg-slate-300 text-white'
                                                 }`}>{ci + 1}</span>
-                                                <span className="text-sm">{choice}</span>
+                                                <span className="text-sm font-medium">{choice}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -808,14 +818,14 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                     {userScrolledAway && currentListeningProblem && phase !== 'done' && phase !== 'reading_time' && (
                         <button
                             onClick={scrollToCurrentProblem}
-                            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-teal-600 text-white rounded-full shadow-xl text-sm font-bold flex items-center gap-1.5 z-20 animate-bounce hover:bg-teal-700 transition-colors"
+                            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-500/20 text-sm font-bold flex items-center gap-1.5 z-20 hover:bg-blue-700 transition-colors"
                         >
                             📍 {currentListeningProblem.number}번 현재 듣기로
                         </button>
                     )}
 
                     {/* 하단 번호 표시바 */}
-                    <div className="border-t border-slate-200 bg-white p-3 flex-shrink-0">
+                    <div className="bg-white/80 backdrop-blur-sm border-t border-slate-200/30 px-4 py-3 flex-shrink-0">
                         <div className="flex flex-wrap gap-1.5 justify-center">
                             {listeningProblems.map((p) => (
                                 <button
@@ -826,9 +836,9 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                     }}
                                     className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all ${
                                         p.number === currentListeningProblem?.number
-                                            ? 'bg-teal-600 text-white ring-2 ring-teal-300'
+                                            ? 'bg-blue-600 text-white ring-2 ring-blue-300'
                                             : listeningAnswers[p.number] !== undefined
-                                            ? 'bg-teal-100 text-teal-700'
+                                            ? 'bg-blue-600/10 text-blue-600'
                                             : 'bg-slate-100 text-slate-400'
                                     }`}
                                 >
@@ -939,10 +949,10 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                 <>
                                     {/* ── 장문 세트 (43-45) — 공유 지문 ── */}
                                     {longPassageRendered && (
-                                        <div className="bg-white rounded-2xl shadow-sm border-2 border-cyan-200 overflow-hidden">
-                                            <div className="bg-cyan-50 border-b border-cyan-200 px-4 py-2.5 flex items-center justify-between">
-                                                <span className="text-sm font-bold text-cyan-800">📖 장문 [43~45] 공유 지문</span>
-                                                <span className="text-[10px] text-cyan-500">문장 클릭=하이라이트 | (a)~(e) 클릭=파랑/초록표시</span>
+                                        <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-200/30 overflow-hidden">
+                                            <div className="bg-indigo-600/5 border-b border-slate-200/30 px-4 py-2.5 flex items-center justify-between">
+                                                <span className="text-sm font-bold text-indigo-700">📖 장문 [43~45] 공유 지문</span>
+                                                <span className="text-[10px] text-indigo-400">문장 클릭=하이라이트 | (a)~(e) 클릭=파랑/초록표시</span>
                                             </div>
                                             <div className="p-4 space-y-3">
                                                 {parasArray.length > 0 ? (
@@ -953,7 +963,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                             const sentences: string[] = para.text.match(/[^.!?]+[.!?]+/g) || [para.text];
                                                         return (
                                                             <div key={pi} className="border border-slate-300 rounded-lg p-3 mx-2 bg-slate-50">
-                                                                <span className="text-xs font-bold text-cyan-700 bg-cyan-100 px-1.5 py-0.5 rounded">{String(para.label || '')}</span>
+                                                                <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">{String(para.label || '')}</span>
                                                                 <div className="text-sm text-slate-700 mt-2 leading-relaxed">
                                                                     {sentences.map((sentence: string) => {
                                                                         const idx = globalSentenceIdx++;
@@ -984,14 +994,14 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                             </div>
                                             {/* 43~45번 각 문제 */}
                                             {longGroup.map((problem) => (
-                                                <div key={problem.number} className="border-t border-cyan-100">
-                                                    <div className="bg-cyan-50/50 px-4 py-2 flex items-center justify-between">
+                                                <div key={problem.number} className="border-t border-slate-200/30">
+                                                    <div className="bg-indigo-600/5 px-4 py-2 flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="w-7 h-7 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-bold">{problem.number}</span>
+                                                            <span className="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">{problem.number}</span>
                                                             <span className="text-sm font-bold text-slate-700">{problem.question}</span>
                                                         </div>
                                                         {readingAnswers[problem.number] !== undefined && (
-                                                            <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full font-bold">✓</span>
+                                                            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">✓</span>
                                                         )}
                                                     </div>
                                                     <div className="px-4 pb-4 pt-2">
@@ -1005,7 +1015,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                         // ★ refColors 연동: 지문의 (a)~(e) 색상을 선택지에 반영
                                                                         const choiceColor = refColors[choice]; // choice = "(a)", "(b)" 등
                                                                         const colorClass = isSelected
-                                                                            ? 'bg-cyan-600 text-white'
+                                                                            ? 'bg-blue-600 text-white'
                                                                             : choiceColor === 'blue'
                                                                             ? 'bg-blue-200 text-blue-800 border border-blue-300'
                                                                             : choiceColor === 'green'
@@ -1031,7 +1041,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                         onClick={() => selectReadingAnswer(problem.number, ci)}
                                                                         className={`w-full flex gap-1.5 items-start px-2.5 py-1.5 rounded-lg text-left text-[13px] leading-snug transition-all ${
                                                                             readingAnswers[problem.number] === ci
-                                                                                ? 'bg-cyan-600 text-white'
+                                                                                ? 'bg-blue-600 text-white'
                                                                                 : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                                                                         }`}
                                                                     >
@@ -1065,12 +1075,12 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                 }`}>
                                                     <div className="flex items-center gap-2">
                                                         <span className={`w-7 h-7 text-white rounded-full flex items-center justify-center text-xs font-bold ${
-                                                            isNotice ? 'bg-amber-600' : isChart ? 'bg-violet-600' : 'bg-cyan-600'
+                                                            isNotice ? 'bg-amber-600' : isChart ? 'bg-violet-600' : 'bg-indigo-600'
                                                         }`}>{problem.number}</span>
                                                         <span className="text-sm font-bold text-slate-700">{problem.question || (problem as any).instruction || `${problem.number}번`}</span>
                                                     </div>
                                                     {readingAnswers[problem.number] !== undefined && (
-                                                        <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full font-bold">✓</span>
+                                                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">✓</span>
                                                     )}
                                                 </div>
 
@@ -1144,8 +1154,8 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                                         onClick={() => selectReadingAnswer(problem.number, markerIdx)}
                                                                                         className={`inline-block cursor-pointer font-bold px-0.5 rounded transition-all ${
                                                                                             isSelected
-                                                                                                ? 'bg-cyan-600 text-white scale-110'
-                                                                                                : 'text-cyan-700 hover:bg-cyan-100'
+                                                                                                ? 'bg-blue-600 text-white scale-110'
+                                                                                                : 'text-blue-700 hover:bg-blue-100'
                                                                                         }`}
                                                                                         title={`${part} 선택`}
                                                                                     >
@@ -1170,7 +1180,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                 onClick={() => selectReadingAnswer(problem.number, ci)}
                                                                 className={`w-full flex gap-1.5 items-start px-2.5 py-1.5 rounded-lg text-left text-[13px] leading-snug transition-all ${
                                                                     readingAnswers[problem.number] === ci
-                                                                        ? 'bg-cyan-600 text-white'
+                                                                        ? 'bg-blue-600 text-white'
                                                                         : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                                                                 }`}
                                                             >
@@ -1200,7 +1210,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                 <div className="bg-white border-t border-slate-200 px-4 py-3 flex-shrink-0">
                     <button
                         onClick={handleSubmit}
-                        className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold shadow-sm active:scale-[0.98] transition-all"
                     >
                         📝 제출하기 ({totalAnswered}/{totalProblems} 완료)
                     </button>

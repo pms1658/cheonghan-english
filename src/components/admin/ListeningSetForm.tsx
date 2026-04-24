@@ -17,20 +17,20 @@ interface ListeningSetFormProps {
 }
 
 const GRADE_OPTIONS = [
-    { v: '1', l: '고1' },
-    { v: '2', l: '고2' },
-    { v: '3', l: '고3/수능' },
+    { v: '1', l: '�?' },
+    { v: '2', l: '�?' },
+    { v: '3', l: '�?/?�능' },
 ];
 
 const BATCH_LABELS = [
-    { key: 'listening_1_5', label: '듣기 1~5번', icon: '🔊' },
-    { key: 'listening_6_10', label: '듣기 6~10번', icon: '🔊' },
-    { key: 'listening_11_15', label: '듣기 11~15번', icon: '🔊' },
-    { key: 'listening_16_17', label: '듣기 16~17번', icon: '🔁' },
-    { key: 'reading_18_20', label: '독해 18~20번', icon: '📖' },
-    { key: 'reading_25_28', label: '독해 25~28번', icon: '📖' },
-    { key: 'reading_43_45', label: '독해 43~45번', icon: '📖' },
-    { key: 'picture', label: '4번 그림 생성', icon: '🖼️' },
+    { key: 'listening_1_5', label: '?�기 1~5�?, icon: '?��' },
+    { key: 'listening_6_10', label: '?�기 6~10�?, icon: '?��' },
+    { key: 'listening_11_15', label: '?�기 11~15�?, icon: '?��' },
+    { key: 'listening_16_17', label: '?�기 16~17�?, icon: '?��' },
+    { key: 'reading_18_20', label: '?�해 18~20�?, icon: '?��' },
+    { key: 'reading_25_28', label: '?�해 25~28�?, icon: '?��' },
+    { key: 'reading_43_45', label: '?�해 43~45�?, icon: '?��' },
+    { key: 'picture', label: '4�?그림 ?�성', icon: '?���? },
 ];
 
 export default function ListeningSetForm({ selectedClass, initialData, onBack, onSave }: ListeningSetFormProps) {
@@ -120,7 +120,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
         return () => { alive = false; };
     }, []);
 
-    // ── Generate ──
+    // ?�?� Generate ?�?�
     const handleGenerate = async () => {
         setIsGenerating(true);
         setGenerationProgress(0);
@@ -139,7 +139,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.error || '생성 실패');
+                throw new Error(err.error || '?�성 ?�패');
             }
 
             const data = await res.json();
@@ -168,15 +168,15 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
             setGenerationProgress(100);
 
             const total = (data.listeningProblems?.length || 0) + (data.readingProblems?.length || 0);
-            toast.success(`✅ 총 ${total}문제 생성 완료!`);
+            toast.success(`??�?${total}문제 ?�성 ?�료!`);
         } catch (error: any) {
-            toast.error(`생성 실패: ${error.message}`);
+            toast.error(`?�성 ?�패: ${error.message}`);
         } finally {
             setIsGenerating(false);
         }
     };
 
-    // ── Helper: create WAV header (PCM 16-bit 16kHz mono) ──
+    // ?�?� Helper: create WAV header (PCM 16-bit 16kHz mono) ?�?�
     const createWavHeader = (pcmLength: number): Uint8Array => {
         const sampleRate = 16000, channels = 1, bitsPerSample = 16;
         const byteRate = sampleRate * channels * bitsPerSample / 8;
@@ -203,13 +203,13 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
         return new Uint8Array(header);
     };
 
-    // ── Helper: create silence bytes (PCM 16-bit 16kHz mono) ──
+    // ?�?� Helper: create silence bytes (PCM 16-bit 16kHz mono) ?�?�
     const createSilenceBytes = (durationMs: number): Uint8Array => {
         const samples = Math.floor((durationMs / 1000) * 16000);
         return new Uint8Array(samples * 2); // 16-bit = 2 bytes
     };
 
-    // ── Helper: fade-in/fade-out for click noise prevention ──
+    // ?�?� Helper: fade-in/fade-out for click noise prevention ?�?�
     const applyFadeBytes = (pcm: Uint8Array, fadeSamples = 80): Uint8Array => {
         const result = new Uint8Array(pcm);
         const view = new DataView(result.buffer, result.byteOffset, result.byteLength);
@@ -229,16 +229,16 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
         return result;
     };
 
-    // ── AI Picture Generation (Imagen 4) ──
+    // ?�?� AI Picture Generation (Imagen 4) ?�?�
     const handleGenerateImage = async (problemIndex: number) => {
         const problem = listeningProblems[problemIndex];
         if (!problem.pictureDescription) {
-            toast.error('그림 묘사(pictureDescription)가 없습니다.');
+            toast.error('그림 묘사(pictureDescription)가 ?�습?�다.');
             return;
         }
 
         setIsGeneratingImage(true);
-        const toastId = toast.loading('AI 그림 생성 중...');
+        const toastId = toast.loading('AI 그림 ?�성 �?..');
 
         try {
             const res = await fetch('/api/generate-image', {
@@ -256,7 +256,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
             if (!data.imageBase64) throw new Error('No image returned');
 
             // Upload to Firebase Storage
-            toast.loading('생성된 이미지 저장 중...', { id: toastId });
+            toast.loading('?�성???��?지 ?�??�?..', { id: toastId });
             const byteCharacters = atob(data.imageBase64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -275,21 +275,21 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
             newProblems[problemIndex] = { ...problem, pictureUrl: url };
             setListeningProblems(newProblems);
 
-            toast.success('AI 그림 생성 및 저장 완료!', { id: toastId });
+            toast.success('AI 그림 ?�성 �??�???�료!', { id: toastId });
         } catch (error: any) {
             console.error('Image generation error:', error);
-            toast.error(`생성 실패: ${error.message}`, { id: toastId });
+            toast.error(`?�성 ?�패: ${error.message}`, { id: toastId });
         } finally {
             setIsGeneratingImage(false);
         }
     };
 
-    // ── Manual Picture Upload ──
+    // ?�?� Manual Picture Upload ?�?�
     const handleUploadImage = async (problemIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const toastId = toast.loading('이미지 업로드 중...');
+        const toastId = toast.loading('?��?지 ?�로??�?..');
         try {
             const assignmentId = initialData?.id || `ls_${Date.now()}`;
             const problem = listeningProblems[problemIndex];
@@ -301,16 +301,16 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
             newProblems[problemIndex] = { ...problem, pictureUrl: url };
             setListeningProblems(newProblems);
 
-            toast.success('업로드 완료!', { id: toastId });
+            toast.success('?�로???�료!', { id: toastId });
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast.error(`업로드 실패: ${error.message}`, { id: toastId });
+            toast.error(`?�로???�패: ${error.message}`, { id: toastId });
         }
     };
 
-    // ── TTS Pre-cache: via /api/tts-problem (MP3 압축) → Firebase ──
+    // ?�?� TTS Pre-cache: via /api/tts-problem (MP3 ?�축) ??Firebase ?�?�
     const handleGenerateTTS = async () => {
-        if (listeningProblems.length === 0) return toast.warning('문제를 먼저 생성해주세요.');
+        if (listeningProblems.length === 0) return toast.warning('문제�?먼�? ?�성?�주?�요.');
 
         setIsGeneratingTTS(true);
         setTtsProgress(0);
@@ -326,10 +326,10 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                 continue;
             }
 
-            setTtsCurrentLabel(`${problem.number}번 음성 생성 중... (${i + 1}/${listeningProblems.length})`);
+            setTtsCurrentLabel(`${problem.number}�??�성 ?�성 �?.. (${i + 1}/${listeningProblems.length})`);
 
             try {
-                // ★ 서버에서 한 번에 결합 + MP3 압축
+                // ???�버?�서 ??번에 결합 + MP3 ?�축
                 const res = await fetch('/api/tts-problem', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -357,18 +357,18 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                 for (let j = 0; j < binaryStr.length; j++) bytes[j] = binaryStr.charCodeAt(j);
 
                 // Upload MP3 to Firebase Storage
-                setTtsCurrentLabel(`${problem.number}번 업로드 중...`);
+                setTtsCurrentLabel(`${problem.number}�??�로??�?..`);
                 const ext = data.format === 'mp3' ? 'mp3' : 'wav';
                 const contentType = data.format === 'mp3' ? 'audio/mpeg' : 'audio/wav';
                 const storageRef = ref(storage, `tts/${assignmentId}/problem_${problem.number}.${ext}`);
                 await uploadBytes(storageRef, bytes, { contentType });
                 const url = await getDownloadURL(storageRef);
                 audioUrls[problem.number] = url;
-                toast.success(`✅ ${problem.number}번 완료 (${(bytes.length / 1024).toFixed(0)}KB ${ext.toUpperCase()})`);
+                toast.success(`??${problem.number}�??�료 (${(bytes.length / 1024).toFixed(0)}KB ${ext.toUpperCase()})`);
 
             } catch (err: any) {
                 console.error(`TTS error for problem ${problem.number}:`, err.message);
-                toast.error(`${problem.number}번 실패: ${err.message?.slice(0, 50)}`);
+                toast.error(`${problem.number}�??�패: ${err.message?.slice(0, 50)}`);
                 failCount++;
             }
 
@@ -385,17 +385,17 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
         const successCount = Object.keys(audioUrls).length;
         if (failCount > 0) {
-            toast.warning(`🔊 TTS 완료: ${successCount}개 성공, ${failCount}개 실패`);
+            toast.warning(`?�� TTS ?�료: ${successCount}�??�공, ${failCount}�??�패`);
         } else {
-            toast.success(`🔊 TTS MP3 생성 완료! ${successCount}/${listeningProblems.length}개 캐싱됨`);
+            toast.success(`?�� TTS MP3 ?�성 ?�료! ${successCount}/${listeningProblems.length}�?캐싱??);
         }
         setIsGeneratingTTS(false);
         setTtsCurrentLabel('');
     };
 
     const handleSave = async () => {
-        if (!title.trim()) return toast.warning('제목을 입력해주세요.');
-        if (listeningProblems.length === 0) return toast.warning('문제를 먼저 생성해주세요.');
+        if (!title.trim()) return toast.warning('?�목???�력?�주?�요.');
+        if (listeningProblems.length === 0) return toast.warning('문제�?먼�? ?�성?�주?�요.');
 
         const today = new Date();
         const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -449,8 +449,8 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         </button>
                         <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 bg-teal-600 text-white text-[10px] font-bold rounded">🎧 듣기</span>
-                            <h1 className="text-lg font-bold text-slate-900">듣기세트 생성</h1>
+                            <span className="px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded">?�� ?�기</span>
+                            <h1 className="text-lg font-bold text-slate-900">?�기?�트 ?�성</h1>
                         </div>
                     </div>
                     <button
@@ -458,7 +458,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                         disabled={!hasResults}
                         className="px-4 py-1.5 bg-[#1e3a5f] text-white rounded-lg text-sm font-bold shadow-lg hover:bg-[#2a4d75] disabled:opacity-50 transition-colors"
                     >
-                        저장
+                        ?�??
                     </button>
                 </div>
             </header>
@@ -467,7 +467,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                 {/* 1. Settings */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5">
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">시험 제목</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">?�험 ?�목</label>
                         <div className="relative">
                             <input
                                 type="text"
@@ -475,8 +475,8 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                 onChange={(e) => { setTitle(e.target.value); setShowTitleSuggestions(true); }}
                                 onFocus={() => setShowTitleSuggestions(true)}
                                 onBlur={() => setTimeout(() => setShowTitleSuggestions(false), 200)}
-                                placeholder="예) 2024년 9월 모의고사 듣기세트"
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none"
+                                placeholder="?? 2024??9??모의고사 ?�기?�트"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
                             />
                             {showTitleSuggestions && titleSuggestions.length > 0 && (
                                 <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-[320px] overflow-y-auto">
@@ -499,7 +499,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">학년</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">?�년</label>
                             <div className="flex gap-2">
                                 {GRADE_OPTIONS.map(g => (
                                     <button
@@ -507,7 +507,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                         onClick={() => setTargetGrade(g.v)}
                                         className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-colors ${
                                             targetGrade === g.v
-                                                ? 'bg-teal-600 text-white border-teal-600'
+                                                ? 'bg-blue-600 text-white border-blue-600'
                                                 : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                                         }`}
                                     >
@@ -519,7 +519,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                         <div>
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">문제 구성</label>
                             <div className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
-                                🔊 듣기 17문제 + 📖 독해 10문제 = <span className="font-bold text-teal-700">총 27문제</span>
+                                ?�� ?�기 17문제 + ?�� ?�해 10문제 = <span className="font-bold text-blue-700">�?27문제</span>
                             </div>
                         </div>
                     </div>
@@ -534,17 +534,17 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                     <button
                         onClick={handleGenerate}
                         disabled={isGenerating}
-                        className="w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                     >
                         {isGenerating ? (
                             <>
                                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                                AI 생성 중... (약 30~60초 소요)
+                                AI ?�성 �?.. (??30~60�??�요)
                             </>
                         ) : hasResults ? (
-                            '🔄 다시 생성'
+                            '?�� ?�시 ?�성'
                         ) : (
-                            '🎧 듣기세트 생성'
+                            '?�� ?�기?�트 ?�성'
                         )}
                     </button>
                 </div>
@@ -552,7 +552,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                 {/* 2. Generation Progress */}
                 {isGenerating && (
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-                        <h2 className="text-sm font-bold text-slate-700 mb-4">⏳ 생성 진행도</h2>
+                        <h2 className="text-sm font-bold text-slate-700 mb-4">???�성 진행??/h2>
                         <div className="space-y-2">
                             {BATCH_LABELS.map(b => (
                                 <div key={b.key} className="flex items-center gap-3">
@@ -565,13 +565,13 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                             ? 'bg-red-100 text-red-700'
                                             : 'bg-amber-100 text-amber-700'
                                     }`}>
-                                        {batchStatus[b.key] === 'done' ? '✅ 완료' : batchStatus[b.key] === 'error' ? '❌ 실패' : '⏳ 생성 중...'}
+                                        {batchStatus[b.key] === 'done' ? '???�료' : batchStatus[b.key] === 'error' ? '???�패' : '???�성 �?..'}
                                     </span>
                                 </div>
                             ))}
                         </div>
                         <div className="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full animate-pulse" style={{ width: '60%' }} />
+                            <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full animate-pulse" style={{ width: '60%' }} />
                         </div>
                     </div>
                 )}
@@ -581,15 +581,15 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                                    🔊 TTS 사전 캐싱
+                                    ?�� TTS ?�전 캐싱
                                     {Object.keys(cachedAudioUrls).length > 0 && (
                                         <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
-                                            ✅ {Object.keys(cachedAudioUrls).length}개 완료
+                                            ??{Object.keys(cachedAudioUrls).length}�??�료
                                         </span>
                                     )}
                                 </h2>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    학생 듣기 시 딜레이 없이 즉시 재생됩니다. 저장 전에 생성하세요.
+                                    ?�생 ?�기 ???�레???�이 즉시 ?�생?�니?? ?�???�에 ?�성?�세??
                                 </p>
                             </div>
                             <button
@@ -600,12 +600,12 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                 {isGeneratingTTS ? (
                                     <>
                                         <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                                        생성 중...
+                                        ?�성 �?..
                                     </>
                                 ) : Object.keys(cachedAudioUrls).length > 0 ? (
-                                    '🔄 다시 생성'
+                                    '?�� ?�시 ?�성'
                                 ) : (
-                                    '🔊 TTS 생성'
+                                    '?�� TTS ?�성'
                                 )}
                             </button>
                         </div>
@@ -653,7 +653,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-red-100 text-red-500'
                                         }`}
-                                        title={cachedAudioUrls[p.number] ? '캐싱 완료' : '미캐싱'}
+                                        title={cachedAudioUrls[p.number] ? '캐싱 ?�료' : '미캐??}
                                     >
                                         {p.number}
                                     </div>
@@ -672,21 +672,21 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                 onClick={() => setReviewTab('listening')}
                                 className={`flex-1 py-3 rounded-xl font-bold text-sm transition-colors ${
                                     reviewTab === 'listening'
-                                        ? 'bg-teal-600 text-white shadow-md'
+                                        ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-white text-slate-500 border border-slate-200'
                                 }`}
                             >
-                                🔊 듣기 ({listeningProblems.length}문제)
+                                ?�� ?�기 ({listeningProblems.length}문제)
                             </button>
                             <button
                                 onClick={() => setReviewTab('reading')}
                                 className={`flex-1 py-3 rounded-xl font-bold text-sm transition-colors ${
                                     reviewTab === 'reading'
-                                        ? 'bg-teal-600 text-white shadow-md'
+                                        ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-white text-slate-500 border border-slate-200'
                                 }`}
                             >
-                                📖 독해 ({readingProblems.length}문제)
+                                ?�� ?�해 ({readingProblems.length}문제)
                             </button>
                         </div>
 
@@ -698,13 +698,13 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                     className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="w-8 h-8 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold">{p.number}</span>
+                                        <span className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">{p.number}</span>
                                         <div className="text-left">
                                             <div className="text-sm font-bold text-slate-800">{p.instruction?.slice(0, 40)}...</div>
                                             <div className="text-xs text-slate-500 mt-0.5">
-                                                대본 {p.script?.length || 0}줄 · 정답 ⓪①②③④⑤[{(p.correctAnswer || 0) + 1}]
-                                                {p.needsMemo && ' · 📝메모'}
-                                                {p.playTwice && ' · 🔁두번재생'}
+                                                ?��?{p.script?.length || 0}�?· ?�답 ?�①?�③?�⑤[{(p.correctAnswer || 0) + 1}]
+                                                {p.needsMemo && ' · ?��메모'}
+                                                {p.playTwice && ' · ?��?�번?�생'}
                                             </div>
                                         </div>
                                     </div>
@@ -715,7 +715,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                     <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-4">
                                         {/* Script */}
                                         <div>
-                                            <h4 className="text-xs font-bold text-slate-500 mb-2">📜 대본</h4>
+                                            <h4 className="text-xs font-bold text-slate-500 mb-2">?�� ?��?/h4>
                                             <div className="bg-slate-50 rounded-xl p-3 space-y-1 max-h-60 overflow-y-auto text-sm">
                                                 {p.script?.map((line, li) => (
                                                     <div key={li} className="flex gap-2">
@@ -732,30 +732,30 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
                                         {/* Choices */}
                                         <div>
-                                            <h4 className="text-xs font-bold text-slate-500 mb-2">선택지</h4>
+                                            <h4 className="text-xs font-bold text-slate-500 mb-2">?�택지</h4>
                                             <div className="space-y-1.5">
                                                 {p.choices?.map((c, ci) => (
-                                                    <div key={ci} className={`flex gap-2 text-sm ${ci === p.correctAnswer ? 'font-bold text-teal-700' : 'text-slate-600'}`}>
+                                                    <div key={ci} className={`flex gap-2 text-sm ${ci === p.correctAnswer ? 'font-bold text-blue-700' : 'text-slate-600'}`}>
                                                         <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold ${
-                                                            ci === p.correctAnswer ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-500'
+                                                            ci === p.correctAnswer ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'
                                                         }`}>{ci + 1}</span>
                                                         <span>{c}</span>
-                                                        {ci === p.correctAnswer && <span className="text-[10px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded font-bold">정답</span>}
+                                                        {ci === p.correctAnswer && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">?�답</span>}
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        {/* 4번 그림 관리 */}
+                                        {/* 4�?그림 관�?*/}
                                         {p.number === 4 && (
                                             <div>
                                                 <h4 className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
-                                                    <span>🖼️ 그림 (4번 전용)</span>
+                                                    <span>?���?그림 (4�??�용)</span>
                                                 </h4>
                                                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-4">
                                                     {(p as any).pictureDescription && (
                                                         <p className="text-[11px] text-amber-700 italic flex gap-1">
-                                                            <span className="font-bold">프롬프트:</span> {(p as any).pictureDescription}
+                                                            <span className="font-bold">?�롬?�트:</span> {(p as any).pictureDescription}
                                                         </p>
                                                     )}
                                                     
@@ -764,15 +764,15 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                                         <button
                                                             onClick={(e) => { e.preventDefault(); handleGenerateImage(idx); }}
                                                             disabled={isGeneratingImage}
-                                                            className="px-3 py-1.5 bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-lg text-[11px] font-bold shadow hover:shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-[11px] font-bold shadow hover:shadow-md disabled:opacity-50 flex items-center gap-1.5"
                                                         >
                                                             {isGeneratingImage ? (
                                                                 <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                                                            ) : '🤖 AI 모의고사 그림 생성'}
+                                                            ) : '?�� AI 모의고사 그림 ?�성'}
                                                         </button>
                                                         
                                                         <label className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-[11px] font-bold shadow-sm hover:bg-slate-50 cursor-pointer flex items-center gap-1.5">
-                                                            <span>📤 직접 업로드</span>
+                                                            <span>?�� 직접 ?�로??/span>
                                                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadImage(idx, e)} />
                                                         </label>
                                                     </div>
@@ -780,8 +780,8 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                                     {/* Preview */}
                                                     {p.pictureUrl ? (
                                                         <div className="relative border-2 border-slate-300 rounded-lg overflow-hidden bg-white max-w-sm mt-3">
-                                                            <div className="text-[10px] text-teal-600 bg-teal-50 px-2 py-1 text-center font-bold">
-                                                                👇 이미지를 클릭하여 기호(①~⑤)를 배치하세요
+                                                            <div className="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 text-center font-bold">
+                                                                ?�� ?��?지�??�릭?�여 기호(????�?배치?�세??
                                                             </div>
                                                             <div className="relative w-full" onClick={(e) => {
                                                                 const rect = e.currentTarget.getBoundingClientRect();
@@ -811,13 +811,13 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                                                     }}
                                                                     className="w-full mt-1 py-1.5 bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition-colors"
                                                                 >
-                                                                    🗑️ 기호 초기화
+                                                                    ?���?기호 초기??
                                                                 </button>
                                                             )}
                                                         </div>
                                                     ) : (p as any).pictureElements ? (
                                                         <div className="mt-3">
-                                                            <div className="text-[10px] text-slate-500 mb-1">⚠️ 그림이 생성/업로드되지 않으면 아래 기본 아이콘 형태로 제공됩니다.</div>
+                                                            <div className="text-[10px] text-slate-500 mb-1">?�️ 그림???�성/?�로?�되지 ?�으�??�래 기본 ?�이�??�태�??�공?�니??</div>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {((p as any).pictureElements as any[]).map((el: any, ei: number) => (
                                                                     <div key={ei} className="flex items-start gap-2 bg-white rounded-lg p-2 border border-amber-100">
@@ -835,10 +835,10 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                             </div>
                                         )}
 
-                                        {/* 10번 도표(표) 미리보기 */}
+                                        {/* 10�??�표(?? 미리보기 */}
                                         {p.number === 10 && (p as any).chartData && (
                                             <div>
-                                                <h4 className="text-xs font-bold text-slate-500 mb-2">📊 표 미리보기</h4>
+                                                <h4 className="text-xs font-bold text-slate-500 mb-2">?�� ??미리보기</h4>
                                                 <div className="bg-violet-50 rounded-xl p-4 border border-violet-200">
                                                     <ChartRenderer chartData={(p as any).chartData} />
                                                 </div>
@@ -846,9 +846,9 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                         )}
 
                                         {/* Explanation */}
-                                        <div className="bg-teal-50 rounded-xl p-3">
-                                            <div className="text-[11px] font-bold text-teal-700 mb-1">💡 해설</div>
-                                            <div className="text-sm text-teal-800">{p.explanation}</div>
+                                        <div className="bg-blue-50 rounded-xl p-3">
+                                            <div className="text-[11px] font-bold text-blue-700 mb-1">?�� ?�설</div>
+                                            <div className="text-sm text-blue-800">{p.explanation}</div>
                                         </div>
                                     </div>
                                 )}
@@ -863,13 +863,13 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
                                     className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="w-8 h-8 bg-cyan-100 text-cyan-700 rounded-full flex items-center justify-center text-sm font-bold">{p.number}</span>
+                                        <span className="w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold">{p.number}</span>
                                         <div className="text-left">
                                             <div className="text-sm font-bold text-slate-800">{p.question?.slice(0, 40)}...</div>
                                             <div className="text-xs text-slate-500 mt-0.5">
-                                                지문 {p.passage?.length || 0}자 · 정답 [{(p.correctAnswer || 0) + 1}]
-                                                {p.chartData && ' · 📊도표'}
-                                                {p.longPassageGroup && ' · 📖장문'}
+                                                지�?{p.passage?.length || 0}??· ?�답 [{(p.correctAnswer || 0) + 1}]
+                                                {p.chartData && ' · ?��?�표'}
+                                                {p.longPassageGroup && ' · ?��?�문'}
                                             </div>
                                         </div>
                                     </div>
@@ -878,10 +878,10 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
                                 {expandedProblem === p.number && (
                                     <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-4">
-                                        {/* 25번 도표 미리보기 */}
+                                        {/* 25�??�표 미리보기 */}
                                         {p.number === 25 && p.chartData && (
                                             <div>
-                                                <h4 className="text-xs font-bold text-slate-500 mb-2">📊 도표 미리보기</h4>
+                                                <h4 className="text-xs font-bold text-slate-500 mb-2">?�� ?�표 미리보기</h4>
                                                 <div className="bg-violet-50 rounded-xl p-4 border border-violet-200">
                                                     <ChartRenderer chartData={p.chartData as any} />
                                                 </div>
@@ -890,7 +890,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
                                         {/* Passage */}
                                         <div>
-                                            <h4 className="text-xs font-bold text-slate-500 mb-2">📖 지문</h4>
+                                            <h4 className="text-xs font-bold text-slate-500 mb-2">?�� 지�?/h4>
                                             <div className="bg-slate-50 rounded-xl p-4 text-sm leading-relaxed text-slate-700 max-h-60 overflow-y-auto whitespace-pre-wrap">
                                                 {typeof p.passage === 'string' ? p.passage : JSON.stringify(p.passage, null, 2)}
                                             </div>
@@ -898,7 +898,7 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
                                         {/* Paragraphs for 43-45 */}
                                         {p.paragraphs && (() => {
-                                            // AI가 {A: "...", B: "...", C: "...", D: "..."} 형태로 줄 때 배열로 정규화
+                                            // AI가 {A: "...", B: "...", C: "...", D: "..."} ?�태�?�???배열�??�규??
                                             let parasArray: { label: string; text: string }[] = [];
                                             if (Array.isArray(p.paragraphs)) {
                                                 parasArray = p.paragraphs;
@@ -923,24 +923,24 @@ export default function ListeningSetForm({ selectedClass, initialData, onBack, o
 
                                         {/* Choices */}
                                         <div>
-                                            <h4 className="text-xs font-bold text-slate-500 mb-2">선택지</h4>
+                                            <h4 className="text-xs font-bold text-slate-500 mb-2">?�택지</h4>
                                             <div className="space-y-1.5">
                                                 {p.choices?.map((c, ci) => (
-                                                    <div key={ci} className={`flex gap-2 text-sm ${ci === p.correctAnswer ? 'font-bold text-cyan-700' : 'text-slate-600'}`}>
+                                                    <div key={ci} className={`flex gap-2 text-sm ${ci === p.correctAnswer ? 'font-bold text-indigo-700' : 'text-slate-600'}`}>
                                                         <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold ${
-                                                            ci === p.correctAnswer ? 'bg-cyan-600 text-white' : 'bg-slate-200 text-slate-500'
+                                                            ci === p.correctAnswer ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'
                                                         }`}>{ci + 1}</span>
                                                         <span>{typeof c === 'string' ? c : JSON.stringify(c)}</span>
-                                                        {ci === p.correctAnswer && <span className="text-[10px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded font-bold">정답</span>}
+                                                        {ci === p.correctAnswer && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-bold">?�답</span>}
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
                                         {/* Explanation */}
-                                        <div className="bg-cyan-50 rounded-xl p-3">
-                                            <div className="text-[11px] font-bold text-cyan-700 mb-1">💡 해설</div>
-                                            <div className="text-sm text-cyan-800">{typeof p.explanation === 'string' ? p.explanation : JSON.stringify(p.explanation)}</div>
+                                        <div className="bg-indigo-50 rounded-xl p-3">
+                                            <div className="text-[11px] font-bold text-indigo-700 mb-1">?�� ?�설</div>
+                                            <div className="text-sm text-indigo-800">{typeof p.explanation === 'string' ? p.explanation : JSON.stringify(p.explanation)}</div>
                                         </div>
                                     </div>
                                 )}

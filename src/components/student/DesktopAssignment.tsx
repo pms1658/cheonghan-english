@@ -136,7 +136,9 @@ export default function DesktopAssignment({
                     <ListeningSetAssignment
                         assignment={assignment as any}
                         onSubmit={(answers) => {
-                            // Submission is handled internally; navigate back after
+                            // Don't navigate — let the child show its own results screen
+                        }}
+                        onExit={() => {
                             const finalClassId = queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || '';
                             router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
                         }}

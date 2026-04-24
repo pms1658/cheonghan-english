@@ -108,6 +108,9 @@ export default function MobileAssignment({
                     <ListeningSetAssignment
                         assignment={assignment as any}
                         onSubmit={(answers) => {
+                            // Don't navigate — let the child show its own results screen
+                        }}
+                        onExit={() => {
                             const finalClassId = queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || '';
                             router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
                         }}
