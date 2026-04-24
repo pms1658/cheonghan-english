@@ -962,9 +962,34 @@ export default function ListeningSetAssignment({ assignment, onSubmit, onExit }:
                                                         return parasArray.map((para, pi) => {
                                                             const sentences: string[] = para.text.match(/[^.!?]+[.!?]+/g) || [para.text];
                                                         return (
-                                                            <div key={pi} className="border border-slate-300 rounded-lg p-3 mx-2 bg-slate-50">
-                                                                <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">{String(para.label || '')}</span>
-                                                                <div className="text-sm text-slate-700 mt-2 leading-relaxed">
+                                                            <div key={pi} className="border border-slate-200/30 rounded-lg p-3 mx-2 bg-slate-50/50">
+                                                                <div className="text-sm text-slate-700 leading-relaxed">
+                                                                    {/* (A)~(D) label inline with text */}
+                                                                    {(() => {
+                                                                        const label = String(para.label || '');
+                                                                        const orderIdx = orderSequence.indexOf(`(${label.replace(/[()]/g, '')})`);
+                                                                        const normalizedLabel = label.match(/^\(/) ? label : `(${label})`;
+                                                                        const oIdx = orderSequence.indexOf(normalizedLabel);
+                                                                        const colorSet = oIdx >= 0 ? ORDER_COLORS[oIdx % ORDER_COLORS.length] : null;
+                                                                        const colorClass = colorSet
+                                                                            ? `${colorSet.bg} ${colorSet.text}`
+                                                                            : 'bg-indigo-100 text-indigo-700';
+                                                                        const orderLabel = oIdx >= 0 ? `${oIdx + 1}` : '';
+                                                                        return (
+                                                                            <span
+                                                                                onClick={(e) => { e.stopPropagation(); toggleOrderColor(normalizedLabel); }}
+                                                                                className={`inline-block text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer mr-1.5 relative transition-colors ${colorClass}`}
+                                                                                title="클릭하여 순서 표시"
+                                                                            >
+                                                                                {label}
+                                                                                {orderLabel && (
+                                                                                    <span className="absolute -top-2.5 -right-2.5 text-[9px] font-black bg-white rounded-full w-4 h-4 flex items-center justify-center shadow-sm border border-slate-300">
+                                                                                        {orderLabel}
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
+                                                                        );
+                                                                    })()}
                                                                     {sentences.map((sentence: string) => {
                                                                         const idx = globalSentenceIdx++;
                                                                         const isHighlighted = (highlights[9999] || []).includes(idx);
