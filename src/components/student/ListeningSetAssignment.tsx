@@ -1164,7 +1164,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit, onExit }:
                                                             <ChartRenderer chartData={problem.chartData as any} />
                                                             {/* 도표 아래 지문 — ①~⑤ 클릭 선택 */}
                                                             {problem.passage && (
-                                                                <div className="mt-3 pt-3 border-t border-slate-200 text-sm leading-relaxed text-slate-700">
+                                                                <div className="mt-4 pt-4 border-t border-slate-200 text-[15px] leading-[1.8] text-slate-700">
                                                                     {(() => {
                                                                         const markers = ['①', '②', '③', '④', '⑤'];
                                                                         // Split passage by ①~⑤ markers
@@ -1177,10 +1177,10 @@ export default function ListeningSetAssignment({ assignment, onSubmit, onExit }:
                                                                                     <span
                                                                                         key={pi}
                                                                                         onClick={() => selectReadingAnswer(problem.number, markerIdx)}
-                                                                                        className={`inline-block cursor-pointer font-bold px-0.5 rounded transition-all ${
+                                                                                        className={`inline-flex items-center justify-center cursor-pointer font-black text-[17px] w-7 h-7 rounded-full mx-0.5 transition-all ${
                                                                                             isSelected
-                                                                                                ? 'bg-blue-600 text-white scale-110'
-                                                                                                : 'text-blue-700 hover:bg-blue-100'
+                                                                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 scale-110'
+                                                                                                : 'text-blue-700 hover:bg-blue-100 hover:scale-105'
                                                                                         }`}
                                                                                         title={`${part} 선택`}
                                                                                     >

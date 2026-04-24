@@ -362,12 +362,12 @@ export default function ChartRenderer({ chartData }: ChartRendererProps) {
     const maxLabelLen = Math.max(...labels.map(l => l.length));
     const needsRotation = maxLabelLen > 8 || labels.length > 5;
 
-    const W = 420;
-    const padLeft = 55;
-    const padRight = 20;
-    const padTop = 15;
-    const padBottom = needsRotation ? 80 : 45;
-    const H = 250 + (needsRotation ? 35 : 0);
+    const W = 480;
+    const padLeft = 60;
+    const padRight = 25;
+    const padTop = 20;
+    const padBottom = needsRotation ? 90 : 50;
+    const H = 280 + (needsRotation ? 40 : 0);
     const chartW = W - padLeft - padRight;
     const chartH = H - padTop - padBottom;
 
@@ -378,16 +378,16 @@ export default function ChartRenderer({ chartData }: ChartRendererProps) {
     const yScale = (val: number) => padTop + chartH - (val / niceMax) * chartH;
     const groupWidth = chartW / labels.length;
     const barCount = numericData.length;
-    const barW = Math.min(groupWidth * 0.7 / barCount, 30);
-    const barGap = 2;
+    const barW = Math.min(groupWidth * 0.7 / barCount, 35);
+    const barGap = 3;
 
     return (
         <div>
-            <h4 className="text-xs font-bold text-slate-700 mb-1 text-center leading-tight">{title}</h4>
+            <h4 className="text-sm font-bold text-slate-800 mb-2 text-center leading-tight">{title}</h4>
             <div className="flex justify-center">
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[440px]" style={{ fontFamily: 'serif' }}>
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[500px]" style={{ fontFamily: 'serif' }}>
                     {/* Y-axis unit */}
-                    <text x={padLeft - 5} y={padTop - 4} textAnchor="end" fontSize="9" fill="#666">{unit.trim()}</text>
+                    <text x={padLeft - 5} y={padTop - 6} textAnchor="end" fontSize="11" fill="#555" fontWeight="bold">{unit.trim()}</text>
 
                     {/* Grid + Y labels */}
                     {Array.from({ length: yTicks + 1 }, (_, i) => {
@@ -395,8 +395,8 @@ export default function ChartRenderer({ chartData }: ChartRendererProps) {
                         const y = yScale(val);
                         return (
                             <g key={i}>
-                                <line x1={padLeft} y1={y} x2={W - padRight} y2={y} stroke="#e0e0e0" strokeWidth="0.5" />
-                                <text x={padLeft - 8} y={y + 3} textAnchor="end" fontSize="9" fill="#666">
+                                <line x1={padLeft} y1={y} x2={W - padRight} y2={y} stroke="#ddd" strokeWidth="0.8" strokeDasharray={i === 0 ? '' : '3,3'} />
+                                <text x={padLeft - 10} y={y + 4} textAnchor="end" fontSize="11" fill="#555">
                                     {val.toFixed(val % 1 === 0 ? 0 : 1)}
                                 </text>
                             </g>
@@ -412,16 +412,17 @@ export default function ChartRenderer({ chartData }: ChartRendererProps) {
                                 {needsRotation ? (
                                     <text
                                         x={groupX}
-                                        y={H - padBottom + 12}
+                                        y={H - padBottom + 14}
                                         textAnchor="end"
-                                        fontSize="8"
+                                        fontSize="10"
                                         fill="#333"
-                                        transform={`rotate(-40, ${groupX}, ${H - padBottom + 12})`}
+                                        fontWeight="bold"
+                                        transform={`rotate(-40, ${groupX}, ${H - padBottom + 14})`}
                                     >
                                         {label}
                                     </text>
                                 ) : (
-                                    <text x={groupX} y={H - padBottom + 16} textAnchor="middle" fontSize="9" fill="#333">
+                                    <text x={groupX} y={H - padBottom + 18} textAnchor="middle" fontSize="11" fill="#333" fontWeight="bold">
                                         {label}
                                     </text>
                                 )}
@@ -435,8 +436,8 @@ export default function ChartRenderer({ chartData }: ChartRendererProps) {
                                     return (
                                         <g key={di}>
                                             <rect x={bx} y={by} width={barW} height={Math.max(bh, 0)}
-                                                fill={COLORS[di % COLORS.length]} />
-                                            <text x={bx + barW / 2} y={by - 3} textAnchor="middle" fontSize="7" fill="#333" fontWeight="bold">
+                                                fill={COLORS[di % COLORS.length]} rx="1" />
+                                            <text x={bx + barW / 2} y={by - 5} textAnchor="middle" fontSize="10" fill="#333" fontWeight="bold">
                                                 {val}
                                             </text>
                                         </g>
@@ -447,8 +448,8 @@ export default function ChartRenderer({ chartData }: ChartRendererProps) {
                     })}
 
                     {/* Axes */}
-                    <line x1={padLeft} y1={padTop} x2={padLeft} y2={H - padBottom} stroke="#333" strokeWidth="1" />
-                    <line x1={padLeft} y1={H - padBottom} x2={W - padRight} y2={H - padBottom} stroke="#333" strokeWidth="1" />
+                    <line x1={padLeft} y1={padTop} x2={padLeft} y2={H - padBottom} stroke="#333" strokeWidth="1.5" />
+                    <line x1={padLeft} y1={H - padBottom} x2={W - padRight} y2={H - padBottom} stroke="#333" strokeWidth="1.5" />
 
                     {/* Legend */}
                     {numericData.length > 1 && (
