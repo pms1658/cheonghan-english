@@ -1,31 +1,29 @@
 @echo off
 chcp 65001 > nul
-title 청한영어 - Push (백업만)
+title CheongHan - Push
 echo.
-echo  ┌─────────────────────────────────────┐
-echo  │   청한영어 - GitHub 백업 (배포X)    │
-echo  └─────────────────────────────────────┘
+echo  ========================================
+echo   CheongHan English - GitHub Backup Only
+echo  ========================================
 echo.
 
-:: Pull first to avoid conflicts
-echo  [1/2] 최신 코드 확인 중...
+echo  [1/2] Pulling latest first...
 "C:\Program Files\Git\bin\git.exe" pull origin master --rebase
 echo.
 
-:: Commit and push
-echo  [2/2] GitHub에 백업 중...
+echo  [2/2] Pushing to GitHub...
 "C:\Program Files\Git\bin\git.exe" add .
 "C:\Program Files\Git\bin\git.exe" commit -m "manual-backup: %date% %time%"
 "C:\Program Files\Git\bin\git.exe" push origin master
 if %errorlevel% neq 0 (
     echo.
-    echo  [!] Push 실패. 네트워크를 확인해주세요.
+    echo  [!] Push failed. Check network.
     pause
     exit /b 1
 )
 echo.
 echo  ========================================
-echo   GitHub 백업 완료! (배포는 안 함)
-echo   배포하려면 deploy.bat 실행
+echo   GitHub backup done! (No deploy)
+echo   To deploy: run deploy.bat
 echo  ========================================
 pause

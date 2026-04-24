@@ -1,33 +1,30 @@
 @echo off
 chcp 65001 > nul
-title 청한영어 - Pull (동기화)
+title CheongHan - Pull
 echo.
-echo  ┌─────────────────────────────────────┐
-echo  │   청한영어 - 최신 코드 가져오기     │
-echo  └─────────────────────────────────────┘
+echo  ========================================
+echo   CheongHan English - Pull Latest Code
+echo  ========================================
 echo.
 
-:: Git Pull
-echo  [1/2] GitHub에서 최신 코드 가져오는 중...
+echo  [1/2] Pulling latest code from GitHub...
 "C:\Program Files\Git\bin\git.exe" pull origin master
 if %errorlevel% neq 0 (
     echo.
-    echo  [!] Pull 실패 - 충돌이 있을 수 있습니다.
-    echo      수동으로 해결하거나, 로컬 변경사항을 먼저 커밋해주세요.
+    echo  [!] Pull failed. Commit local changes first.
     pause
     exit /b 1
 )
-echo  [OK] 최신 코드 동기화 완료!
+echo  [OK] Code synced!
 echo.
 
-:: npm install (새 패키지가 있을 수 있음)
-echo  [2/2] 패키지 동기화 중...
+echo  [2/2] Syncing packages...
 call npm install --silent
-echo  [OK] 패키지 동기화 완료!
-
+echo  [OK] Packages synced!
 echo.
+
 echo  ========================================
-echo   동기화 완료! 이제 작업을 시작하세요.
-echo   개발서버: start_app.bat 실행
+echo   Sync complete! Ready to work.
+echo   Dev server: run start_app.bat
 echo  ========================================
 pause
