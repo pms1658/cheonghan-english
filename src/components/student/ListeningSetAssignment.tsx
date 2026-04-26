@@ -554,17 +554,6 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                             {preparingProgress.current} / {preparingProgress.total}
                         </div>
                     </div>
-                    {/* 스켈레톤 미리보기 */}
-                    <div className="mt-6 space-y-3 px-2">
-                        <div className="h-10 skeleton-shimmer rounded-xl" />
-                        <div className="grid grid-cols-5 gap-2">
-                            {[0,1,2,3,4].map(i => <div key={i} className="h-8 skeleton-shimmer rounded-lg" />)}
-                        </div>
-                        <div className="h-10 skeleton-shimmer rounded-xl" />
-                        <div className="grid grid-cols-5 gap-2">
-                            {[0,1,2,3,4].map(i => <div key={i} className="h-8 skeleton-shimmer rounded-lg" />)}
-                        </div>
-                    </div>
                 </div>
             </div>
         );
@@ -638,7 +627,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
     const showReadingPanel = isMobile ? mobileTab === 'reading' : true;
 
     return (
-        <div className="h-screen flex flex-col bg-slate-100 dark:bg-slate-900">
+        <div className="h-screen flex flex-col bg-slate-100 dark:bg-slate-900 overflow-hidden">
             {/* Top Status Bar */}
             <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between text-sm flex-shrink-0">
                 <div className="flex items-center gap-4">
@@ -706,7 +695,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                     <div
                         ref={listeningScrollRef}
                         onScroll={handleListeningScroll}
-                        className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
+                        className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth hide-scrollbar"
                     >
                         {listeningProblems.map((problem) => {
                             const isCurrent = problem.number === currentListeningProblem?.number;
@@ -804,44 +793,21 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                         })}
                     </div>
 
-                    {/* ★ '현재 듣기로' 플로팅 버튼 */}
+                    {/* ★ '현재 듣기로' 플로팅 버튼 — Apple 스타일 pill */}
                     {userScrolledAway && currentListeningProblem && phase !== 'done' && phase !== 'reading_time' && (
                         <button
                             onClick={scrollToCurrentProblem}
-                            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-teal-600 text-white rounded-full shadow-xl text-sm font-bold flex items-center gap-1.5 z-20 animate-bounce hover:bg-teal-700 transition-colors"
+                            className="absolute bottom-5 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl text-slate-900 dark:text-white rounded-full shadow-lg border border-slate-200/60 dark:border-slate-600/60 text-sm font-semibold flex items-center gap-2 z-20 hover:scale-105 active:scale-95 transition-all duration-200"
                         >
-                            📍 {currentListeningProblem.number}번 현재 듣기로
+                            <span className="w-6 h-6 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs font-bold">{currentListeningProblem.number}</span>
+                            현재 듣기로
                         </button>
                     )}
-
-                    {/* 하단 번호 표시바 */}
-                    <div className="border-t border-slate-200 bg-white p-3 flex-shrink-0">
-                        <div className="flex flex-wrap gap-1.5 justify-center">
-                            {listeningProblems.map((p) => (
-                                <button
-                                    key={p.number}
-                                    onClick={() => {
-                                        const el = problemRefsMap.current[p.number];
-                                        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); setUserScrolledAway(true); }
-                                    }}
-                                    className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all ${
-                                        p.number === currentListeningProblem?.number
-                                            ? 'bg-teal-600 text-white ring-2 ring-teal-300'
-                                            : listeningAnswers[p.number] !== undefined
-                                            ? 'bg-teal-100 text-teal-700'
-                                            : 'bg-slate-100 text-slate-400'
-                                    }`}
-                                >
-                                    {p.number}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
                 {/* ── Reading Panel (always mounted, scroll preserved) ── */}
                 <div
-                    className={`${isMobile ? 'w-full' : 'w-1/2'} bg-slate-50 h-full overflow-y-auto p-4 space-y-6`}
+                    className={`${isMobile ? 'w-full' : 'w-1/2'} bg-slate-50 h-full overflow-y-auto p-4 space-y-6 hide-scrollbar`}
                     style={{ display: showReadingPanel ? 'block' : 'none' }}
                 >
                     {!canViewReading ? (

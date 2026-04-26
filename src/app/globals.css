@@ -278,6 +278,15 @@ body {
   100% { background-position: -200% 0; }
 }
 
+/* Hide scrollbar but keep scroll */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Global button click animation — subtle haptic feedback */
 /* :not(:has(:active)) ensures only the deepest clicked element scales, not ancestor buttons */
 button:not(:disabled):active:not(:has(:active)),
