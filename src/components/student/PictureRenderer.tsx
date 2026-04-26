@@ -96,11 +96,10 @@ export default function PictureRenderer({ elements, description }: PictureRender
     if (!elements || elements.length === 0) return null;
 
     return (
-        <div className="border-2 border-slate-800 rounded-lg bg-white overflow-hidden">
+        <div className="border-2 border-slate-800 rounded-lg bg-white overflow-hidden w-full">
             <svg
                 viewBox="0 0 460 320"
-                className="w-full"
-                style={{ maxHeight: '280px' }}
+                className="w-full h-auto"
             >
                 {/* Background - room outline */}
                 <rect x="20" y="20" width="420" height="280" rx="4"

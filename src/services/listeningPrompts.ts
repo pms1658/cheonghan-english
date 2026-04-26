@@ -1349,9 +1349,9 @@ Return JSON array of 2 problems:
         "type": "long_topic",
         "instruction": "다음을 듣고, [남자/여자]가 하는 말의 주제로 가장 적절한 것을 고르시오.",
         "script": [
-            { "speaker": "N", "text": "16번과 17번은 두 번 들려줍니다.", "lang": "ko" },
-            { "speaker": "N", "text": "16번. 다음을 듣고, 남자가 하는 말의 주제로 가장 적절한 것을 고르시오.", "lang": "ko" },
-            { "speaker": "M", "text": "Hello, students. [15~20문장 강의 전체 — First/Second/Next/Finally 4항목 + Now, let's watch a video.로 마무리]", "lang": "en" }
+            { "speaker": "M", "text": "Hello, students. Today, we're going to learn about...", "lang": "en" },
+            { "speaker": "M", "text": "First, ... (강의 본문 15~20문장 — 안내 멘트나 문제 지시문은 절대 포함하지 마세요)", "lang": "en" },
+            { "speaker": "M", "text": "Now, let's watch a video about this topic.", "lang": "en" }
         ],
         "choices": [
             "features that allow certain animals to achieve high speeds",
@@ -1398,6 +1398,12 @@ CRITICAL RULES:
    - 분야면: "언급된 분야가 아닌 것은?"
 6. 17번 정답은 ①번(0번 인덱스)이 되지 않도록 할 것
 7. 16번과 17번 script는 반드시 동일 대본 공유 (17번 script는 빈 배열 [] 허용)
+8. ★★★ **script 배열에는 순수 강의 대본만 포함하세요!** 아래 내용은 script에 절대 넣지 마세요:
+   - "16번과 17번은 두 번 들려줍니다" (안내멘트 — 재생 코드에서 자동 처리)
+   - "16번. 다음을 듣고..." (문제 지시문 — instruction 필드에 이미 있음)
+   - "다시 한 번 듣겠습니다" (반복 안내 — 재생 코드에서 자동 처리)
+   - speaker "N"으로 된 한국어 안내 라인 전부 금지
+   script에는 speaker "M" 또는 "F"의 영어 강의 내용만 들어가야 합니다.
 `;
 }
 
@@ -1893,7 +1899,7 @@ export const TRANSITION_DELAY_SECONDS = 60;
 export const TRANSITION_SCRIPT: ScriptLineShape[] = [
     {
         speaker: 'N',
-        text: '이상으로 듣기 평가를 마칩니다. 수고하셨습니다. 17번까지의 답을 확인하시고, 나머지 문항을 계속 풀어 주시기 바랍니다.',
+        text: '이제 듣기 문제가 끝났습니다. 18번부터는 문제지의 지시에 따라 답하시기 바랍니다.',
         lang: 'ko'
     },
 ];

@@ -756,6 +756,18 @@ export function useListeningTTS({
                         console.warn('[TTS] Long set intro failed:', e);
                     }
 
+                    // ★ 방어: AI가 script 안에 안내멘트/지시문을 넣었을 경우 제거
+                    // (speaker "N" + 한국어 라인 = 재생 코드에서 자동 처리하므로 제거)
+                    if (problem.script && problem.script.length > 0) {
+                        problem.script = problem.script.filter((line: any) => {
+                            if (line.speaker === 'N' && line.lang === 'ko') {
+                                console.log(`[TTS] ★ Stripped narrator line from #16 script: "${line.text}"`);
+                                return false;
+                            }
+                            return true;
+                        });
+                    }
+
                     onProblemStart?.(idx);
 
                     // ── Step 2: 대본 1회차 재생 ──
