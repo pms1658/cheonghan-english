@@ -146,7 +146,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="h-full overflow-hidden">
                 <ErrorBoundary>
                     <VocabularyAssignment
                         assignment={assignment as any}

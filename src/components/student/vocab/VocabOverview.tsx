@@ -16,7 +16,7 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
     const safeWords = Array.isArray(words) ? words : [];
 
     return (
-        <div className="pb-24">
+        <div className="pb-4">
             {/* Navy Header — Unified Full-Width */}
             <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
@@ -94,7 +94,7 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
             </div>
 
             {/* Floating Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))] pt-4 max-w-4xl mx-auto flex gap-3 z-40 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+            <div className="sticky bottom-0 px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))] pt-4 max-w-4xl mx-auto flex gap-3 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
                 <button
                     onClick={() => {
                         const printWindow = window.open('', '_blank', 'width=800,height=600');

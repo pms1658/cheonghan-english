@@ -106,7 +106,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="bg-slate-50">
+            <div className="h-full overflow-hidden">
                 <ErrorBoundary>
                     <VocabularyAssignment
                         assignment={assignment as any}

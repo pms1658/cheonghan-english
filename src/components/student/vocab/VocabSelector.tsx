@@ -31,9 +31,9 @@ export default function VocabSelector({ words, onSubmit, onExit }: VocabSelector
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+        <div className="h-full bg-slate-50 dark:bg-slate-900 flex flex-col font-sans overflow-hidden">
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 flex justify-between items-center shadow-sm">
+            <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex-shrink-0 flex justify-between items-center shadow-sm">
                 <button
                     onClick={onExit}
                     disabled={isSubmitting}
@@ -41,13 +41,13 @@ export default function VocabSelector({ words, onSubmit, onExit }: VocabSelector
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-                <h1 className="text-lg font-bold text-slate-800">모르는 단어 선택</h1>
+                <h1 className="text-lg font-bold text-slate-800 dark:text-white">모르는 단어 선택</h1>
                 <div className="w-6"></div>
             </div>
 
-            {/* Content — pb를 넉넉하게 잡아 fixed 하단 바에 가려지지 않도록 */}
-            <div className="flex-1 p-6 pb-[calc(13rem+env(safe-area-inset-bottom))] max-w-3xl mx-auto w-full">
-                <div className="bg-[#1e3a5f]/5 border border-[#1e3a5f]/15 rounded-xl p-4 mb-6 text-sm text-[#1e3a5f] font-medium flex items-start gap-3">
+            <div className="flex-1 overflow-y-auto p-6 hide-scrollbar">
+            <div className="max-w-3xl mx-auto w-full">
+                <div className="bg-[#1e3a5f]/5 dark:bg-[#1e3a5f]/15 border border-[#1e3a5f]/15 dark:border-[#1e3a5f]/30 rounded-xl p-4 mb-6 text-sm text-[#1e3a5f] dark:text-blue-200 font-medium flex items-start gap-3">
                     <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <p>
                         리스트에서 본인이 <b>모르는 단어</b>를 솔직하게 체크해주세요.<br />
@@ -56,13 +56,13 @@ export default function VocabSelector({ words, onSubmit, onExit }: VocabSelector
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm font-bold text-slate-500">
+                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
                         Total <span className="text-[#1e3a5f]">{safeWords.length}</span>
                     </span>
                     <button
                         onClick={handleSelectAll}
                         disabled={isSubmitting}
-                        className="text-sm font-bold text-[#1e3a5f] hover:text-[#0f2a47] transition-colors disabled:opacity-50"
+                        className="text-sm font-bold text-[#1e3a5f] dark:text-blue-300 hover:text-[#0f2a47] dark:hover:text-blue-200 transition-colors disabled:opacity-50"
                     >
                         {selectedIndices.length === safeWords.length ? '전체 해제' : '전체 선택'}
                     </button>
@@ -78,15 +78,15 @@ export default function VocabSelector({ words, onSubmit, onExit }: VocabSelector
                                 className={`group relative p-4 rounded-xl border-2 transition-all duration-200 select-none flex flex-col justify-between h-full
                                     ${isSubmitting ? 'cursor-not-allowed' : 'cursor-pointer'}
                                     ${isSelected
-                                        ? 'border-[#1e3a5f]/50 bg-[#1e3a5f]/5 shadow-md transform scale-[1.01]'
-                                        : 'border-white bg-white hover:border-slate-200 shadow-sm'}`}
+                                        ? 'border-[#1e3a5f]/50 dark:border-blue-400/40 bg-[#1e3a5f]/5 dark:bg-blue-900/20 shadow-md transform scale-[1.01]'
+                                        : 'border-white dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600 shadow-sm'}`}
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex flex-col gap-1">
-                                        <h3 className={`font-bold text-lg ${isSelected ? 'text-[#1e3a5f]' : 'text-slate-800'}`}>
+                                        <h3 className={`font-bold text-lg ${isSelected ? 'text-[#1e3a5f] dark:text-blue-200' : 'text-slate-800 dark:text-white'}`}>
                                             {word.term}
                                         </h3>
-                                        <p className={`text-sm ${isSelected ? 'text-[#1e3a5f]/70' : 'text-slate-400'}`}>
+                                        <p className={`text-sm ${isSelected ? 'text-[#1e3a5f]/70 dark:text-blue-300/70' : 'text-slate-400 dark:text-slate-400'}`}>
                                             {word.meaning}
                                         </p>
                                     </div>
@@ -99,7 +99,7 @@ export default function VocabSelector({ words, onSubmit, onExit }: VocabSelector
                                     </div>
                                 </div>
                                 {word.contextSentence && (
-                                    <div className={`text-xs mt-2 pt-2 border-t ${isSelected ? 'border-[#1e3a5f]/20 text-[#1e3a5f]' : 'border-slate-100 text-slate-400'} italic`}>
+                                    <div className={`text-xs mt-2 pt-2 border-t ${isSelected ? 'border-[#1e3a5f]/20 dark:border-blue-400/20 text-[#1e3a5f] dark:text-blue-300' : 'border-slate-100 dark:border-slate-700 text-slate-400'} italic`}>
                                         &quot;{word.contextSentence}&quot;
                                     </div>
                                 )}
@@ -108,9 +108,10 @@ export default function VocabSelector({ words, onSubmit, onExit }: VocabSelector
                     })}
                 </div>
             </div>
+            </div>
 
             {/* Footer Action */}
-            <div className="fixed bottom-0 left-0 right-0 px-4 md:px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))] pt-4 flex gap-2 md:gap-3 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 transition-colors shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)]">
+            <div className="flex-shrink-0 px-4 md:px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] pt-4 flex gap-2 md:gap-3 z-40 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-700">
                 <div className="w-full flex gap-3 items-center">
                     <button
                         onClick={onExit}
