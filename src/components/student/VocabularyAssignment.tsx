@@ -468,7 +468,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
 
 
     return (
-        <div className="bg-slate-50 min-h-screen font-sans">
+        <div className="h-full font-sans">
             <ErrorBoundary>
                 {mode === 'overview' && (
                     <VocabOverview

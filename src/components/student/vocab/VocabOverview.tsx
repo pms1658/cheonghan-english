@@ -16,9 +16,9 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
     const safeWords = Array.isArray(words) ? words : [];
 
     return (
-        <div className="pb-4">
-            {/* Navy Header — Unified Full-Width */}
-            <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
+        <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+            {/* Navy Header — flex-shrink-0 */}
+            <div className="flex-shrink-0 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
 
@@ -55,46 +55,48 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
                 </div>
             </div>
 
-            {/* Word List (Grid) */}
-            <div className="max-w-4xl mx-auto p-4 lg:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-                {safeWords.map((word, idx) => {
-                    if (!word) return null; // Defensive check for null words
-                    return (
-                        <div key={idx} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-white/10 shadow-sm flex flex-col gap-2">
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-slate-300 w-5">{idx + 1}</span>
-                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{word.term || 'No Term'}</h3>
-                                    {word.pronunciation && (
-                                        <span className="text-xs text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 mr-1">{word.pronunciation}</span>
-                                    )}
-                                    {word.partOfSpeech && (
-                                        <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 uppercase tracking-tight">{word.partOfSpeech}</span>
+            {/* Word List — scrollable */}
+            <div className="flex-1 overflow-y-auto hide-scrollbar">
+                <div className="max-w-4xl mx-auto p-4 lg:p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {safeWords.map((word, idx) => {
+                            if (!word) return null;
+                            return (
+                                <div key={idx} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-white/10 shadow-sm flex flex-col gap-2">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-slate-300 w-5">{idx + 1}</span>
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">{word.term || 'No Term'}</h3>
+                                            {word.pronunciation && (
+                                                <span className="text-xs text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 mr-1">{word.pronunciation}</span>
+                                            )}
+                                            {word.partOfSpeech && (
+                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 uppercase tracking-tight">{word.partOfSpeech}</span>
+                                            )}
+                                        </div>
+                                        {/* Sound Icon */}
+                                        <button
+                                            onClick={() => word.term && speak(word.term)}
+                                            className="p-1.5 text-slate-300 hover:text-blue-500 transition-colors rounded-full hover:bg-blue-50"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                        </button>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-slate-300 font-medium pl-7">{word.meaning || 'No Meaning'}</p>
+                                    {word.contextSentence && (
+                                        <div className="mt-1 pl-7 text-xs text-black dark:text-slate-300 font-['Apple_SD_Gothic_Neo'] border-l-2 border-slate-100 dark:border-slate-600 pl-2">
+                                            &quot;{word.contextSentence}&quot;
+                                        </div>
                                     )}
                                 </div>
-                                {/* Sound Icon */}
-                                <button
-                                    onClick={() => word.term && speak(word.term)}
-                                    className="p-1.5 text-slate-300 hover:text-blue-500 transition-colors rounded-full hover:bg-blue-50"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
-                                </button>
-                            </div>
-                            <p className="text-slate-600 dark:text-slate-300 font-medium pl-7">{word.meaning || 'No Meaning'}</p>
-                            {word.contextSentence && (
-                                <div className="mt-1 pl-7 text-xs text-black dark:text-slate-300 font-['Apple_SD_Gothic_Neo'] border-l-2 border-slate-100 dark:border-slate-600 pl-2">
-                                    &quot;{word.contextSentence}&quot;
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
-            {/* Floating Action Bar */}
-            <div className="sticky bottom-0 px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))] pt-4 max-w-4xl mx-auto flex gap-3 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
+            {/* Bottom Action Bar — flex-shrink-0 */}
+            <div className="flex-shrink-0 px-6 py-4 max-w-4xl mx-auto w-full flex gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
                 <button
                     onClick={() => {
                         const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -145,8 +147,6 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
                     테스트 시작
                 </button>
             </div>
-            {/* Safe Area Spacer */}
-            <div className="h-12"></div>
         </div>
     );
 }
