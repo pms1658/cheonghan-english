@@ -604,17 +604,8 @@ export default function DesktopAssignment({
                 </div>
             </div>
 
-            <main className="flex-1 p-4 lg:p-8 flex flex-col max-w-5xl mx-auto w-full relative pb-32">
-                <header className="mb-6 flex items-center gap-3">
-                    <h1 className="text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
-                        Sentence <span className="text-blue-600">#{currentActualIndex + 1}</span>
-                    </h1>
-                    {isRetryMode && (
-                        <span className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-500 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
-                            Review Required
-                        </span>
-                    )}
-                </header>
+            <main className="flex-1 p-4 lg:p-8 flex flex-col max-w-5xl mx-auto w-full relative pb-40">
+
 
 
                 <AnimatePresence mode="wait" initial={false}>
@@ -735,7 +726,7 @@ export default function DesktopAssignment({
                 </motion.div>
                 </AnimatePresence>
 
-                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between">
+                <div className="fixed bottom-6 left-[calc(50%+110px)] lg:left-[calc(50%+110px)] xl:left-[calc(50%+140px)] transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between">
                     <button
                         onClick={() => setCurrentTargetIndexPtr(Math.max(0, currentTargetIndexPtr - 1))}
                         disabled={isFirst}

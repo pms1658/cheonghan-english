@@ -96,7 +96,7 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
             </div>
 
             {/* Bottom Action Bar — flex-shrink-0 */}
-            <div className="flex-shrink-0 px-6 py-4 max-w-4xl mx-auto w-full flex gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
+            <div className="flex-shrink-0 px-6 py-4 flex gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
                 <button
                     onClick={() => {
                         const printWindow = window.open('', '_blank', 'width=800,height=600');

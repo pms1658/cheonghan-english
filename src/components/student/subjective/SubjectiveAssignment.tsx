@@ -446,7 +446,7 @@ export default function SubjectiveAssignment({
             </header>
 
             {/* Main Content */}
-            <div className="max-w-4xl mx-auto px-4 py-6 md:py-8 pb-32">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:py-8 pb-40">
 
                 {/* Passage — Always visible like a real exam paper */}
                 {(assignment.modifiedPassage || assignment.content) && (
