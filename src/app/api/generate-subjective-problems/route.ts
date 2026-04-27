@@ -72,7 +72,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Passage is required' }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
 
         // Generate subjective problems
         const typesToGenerate = mode === 'manual' && problemTypes?.length > 0 ? problemTypes : undefined;

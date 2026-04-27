@@ -151,11 +151,11 @@ export async function POST(req: Request) {
 
     // Use user-requested model (found in extract-words route)
     const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    console.log(`[Grading] Starting batch grading for ${assignments.length} items using gemini-3-flash-preview`);
+    console.log(`[Grading] Starting batch grading for ${assignments.length} items using gemini-3-flash`);
 
     const gradingPromises = assignments.map(async (task: any, index: number) => {
       const prompt = GRADE_PROMPT

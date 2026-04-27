@@ -175,7 +175,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Passage is required' }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
 
         // ★ SL MODE: Rewrite passage first, then generate problems from rewritten version
         let rewrittenPassage: string | null = null;

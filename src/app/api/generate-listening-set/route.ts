@@ -124,7 +124,7 @@ export async function POST(req: Request) {
         }
 
         const { targetGrade = '3' } = await req.json();
-        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
 
         console.log('[ListeningSet] Starting generation for grade:', targetGrade);
 

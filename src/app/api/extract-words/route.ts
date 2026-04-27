@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
         // Using user's preferred model that is confirmed to work in other parts of the app
         const model = genAI.getGenerativeModel({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3-flash",
             generationConfig: {
                 // Ensure JSON mode is supported by the model
                 responseMimeType: "application/json",
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         console.log('Gemini Call Start', {
             textLength: fullText.length,
             wordsCount: providedWords?.length,
-            model: "gemini-3-flash-preview"
+            model: "gemini-3-flash"
         });
 
         const result = await model.generateContent(prompt);
