@@ -15,7 +15,7 @@ export async function POST(req: Request) {
             : sentences;
         const passage = cleanPassageMarkers(rawPassage);
 
-        const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
         const prompt = getPremiumAnalysisPrompt(passage, grade);
 
         const result = await model.generateContent({

@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
         if (!passage) return NextResponse.json({ error: 'Passage is required' }, { status: 400 });
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
         // 1. Workbook Generation Task
         const workbookTask = (async () => {
