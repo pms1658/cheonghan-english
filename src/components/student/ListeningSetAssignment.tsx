@@ -415,30 +415,30 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                         <div className="text-slate-500 dark:text-slate-400">({totalCorrect}/{totalProblems} 정답)</div>
 
                         <div className="grid grid-cols-2 gap-4 mt-6">
-                            <div className="bg-teal-50 rounded-2xl p-4">
-                                <div className="text-2xl font-bold text-teal-700">{listeningScore}점</div>
-                                <div className="text-sm text-teal-600">🔊 듣기 ({listeningCorrect}/{listeningProblems.length})</div>
+                            <div className="bg-teal-50 dark:bg-teal-900/30 rounded-2xl p-4">
+                                <div className="text-2xl font-bold text-teal-700 dark:text-teal-300">{listeningScore}점</div>
+                                <div className="text-sm text-teal-600 dark:text-teal-400">🔊 듣기 ({listeningCorrect}/{listeningProblems.length})</div>
                             </div>
-                            <div className="bg-cyan-50 rounded-2xl p-4">
-                                <div className="text-2xl font-bold text-cyan-700">{readingScore}점</div>
-                                <div className="text-sm text-cyan-600">📖 독해 ({readingCorrect}/{readingProblems.length})</div>
+                            <div className="bg-cyan-50 dark:bg-cyan-900/30 rounded-2xl p-4">
+                                <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">{readingScore}점</div>
+                                <div className="text-sm text-cyan-600 dark:text-cyan-400">📖 독해 ({readingCorrect}/{readingProblems.length})</div>
                             </div>
                         </div>
                         <div className="text-sm text-slate-400 mt-4">⏱ 소요시간: {formatTime(elapsedSeconds)}</div>
                     </div>
 
                     {/* ── 전체 듣기 해설 ── */}
-                    <div className="bg-white rounded-3xl shadow-md p-6">
-                        <h2 className="text-lg font-bold text-teal-700 mb-4">🔊 듣기 문제 해설 ({listeningCorrect}/{listeningProblems.length})</h2>
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md p-6">
+                        <h2 className="text-lg font-bold text-teal-700 dark:text-teal-300 mb-4">🔊 듣기 문제 해설 ({listeningCorrect}/{listeningProblems.length})</h2>
                         <div className="space-y-4">
                             {listeningProblems.map(p => {
                                 const myAnswer = listeningAnswers[p.number];
                                 const isCorrect = myAnswer === p.correctAnswer;
                                 return (
-                                    <div key={p.number} className={`rounded-xl p-3 border ${isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                                    <div key={p.number} className={`rounded-xl p-3 shadow-sm ${isCorrect ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCorrect ? 'bg-emerald-200 text-emerald-800' : 'bg-red-200 text-red-800'}`}>{p.number}</span>
-                                            <span className="text-xs font-bold text-slate-600">{p.instruction?.slice(0, 60)}</span>
+                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{p.instruction?.slice(0, 60)}</span>
                                             <span className={`ml-auto text-xs font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
                                                 {isCorrect ? '✅' : `❌ ${formatAnswer(myAnswer)} → ${p.correctAnswer + 1}번`}
                                             </span>
@@ -447,13 +447,13 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                         {p.script && p.script.length > 0 && (
                                             <details className="mt-2">
                                                 <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 font-medium">📜 대본 보기</summary>
-                                                <div className="mt-2 bg-white/80 rounded-lg p-2 text-xs space-y-1 max-h-40 overflow-y-auto">
+                                                <div className="mt-2 bg-white/80 dark:bg-slate-700/50 rounded-lg p-2 text-xs space-y-1 max-h-40 overflow-y-auto">
                                                     {p.script.map((line: any, li: number) => (
                                                         <div key={li} className="flex gap-2">
                                                             <span className={`font-bold flex-shrink-0 ${line.speaker === 'W' ? 'text-pink-600' : line.speaker === 'N' ? 'text-purple-600' : 'text-blue-600'}`}>
                                                                 {line.speaker === 'W' ? 'W:' : line.speaker === 'N' ? 'N:' : 'M:'}
                                                             </span>
-                                                            <span className="text-slate-700">{line.text}</span>
+                                                            <span className="text-slate-700 dark:text-slate-300">{line.text}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -461,7 +461,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                         )}
                                         {/* 해설 */}
                                         {p.explanation && (
-                                            <div className="text-xs text-slate-600 mt-2 bg-white/60 rounded p-2">
+                                            <div className="text-xs text-slate-600 dark:text-slate-300 mt-2 bg-white/60 dark:bg-slate-700/40 rounded p-2">
                                                 💡 {typeof p.explanation === 'string' ? p.explanation : JSON.stringify(p.explanation)}
                                             </div>
                                         )}
@@ -487,17 +487,17 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
                     {/* ── 전체 독해 해설 ── */}
                     {readingProblems.length > 0 && (
-                        <div className="bg-white rounded-3xl shadow-md p-6">
-                            <h2 className="text-lg font-bold text-cyan-700 mb-4">📖 독해 문제 해설 ({readingCorrect}/{readingProblems.length})</h2>
+                        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md p-6">
+                            <h2 className="text-lg font-bold text-cyan-700 dark:text-cyan-300 mb-4">📖 독해 문제 해설 ({readingCorrect}/{readingProblems.length})</h2>
                             <div className="space-y-4">
                                 {readingProblems.map(p => {
                                     const myAnswer = readingAnswers[p.number];
                                     const isCorrect = myAnswer === p.correctAnswer;
                                     return (
-                                        <div key={p.number} className={`rounded-xl p-3 border ${isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                                        <div key={p.number} className={`rounded-xl p-3 shadow-sm ${isCorrect ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isCorrect ? 'bg-emerald-200 text-emerald-800' : 'bg-red-200 text-red-800'}`}>{p.number}</span>
-                                                <span className="text-xs font-bold text-slate-600 flex-1 truncate">{p.question?.slice(0, 60)}</span>
+                                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300 flex-1 truncate">{p.question?.slice(0, 60)}</span>
                                                 <span className={`ml-auto text-xs font-bold flex-shrink-0 ${isCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
                                                     {isCorrect ? '✅' : `❌ ${formatAnswer(myAnswer)} → ${p.correctAnswer + 1}번`}
                                                 </span>
@@ -506,14 +506,14 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                             {(p.passage || p.paragraphs) && (
                                                 <details className="mt-2">
                                                     <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 font-medium">📄 지문 보기</summary>
-                                                    <div className="mt-2 bg-white/80 rounded-lg p-2 text-xs text-slate-700 max-h-40 overflow-y-auto whitespace-pre-wrap">
+                                                    <div className="mt-2 bg-white/80 dark:bg-slate-700/50 rounded-lg p-2 text-xs text-slate-700 dark:text-slate-300 max-h-40 overflow-y-auto whitespace-pre-wrap">
                                                         {typeof p.passage === 'string' ? p.passage : (p.passage ? JSON.stringify(p.passage, null, 2) : '지문 생략')}
                                                     </div>
                                                 </details>
                                             )}
                                             {/* 해설 */}
                                             {p.explanation && (
-                                                <div className="text-xs text-slate-600 mt-2 bg-white/60 rounded p-2">
+                                                <div className="text-xs text-slate-600 dark:text-slate-300 mt-2 bg-white/60 dark:bg-slate-700/40 rounded p-2">
                                                     💡 {typeof p.explanation === 'string' ? p.explanation : JSON.stringify(p.explanation)}
                                                 </div>
                                             )}
@@ -658,13 +658,13 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
             {/* Mobile Tab Switcher — ★ sticky로 고정 */}
             {isMobile && (
-                <div className="flex bg-white border-b border-slate-200 flex-shrink-0 sticky top-0 z-30">
+                <div className="flex bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl flex-shrink-0 sticky top-0 z-30">
                     <button
                         onClick={() => setMobileTab('listening')}
                         className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
                             mobileTab === 'listening'
-                                ? 'text-teal-700 border-b-2 border-teal-600 bg-teal-50'
-                                : 'text-slate-400'
+                                ? 'text-teal-700 dark:text-teal-400 border-b-2 border-teal-600 bg-teal-50/50 dark:bg-teal-500/10'
+                                : 'text-slate-400 dark:text-slate-500'
                         }`}
                     >
                         🔊 듣기 ({answeredListening}/{listeningProblems.length})
@@ -674,10 +674,10 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                         disabled={!canViewReading}
                         className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
                             mobileTab === 'reading'
-                                ? 'text-cyan-700 border-b-2 border-cyan-600 bg-cyan-50'
+                                ? 'text-cyan-700 dark:text-cyan-400 border-b-2 border-cyan-600 bg-cyan-50/50 dark:bg-cyan-500/10'
                                 : canViewReading
-                                ? 'text-slate-400'
-                                : 'text-slate-300 opacity-50'
+                                ? 'text-slate-400 dark:text-slate-500'
+                                : 'text-slate-300 dark:text-slate-600 opacity-50'
                         }`}
                     >
                         📖 독해 ({answeredReading}/{readingProblems.length})
@@ -689,13 +689,13 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
             <div className="flex-1 overflow-hidden flex">
                 {/* ══ Listening Panel — ★ 스크롤 기반 전체 문제 리스트 ══ */}
                 <div
-                    className={`${isMobile ? 'w-full' : 'w-1/2 border-r border-slate-300'} bg-white flex flex-col h-full relative`}
+                    className={`${isMobile ? 'w-full' : 'w-1/2'} bg-slate-50 dark:bg-slate-900 flex flex-col h-full relative`}
                     style={{ display: showListeningPanel ? 'flex' : 'none' }}
                 >
                     <div
                         ref={listeningScrollRef}
                         onScroll={handleListeningScroll}
-                        className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth hide-scrollbar"
+                        className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth hide-scrollbar"
                     >
                         {listeningProblems.map((problem) => {
                             const isCurrent = problem.number === currentListeningProblem?.number;
@@ -704,21 +704,21 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                 <div
                                     key={problem.number}
                                     ref={(el) => { problemRefsMap.current[problem.number] = el; }}
-                                    className={`rounded-2xl border-2 p-4 space-y-3 transition-all duration-300 ${
+                                    className={`rounded-2xl p-4 space-y-3 transition-all duration-300 ${
                                         isCurrent
-                                            ? 'border-teal-400 bg-teal-50/50 shadow-lg shadow-teal-100'
+                                            ? 'bg-white dark:bg-slate-800 shadow-lg shadow-teal-200/40 dark:shadow-teal-500/10 ring-2 ring-teal-400/50'
                                             : isAnswered
-                                            ? 'border-teal-200 bg-white'
-                                            : 'border-slate-200 bg-white opacity-80'
+                                            ? 'bg-white dark:bg-slate-800 shadow-sm'
+                                            : 'bg-white/70 dark:bg-slate-800/50 opacity-80'
                                     }`}
                                 >
                                     {/* 문제 헤더 */}
                                     <div className="flex items-center gap-2">
                                         <span className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                                            isCurrent ? 'bg-teal-600 text-white animate-pulse' : isAnswered ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-400'
+                                            isCurrent ? 'bg-teal-600 text-white animate-pulse' : isAnswered ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
                                         }`}>{problem.number}</span>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-bold text-slate-800 truncate">{problem.instruction}</div>
+                                            <div className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{problem.instruction}</div>
                                             {isCurrent && isSecondPlay && (
                                                 <span className="text-xs text-amber-600 font-bold">🔁 두 번째 재생 중</span>
                                             )}
@@ -763,13 +763,13 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                 className={`w-full flex gap-2.5 items-center px-3.5 py-2.5 rounded-xl text-left transition-all ${
                                                     listeningAnswers[problem.number] === ci
                                                         ? 'bg-teal-600 text-white shadow-md'
-                                                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                                                        : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                                 }`}
                                             >
                                                 <span className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold ${
                                                     listeningAnswers[problem.number] === ci
                                                         ? 'bg-white/20 text-white'
-                                                        : 'bg-slate-100 text-slate-500'
+                                                        : 'bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-400'
                                                 }`}>{ci + 1}</span>
                                                 <span className="text-sm">{choice}</span>
                                             </button>
@@ -779,12 +779,12 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                     {/* 6번 메모 */}
                                     {problem.needsMemo && (
                                         <div className="space-y-1">
-                                            <div className="text-xs font-bold text-slate-500">📝 메모 (계산용)</div>
+                                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400">📝 메모 (계산용)</div>
                                             <textarea
                                                 value={memos[problem.number] || ''}
                                                 onChange={(e) => updateMemo(problem.number, e.target.value)}
                                                 placeholder="계산 메모..."
-                                                className="w-full h-20 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-amber-300"
+                                                className="w-full h-20 p-3 bg-amber-50 dark:bg-amber-900/20 border-0 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-amber-300 dark:text-amber-100 dark:placeholder-amber-400/50"
                                             />
                                         </div>
                                     )}
@@ -807,7 +807,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
                 {/* ── Reading Panel (always mounted, scroll preserved) ── */}
                 <div
-                    className={`${isMobile ? 'w-full' : 'w-1/2'} bg-slate-50 h-full overflow-y-auto p-4 space-y-6 hide-scrollbar`}
+                    className={`${isMobile ? 'w-full' : 'w-1/2'} bg-slate-100 dark:bg-slate-950 h-full overflow-y-auto p-4 space-y-6 hide-scrollbar`}
                     style={{ display: showReadingPanel ? 'block' : 'none' }}
                 >
                     {!canViewReading ? (
@@ -905,10 +905,10 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                 <>
                                     {/* ── 장문 세트 (43-45) — 공유 지문 ── */}
                                     {longPassageRendered && (
-                                        <div className="bg-white rounded-2xl shadow-sm border-2 border-cyan-200 overflow-hidden">
-                                            <div className="bg-cyan-50 border-b border-cyan-200 px-4 py-2.5 flex items-center justify-between">
-                                                <span className="text-sm font-bold text-cyan-800">📖 장문 [43~45] 공유 지문</span>
-                                                <span className="text-[10px] text-cyan-500">문장 클릭=하이라이트 | (a)~(e) 클릭=파랑/초록표시</span>
+                                        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden">
+                                            <div className="bg-cyan-50/80 dark:bg-cyan-900/20 px-4 py-2.5 flex items-center justify-between">
+                                                <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">📖 장문 [43~45] 공유 지문</span>
+                                                <span className="text-[10px] text-cyan-500 dark:text-cyan-400">문장 클릭=하이라이트 | (a)~(e) 클릭=파랑/초록표시</span>
                                             </div>
                                             <div className="p-4 space-y-3">
                                                 {parasArray.length > 0 ? (
@@ -918,9 +918,9 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                         return parasArray.map((para, pi) => {
                                                             const sentences: string[] = para.text.match(/[^.!?]+[.!?]+/g) || [para.text];
                                                         return (
-                                                            <div key={pi} className="border border-slate-300 rounded-lg p-3 mx-2 bg-slate-50">
-                                                                <span className="text-xs font-bold text-cyan-700 bg-cyan-100 px-1.5 py-0.5 rounded">{String(para.label || '')}</span>
-                                                                <div className="text-sm text-slate-700 mt-2 leading-relaxed">
+                                                            <div key={pi} className="rounded-lg p-3 mx-2 bg-slate-50 dark:bg-slate-700/30">
+                                                                <span className="text-xs font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-900/40 px-1.5 py-0.5 rounded">{String(para.label || '')}</span>
+                                                                <div className="text-sm text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
                                                                     {sentences.map((sentence: string) => {
                                                                         const idx = globalSentenceIdx++;
                                                                         const isHighlighted = (highlights[9999] || []).includes(idx);
@@ -950,11 +950,11 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                             </div>
                                             {/* 43~45번 각 문제 */}
                                             {longGroup.map((problem) => (
-                                                <div key={problem.number} className="border-t border-cyan-100">
-                                                    <div className="bg-cyan-50/50 px-4 py-2 flex items-center justify-between">
+                                                <div key={problem.number} className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                    <div className="px-4 py-2 flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-7 h-7 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-bold">{problem.number}</span>
-                                                            <span className="text-sm font-bold text-slate-700">{problem.question}</span>
+                                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{problem.question}</span>
                                                         </div>
                                                         {readingAnswers[problem.number] !== undefined && (
                                                             <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full font-bold">✓</span>
@@ -963,7 +963,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                     <div className="px-4 pb-4 pt-2">
                                                         {/* 44번: 지문에서 (a)~(e) 클릭으로 선택 */}
                                                         {problem.type === 'r_long_reference' ? (
-                                                            <div className="text-xs text-slate-500 italic bg-slate-50 rounded-lg p-2">
+                                                            <div className="text-xs text-slate-500 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-700/30 rounded-lg p-2">
                                                                 ☝ 위 지문에서 (a)~(e)를 클릭하여 파랑/초록으로 표시하세요. 나머지 넷과 다른 하나를 선택지에서 골라주세요.
                                                                 <div className="mt-2 flex gap-1.5">
                                                                     {problem.choices?.map((choice, ci) => {
@@ -976,7 +976,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                             ? 'bg-blue-200 text-blue-800 border border-blue-300'
                                                                             : choiceColor === 'green'
                                                                             ? 'bg-emerald-200 text-emerald-800 border border-emerald-300'
-                                                                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100';
+                                                                            : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600';
                                                                         return (
                                                                             <button
                                                                                 key={ci}
@@ -998,13 +998,13 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                         className={`w-full flex gap-1.5 items-start px-2.5 py-1.5 rounded-lg text-left text-[13px] leading-snug transition-all ${
                                                                             readingAnswers[problem.number] === ci
                                                                                 ? 'bg-cyan-600 text-white'
-                                                                                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                                                                : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                                                         }`}
                                                                     >
                                                                         <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full text-[10px] font-bold mt-0.5 ${
                                                                             readingAnswers[problem.number] === ci
                                                                                 ? 'bg-white/20 text-white'
-                                                                                : 'bg-white text-slate-500 border border-slate-200'
+                                                                                : 'bg-white dark:bg-slate-600 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-500'
                                                                         }`}>{ci + 1}</span>
                                                                         <span>{choice}</span>
                                                                     </button>
@@ -1023,17 +1023,15 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                         const isChart = problem.type === 'r_chart';
 
                                         return (
-                                            <div key={problem.number} className={`bg-white rounded-2xl shadow-sm overflow-hidden ${
-                                                isNotice ? 'border-2 border-amber-300' : isChart ? 'border-2 border-violet-200' : 'border border-slate-200'
-                                            }`}>
-                                                <div className={`border-b px-4 py-2.5 flex items-center justify-between ${
-                                                    isNotice ? 'bg-amber-50 border-amber-200' : isChart ? 'bg-violet-50 border-violet-200' : 'bg-slate-50 border-slate-200'
+                                            <div key={problem.number} className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden`}>
+                                                <div className={`px-4 py-2.5 flex items-center justify-between ${
+                                                    isNotice ? 'bg-amber-50 dark:bg-amber-900/20' : isChart ? 'bg-violet-50 dark:bg-violet-900/20' : 'bg-slate-50 dark:bg-slate-700/30'
                                                 }`}>
                                                     <div className="flex items-center gap-2">
                                                         <span className={`w-7 h-7 text-white rounded-full flex items-center justify-center text-xs font-bold ${
                                                             isNotice ? 'bg-amber-600' : isChart ? 'bg-violet-600' : 'bg-cyan-600'
                                                         }`}>{problem.number}</span>
-                                                        <span className="text-sm font-bold text-slate-700">{problem.question || (problem as any).instruction || `${problem.number}번`}</span>
+                                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{problem.question || (problem as any).instruction || `${problem.number}번`}</span>
                                                     </div>
                                                     {readingAnswers[problem.number] !== undefined && (
                                                         <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full font-bold">✓</span>
@@ -1043,8 +1041,8 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                 <div className="p-4 space-y-4">
                                                     {/* 안내문(27,28) — 문장 클릭 하이라이트 가능 */}
                                                     {isNotice && problem.passage && (
-                                                        <div className="border-2 border-slate-800 rounded-lg p-4 bg-white">
-                                                            <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                                                        <div className="rounded-lg p-4 bg-slate-50 dark:bg-slate-700/30">
+                                                            <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                                                                 {(() => {
                                                                     const sentences = problem.passage.match(/[^\n]+/g) || [problem.passage];
                                                                     return sentences.map((line: string, si: number) => (
@@ -1068,7 +1066,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
                                                     {/* 일반 지문 (도표 문제는 차트 뒤에 표시) */}
                                                     {!isNotice && !isChart && problem.passage && (
-                                                        <div className="text-sm leading-relaxed text-slate-700">
+                                                        <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                                                             {problem.sentences && problem.sentences.length > 0 ? (
                                                                 problem.sentences.map((sentence, si) => (
                                                                     <span
@@ -1091,11 +1089,11 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
                                                     {/* 도표(25) — 수능 스타일: SVG 바 차트 + ①~⑤ 인라인 선택 */}
                                                     {problem.chartData && (
-                                                        <div className="border-2 border-slate-800 rounded-lg p-4 bg-white">
+                                                        <div className="rounded-lg p-4 bg-slate-50 dark:bg-slate-700/30">
                                                             <ChartRenderer chartData={problem.chartData as any} />
                                                             {/* 도표 아래 지문 — ①~⑤ 클릭 선택 */}
                                                             {problem.passage && (
-                                                                <div className="mt-3 pt-3 border-t border-slate-200 text-sm leading-relaxed text-slate-700">
+                                                                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                                                                     {(() => {
                                                                         const markers = ['①', '②', '③', '④', '⑤'];
                                                                         // Split passage by ①~⑤ markers
@@ -1137,13 +1135,13 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
                                                                 className={`w-full flex gap-1.5 items-start px-2.5 py-1.5 rounded-lg text-left text-[13px] leading-snug transition-all ${
                                                                     readingAnswers[problem.number] === ci
                                                                         ? 'bg-cyan-600 text-white'
-                                                                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                                                        : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                                                 }`}
                                                             >
                                                                 <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full text-[10px] font-bold mt-0.5 ${
                                                                     readingAnswers[problem.number] === ci
                                                                         ? 'bg-white/20 text-white'
-                                                                        : 'bg-white text-slate-500 border border-slate-200'
+                                                                        : 'bg-white dark:bg-slate-600 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-500'
                                                                 }`}>{ci + 1}</span>
                                                                 <span>{choice}</span>
                                                             </button>
@@ -1163,7 +1161,7 @@ export default function ListeningSetAssignment({ assignment, onSubmit }: Listeni
 
             {/* Bottom Submit Bar */}
             {(phase === 'reading_time' || phase === 'done' || totalAnswered === totalProblems) && (
-                <div className="bg-white border-t border-slate-200 px-4 py-3 flex-shrink-0">
+                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl px-4 py-3 flex-shrink-0">
                     <button
                         onClick={handleSubmit}
                         className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
