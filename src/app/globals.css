@@ -1,6 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* 모바일 바운스 스크롤(꿀렁꿀렁) 완전 방지 — iOS Safari 포함 */
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* 시스템 기본 폰트 적용 (애플산돌고딕 위주) */
 /* 윈도우(PC) 사용자를 위한 애플산돌고딕 완벽 호환 웹폰트(Pretendard) 폴백용 임포트 */

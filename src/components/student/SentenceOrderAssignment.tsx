@@ -57,6 +57,12 @@ export default function SentenceOrderAssignment({
     const dragOffsetX = useRef(0);
     const scrollIntervalRef = useRef<number | null>(null);
     const lastClientY = useRef(0);
+    // Long-press detection
+    const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingIndex = useRef<number | null>(null);
+    const pendingPointerId = useRef<number | null>(null);
+    const startPos = useRef({ x: 0, y: 0 });
+    const isDragging = useRef(false);
 
     // Load attempt count
     useEffect(() => {
@@ -106,28 +112,24 @@ export default function SentenceOrderAssignment({
 
     // Remove floating clone
     const removeFloatingClone = useCallback(() => {
-        if (floatingRef.current) {
-            floatingRef.current.remove();
-            floatingRef.current = null;
-        }
+        if (floatingRef.current) { floatingRef.current.remove(); floatingRef.current = null; }
     }, []);
 
-    // Auto-scroll when near edges (rAF loop)
+    // Auto-scroll when near edges
     const startAutoScroll = useCallback(() => {
         if (scrollIntervalRef.current) return;
-
-        const threshold = 80;
-        const maxSpeed = 14;
-
+        const threshold = 100;
+        const maxSpeed = 16;
         const tick = () => {
             const y = lastClientY.current;
             const viewH = window.innerHeight;
+            const scrollEl = document.scrollingElement || document.body;
             if (y < threshold) {
-                const speed = Math.max(2, maxSpeed * (1 - y / threshold));
-                window.scrollBy(0, -speed);
+                const speed = Math.max(3, maxSpeed * (1 - y / threshold));
+                scrollEl.scrollTop -= speed;
             } else if (y > viewH - threshold) {
-                const speed = Math.max(2, maxSpeed * (1 - (viewH - y) / threshold));
-                window.scrollBy(0, speed);
+                const speed = Math.max(3, maxSpeed * (1 - (viewH - y) / threshold));
+                scrollEl.scrollTop += speed;
             }
             scrollIntervalRef.current = requestAnimationFrame(tick);
         };
@@ -135,80 +137,73 @@ export default function SentenceOrderAssignment({
     }, []);
 
     const stopAutoScroll = useCallback(() => {
-        if (scrollIntervalRef.current) {
-            cancelAnimationFrame(scrollIntervalRef.current);
-            scrollIntervalRef.current = null;
-        }
+        if (scrollIntervalRef.current) { cancelAnimationFrame(scrollIntervalRef.current); scrollIntervalRef.current = null; }
     }, []);
 
-    // Calculate which index the pointer is hovering over
     const calcOverIndex = useCallback((clientY: number): number => {
         const items = itemRefs.current;
         for (let i = 0; i < items.length; i++) {
             const el = items[i];
             if (!el || i === dragIndexRef.current) continue;
             const rect = el.getBoundingClientRect();
-            const midY = rect.top + rect.height / 2;
-            if (clientY < midY) return i;
+            if (clientY < rect.top + rect.height / 2) return i;
         }
         return sentences.length - 1;
     }, [sentences.length]);
 
-    // Apply visual shifts to neighboring items via CSS transforms (zero re-renders)
     const applyShifts = useCallback((newOverIndex: number) => {
         const dIdx = dragIndexRef.current;
         if (dIdx === null) return;
-
         const dragEl = itemRefs.current[dIdx];
-        const dragH = dragEl ? dragEl.offsetHeight + 8 : 60; // 8px gap
-
+        const dragH = dragEl ? dragEl.offsetHeight + 8 : 60;
         itemRefs.current.forEach((el, i) => {
             if (!el || i === dIdx) return;
-
             let shift = 0;
-            if (dIdx < newOverIndex) {
-                // Dragging DOWN → items between (dIdx, newOverIndex] shift UP
-                if (i > dIdx && i <= newOverIndex) shift = -dragH;
-            } else if (dIdx > newOverIndex) {
-                // Dragging UP → items between [newOverIndex, dIdx) shift DOWN
-                if (i >= newOverIndex && i < dIdx) shift = dragH;
-            }
-
+            if (dIdx < newOverIndex && i > dIdx && i <= newOverIndex) shift = -dragH;
+            else if (dIdx > newOverIndex && i >= newOverIndex && i < dIdx) shift = dragH;
             el.style.transition = 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)';
             el.style.transform = shift !== 0 ? `translateY(${shift}px)` : '';
         });
     }, []);
 
-    // Clear all visual shifts instantly
     const clearShifts = useCallback(() => {
-        itemRefs.current.forEach(el => {
-            if (!el) return;
-            el.style.transition = '';
-            el.style.transform = '';
-        });
+        itemRefs.current.forEach(el => { if (el) { el.style.transition = ''; el.style.transform = ''; } });
     }, []);
 
-    // === POINTER EVENT HANDLERS ===
+    const cancelLongPress = useCallback(() => {
+        if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+        pendingIndex.current = null;
+        pendingPointerId.current = null;
+    }, []);
 
-    const handlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    // Lock body scroll during drag
+    const lockBodyScroll = useCallback(() => {
+        document.body.style.touchAction = 'none';
+        document.body.style.overscrollBehavior = 'none';
+    }, []);
+    const unlockBodyScroll = useCallback(() => {
+        document.body.style.touchAction = '';
+        document.body.style.overscrollBehavior = '';
+    }, []);
 
-        // Find the parent card element (the actual item to drag)
-        const handle = e.currentTarget as HTMLElement;
-        const card = handle.closest('[data-drag-item]') as HTMLElement;
+    // Actually start dragging (called after long-press fires)
+    const activateDrag = useCallback((index: number, clientX: number, clientY: number) => {
+        const card = itemRefs.current[index];
         if (!card) return;
 
-        handle.setPointerCapture(e.pointerId);
-
+        isDragging.current = true;
         dragIndexRef.current = index;
         overIndexRef.current = index;
-        lastClientY.current = e.clientY;
+        lastClientY.current = clientY;
 
-        // Create the floating ghost that follows the pointer
-        createFloatingClone(card, e.clientX, e.clientY);
+        // Haptic feedback if available
+        if (navigator.vibrate) navigator.vibrate(30);
 
-        // Fade out original (it stays as a collapsed placeholder)
+        // Prevent browser scroll while dragging
+        lockBodyScroll();
+
+        createFloatingClone(card, clientX, clientY);
+
         card.style.opacity = '0';
         card.style.maxHeight = `${card.offsetHeight}px`;
         card.style.transition = 'opacity 0.15s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
@@ -222,11 +217,40 @@ export default function SentenceOrderAssignment({
         });
 
         startAutoScroll();
-    }, [createFloatingClone, startAutoScroll]);
+    }, [createFloatingClone, startAutoScroll, lockBodyScroll]);
+
+    // === POINTER EVENT HANDLERS ===
+
+    const handlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
+        startPos.current = { x: e.clientX, y: e.clientY };
+        pendingIndex.current = index;
+        pendingPointerId.current = e.pointerId;
+
+        // Start long-press timer (300ms)
+        cancelLongPress();
+        longPressTimer.current = setTimeout(() => {
+            const card = itemRefs.current[index];
+            if (card) {
+                try { card.setPointerCapture(pendingPointerId.current!); } catch {}
+            }
+            activateDrag(index, startPos.current.x, startPos.current.y);
+        }, 300);
+    }, [cancelLongPress, activateDrag]);
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
-        if (dragIndexRef.current === null) return;
+        // If long-press pending, check if finger moved too much → cancel (it's a scroll)
+        if (longPressTimer.current) {
+            const dx = e.clientX - startPos.current.x;
+            const dy = e.clientY - startPos.current.y;
+            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+                cancelLongPress();
+            }
+            return;
+        }
 
+        if (!isDragging.current || dragIndexRef.current === null) return;
+
+        e.preventDefault();
         lastClientY.current = e.clientY;
         moveFloatingClone(e.clientX, e.clientY);
 
@@ -235,32 +259,29 @@ export default function SentenceOrderAssignment({
             overIndexRef.current = newOver;
             applyShifts(newOver);
         }
-    }, [moveFloatingClone, calcOverIndex, applyShifts]);
+    }, [cancelLongPress, moveFloatingClone, calcOverIndex, applyShifts]);
+
+    const restoreElement = useCallback((idx: number | null) => {
+        if (idx !== null && itemRefs.current[idx]) {
+            const el = itemRefs.current[idx]!;
+            el.style.opacity = ''; el.style.maxHeight = ''; el.style.padding = '';
+            el.style.marginTop = ''; el.style.marginBottom = ''; el.style.overflow = '';
+            el.style.border = ''; el.style.transition = ''; el.style.transform = '';
+        }
+    }, []);
 
     const handlePointerUp = useCallback(() => {
+        cancelLongPress();
         const dIdx = dragIndexRef.current;
         const oIdx = overIndexRef.current;
 
         removeFloatingClone();
         stopAutoScroll();
         clearShifts();
+        restoreElement(dIdx);
+        unlockBodyScroll();
 
-        // Restore the original element
-        if (dIdx !== null && itemRefs.current[dIdx]) {
-            const el = itemRefs.current[dIdx]!;
-            el.style.opacity = '';
-            el.style.maxHeight = '';
-            el.style.padding = '';
-            el.style.marginTop = '';
-            el.style.marginBottom = '';
-            el.style.overflow = '';
-            el.style.border = '';
-            el.style.transition = '';
-            el.style.transform = '';
-        }
-
-        // Apply the reorder
-        if (dIdx !== null && oIdx !== null && dIdx !== oIdx) {
+        if (isDragging.current && dIdx !== null && oIdx !== null && dIdx !== oIdx) {
             setSentences(prev => {
                 const items = [...prev];
                 const [removed] = items.splice(dIdx, 1);
@@ -271,29 +292,20 @@ export default function SentenceOrderAssignment({
 
         dragIndexRef.current = null;
         overIndexRef.current = null;
-    }, [removeFloatingClone, stopAutoScroll, clearShifts]);
+        isDragging.current = false;
+    }, [cancelLongPress, removeFloatingClone, stopAutoScroll, clearShifts, restoreElement, unlockBodyScroll]);
 
     const handlePointerCancel = useCallback(() => {
+        cancelLongPress();
         removeFloatingClone();
         stopAutoScroll();
         clearShifts();
-
-        if (dragIndexRef.current !== null && itemRefs.current[dragIndexRef.current]) {
-            const el = itemRefs.current[dragIndexRef.current]!;
-            el.style.opacity = '';
-            el.style.maxHeight = '';
-            el.style.padding = '';
-            el.style.marginTop = '';
-            el.style.marginBottom = '';
-            el.style.overflow = '';
-            el.style.border = '';
-            el.style.transition = '';
-            el.style.transform = '';
-        }
-
+        restoreElement(dragIndexRef.current);
+        unlockBodyScroll();
         dragIndexRef.current = null;
         overIndexRef.current = null;
-    }, [removeFloatingClone, stopAutoScroll, clearShifts]);
+        isDragging.current = false;
+    }, [cancelLongPress, removeFloatingClone, stopAutoScroll, clearShifts, restoreElement, unlockBodyScroll]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -501,7 +513,7 @@ export default function SentenceOrderAssignment({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                     </svg>
                     <p className="text-xs text-slate-500 font-medium">
-                        각 문장의 <span className="font-bold text-amber-700">⠿ 핸들</span>을 잡고 드래그하면 위아래로 이동시킬 수 있습니다.
+                        문장을 <span className="font-bold text-amber-700">꾹 눌러</span> 드래그하면 순서를 바꿀 수 있습니다. 살짝 터치하면 스크롤됩니다.
                     </p>
                 </div>
             </div>
@@ -516,18 +528,14 @@ export default function SentenceOrderAssignment({
                     <div
                         key={`${sentence}-${idx}`}
                         ref={el => { itemRefs.current[idx] = el; }}
-                        data-drag-item
-                        className="flex items-start gap-3 p-4 rounded-xl border-2 select-none bg-white border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md"
+                        onPointerDown={(e) => handlePointerDown(idx, e)}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onPointerCancel={handlePointerCancel}
+                        className="flex items-start gap-3 p-4 rounded-xl border-2 select-none bg-white border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md cursor-grab active:cursor-grabbing"
                     >
-                        {/* Drag Handle + Number — only this area captures drag */}
-                        <div
-                            className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5 cursor-grab active:cursor-grabbing"
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={(e) => handlePointerDown(idx, e)}
-                            onPointerMove={handlePointerMove}
-                            onPointerUp={handlePointerUp}
-                            onPointerCancel={handlePointerCancel}
-                        >
+                        {/* Drag Handle + Number */}
+                        <div className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5">
                             <span className="w-7 h-7 flex items-center justify-center bg-[#0A0E27] text-white rounded-lg text-xs font-bold shadow-sm">
                                 {idx + 1}
                             </span>
@@ -543,7 +551,7 @@ export default function SentenceOrderAssignment({
                             </svg>
                         </div>
 
-                        {/* Sentence Text — allows normal touch scroll */}
+                        {/* Sentence Text */}
                         <p className="text-sm text-slate-700 leading-relaxed flex-1 pt-1">{sentence}</p>
                     </div>
                 ))}
