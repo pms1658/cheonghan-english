@@ -103,7 +103,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="h-full overflow-hidden">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <ListeningSetAssignment
                         assignment={assignment as any}
@@ -123,7 +123,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <SentenceOrderAssignment
                         assignment={assignment as any}
@@ -146,7 +146,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="h-full overflow-hidden">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <VocabularyAssignment
                         assignment={assignment as any}
@@ -171,7 +171,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <TransformAssignment
                         assignment={assignment as any}
@@ -194,7 +194,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <SubjectiveAssignment
                         assignment={assignment as any}
@@ -238,7 +238,7 @@ export default function MobileAssignment({
         };
 
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <AnalysisAssignment
                         assignmentId={assignment.id}
@@ -260,7 +260,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found.</div>;
 
         return (
-            <div className="min-h-screen bg-slate-50 overflow-y-auto">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <WorkbookAssignmentView
                         assignment={assignment as any}
@@ -282,7 +282,7 @@ export default function MobileAssignment({
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found.</div>;
 
         return (
-            <div className="min-h-screen bg-slate-50 overflow-y-auto">
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
                 <ErrorBoundary>
                     <WritingAssignment
                         assignment={assignment as any}
