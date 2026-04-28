@@ -115,26 +115,42 @@ export default function SentenceOrderAssignment({
         if (floatingRef.current) { floatingRef.current.remove(); floatingRef.current = null; }
     }, []);
 
+    // Find the actual scroll container (the fixed wrapper with overflow-y-auto)
+    const getScrollContainer = useCallback((): HTMLElement => {
+        let el: HTMLElement | null = containerRef.current;
+        while (el) {
+            const style = window.getComputedStyle(el);
+            if (style.overflowY === 'auto' || style.overflowY === 'scroll') return el;
+            el = el.parentElement;
+        }
+        return document.scrollingElement as HTMLElement || document.body;
+    }, []);
+
     // Auto-scroll when near edges
     const startAutoScroll = useCallback(() => {
         if (scrollIntervalRef.current) return;
-        const threshold = 100;
-        const maxSpeed = 16;
+        const threshold = 120;
+        const maxSpeed = 18;
         const tick = () => {
             const y = lastClientY.current;
-            const viewH = window.innerHeight;
-            const scrollEl = document.scrollingElement || document.body;
-            if (y < threshold) {
-                const speed = Math.max(3, maxSpeed * (1 - y / threshold));
+            const scrollEl = getScrollContainer();
+            const rect = scrollEl.getBoundingClientRect();
+            const topEdge = Math.max(rect.top, 0);
+            const bottomEdge = Math.min(rect.bottom, window.innerHeight);
+
+            if (y < topEdge + threshold) {
+                const dist = y - topEdge;
+                const speed = Math.max(3, maxSpeed * (1 - Math.max(0, dist) / threshold));
                 scrollEl.scrollTop -= speed;
-            } else if (y > viewH - threshold) {
-                const speed = Math.max(3, maxSpeed * (1 - (viewH - y) / threshold));
+            } else if (y > bottomEdge - threshold) {
+                const dist = bottomEdge - y;
+                const speed = Math.max(3, maxSpeed * (1 - Math.max(0, dist) / threshold));
                 scrollEl.scrollTop += speed;
             }
             scrollIntervalRef.current = requestAnimationFrame(tick);
         };
         scrollIntervalRef.current = requestAnimationFrame(tick);
-    }, []);
+    }, [getScrollContainer]);
 
     const stopAutoScroll = useCallback(() => {
         if (scrollIntervalRef.current) { cancelAnimationFrame(scrollIntervalRef.current); scrollIntervalRef.current = null; }
@@ -176,20 +192,25 @@ export default function SentenceOrderAssignment({
         pendingPointerId.current = null;
     }, []);
 
-    // Lock body scroll + text selection during drag
+    // Lock scroll container during drag
     const lockBodyScroll = useCallback(() => {
+        const scrollEl = getScrollContainer();
+        scrollEl.style.overflowY = 'hidden';
+        scrollEl.style.touchAction = 'none';
         document.body.style.touchAction = 'none';
-        document.body.style.overscrollBehavior = 'none';
         document.body.style.userSelect = 'none';
         document.body.style.webkitUserSelect = 'none';
-    }, []);
+    }, [getScrollContainer]);
+
     const unlockBodyScroll = useCallback(() => {
+        const scrollEl = getScrollContainer();
+        scrollEl.style.overflowY = 'auto';
+        scrollEl.style.touchAction = '';
         document.body.style.touchAction = '';
-        document.body.style.overscrollBehavior = '';
         document.body.style.userSelect = '';
         document.body.style.webkitUserSelect = '';
         window.getSelection()?.removeAllRanges();
-    }, []);
+    }, [getScrollContainer]);
 
     // Actually start dragging (called after long-press fires)
     const activateDrag = useCallback((index: number, clientX: number, clientY: number) => {
@@ -479,7 +500,7 @@ export default function SentenceOrderAssignment({
     //  MAIN DRAG VIEW
     // ═══════════════════════════════════════
     return (
-        <div className="min-h-screen bg-slate-50 font-sans">
+        <div ref={containerRef} className="min-h-screen bg-slate-50 font-sans">
             {/* Navy Header */}
             <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
