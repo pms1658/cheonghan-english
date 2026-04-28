@@ -448,7 +448,7 @@ export default function SubjectiveAssignmentForm({
 
                                     {problem.type === 'sentence_transform' && (
                                         <div className="space-y-2">
-                                            <div className="bg-slate-50 p-3 rounded-xl text-sm leading-relaxed text-slate-800 italic">{problem.originalForTransform}</div>
+                                            <div className="bg-slate-50 p-3 rounded-xl text-sm leading-relaxed text-slate-800 italic">{problem.originalForTransform || (problem as any).originalSentence}</div>
                                             {problem.transformCondition && (
                                                 <div className="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg">📌 조건: {problem.transformCondition}</div>
                                             )}

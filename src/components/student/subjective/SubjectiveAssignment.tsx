@@ -446,7 +446,7 @@ export default function SubjectiveAssignment({
             </header>
 
             {/* Main Content */}
-            <div className="max-w-4xl mx-auto px-4 py-6 md:py-8 pb-40">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:py-8 pb-56">
 
                 {/* Passage — Always visible like a real exam paper */}
                 {(assignment.modifiedPassage || assignment.content) && (
@@ -660,7 +660,7 @@ export default function SubjectiveAssignment({
                                 {currentProblem.type === 'sentence_transform' && (
                                     <div className="space-y-3">
                                         <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600">
-                                            <p className="text-[15px] leading-relaxed italic text-slate-800 dark:text-slate-200">{currentProblem.originalForTransform}</p>
+                                            <p className="text-[15px] leading-relaxed italic text-slate-800 dark:text-slate-200">{currentProblem.originalForTransform || (currentProblem as any).originalSentence}</p>
                                         </div>
                                         {currentProblem.transformCondition && (
                                             <div className="flex items-start gap-2 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-700">
