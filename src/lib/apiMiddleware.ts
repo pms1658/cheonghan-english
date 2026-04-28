@@ -58,6 +58,14 @@ export function validateOrigin(req: Request): NextResponse | null {
         || !IS_PRODUCTION;
 
     if (!isAllowed) {
+        // Same-origin 요청인지 확인 (배포된 도메인에서 자기 API 호출)
+        const host = req.headers.get('host');
+        const isSameOrigin = host && requestOrigin.includes(host);
+        
+        if (isSameOrigin) {
+            return null; // Same-origin은 항상 허용
+        }
+
         console.warn(`[API Security] Blocked request from unauthorized origin: ${requestOrigin}`);
         return NextResponse.json(
             { error: 'Unauthorized origin' },
