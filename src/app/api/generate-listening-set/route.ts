@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
+import { generateListeningSetRequestSchema } from '@/schemas/api';
 
 // Allow up to 120 seconds for 7+ batch Gemini calls
 export const maxDuration = 120;
@@ -119,7 +120,7 @@ function delay(ms: number) {
 
 // ── POST Handler ──
 export async function POST(req: Request) {
-    const blocked = apiGuard(req);
+    const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
 
     try {
@@ -127,7 +128,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Gemini API Key missing' }, { status: 500 });
         }
 
-        const { targetGrade = '3' } = await req.json();
+        const body = await req.json();
+        validateRequest(generateListeningSetRequestSchema, body, 'generate-listening-set');
+        const { targetGrade = '3' } = body;
         const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
         console.log('[ListeningSet] Starting generation for grade:', targetGrade);

@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { gradeSubjectiveRequestSchema } from '@/schemas/api';
 import { getSubjectiveGradingPrompt } from '@/services/geminiPrompts';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
@@ -61,7 +62,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Gemini API Key is missing.' }, { status: 500 });
         }
 
-        const { problems, answers, passage } = await req.json();
+        const body = await req.json();
+        validateRequest(gradeSubjectiveRequestSchema, body, 'grade-subjective');
+        const { problems, answers, passage } = body;
 
         if (!problems || !answers || !passage) {
             return NextResponse.json({ error: 'Problems, answers, and passage are required' }, { status: 400 });

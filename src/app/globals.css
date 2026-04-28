@@ -201,6 +201,39 @@
   display: none;
 }
 
+/* ─── Global Slim Scrollbar (호버 시에만 표시) ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: rgba(100,116,139,0.25) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(100,116,139,0.2);
+}
+*:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(100,116,139,0.4);
+}
+.dark *:hover::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.15);
+}
+.dark *:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(148,163,184,0.3);
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -305,6 +338,17 @@ a[class*="rounded"]:not(:disabled):active:not(:has(:active)) {
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }
 

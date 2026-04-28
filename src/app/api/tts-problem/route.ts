@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { ttsProblemRequestSchema } from '@/schemas/api';
 
 // Vercel Hobby plan max: 60s
 export const maxDuration = 60;
@@ -208,7 +209,9 @@ export async function POST(req: Request) {
     if (blocked) return blocked;
 
     try {
-        const { lines, problemNumber } = await req.json();
+        const body = await req.json();
+        validateRequest(ttsProblemRequestSchema, body, 'tts-problem');
+        const { lines, problemNumber } = body;
 
         if (!lines || !Array.isArray(lines) || lines.length === 0) {
             return NextResponse.json({ error: 'Lines are required' }, { status: 400 });

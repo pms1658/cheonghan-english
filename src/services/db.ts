@@ -100,13 +100,19 @@ export const dbService = {
     getStudents: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
         try {
-            const sn = await getDocs(collection(db, 'students'));
-            return sn.docs.map(d => {
+            // 비기본 테넌트: 서버사이드 필터링 (성능 최적화)
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'students'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : collection(db, 'students');
+            const sn = await getDocs(q);
+            const results = sn.docs.map(d => {
                 const data = convertDoc<Student>(d);
                 if (!data.classIds) data.classIds = [];
                 if (!data.password) data.password = '123456';
                 return data;
-            }).filter(s => matchesTenant(s as any, tid));
+            });
+            // 기본 테넌트는 레거시 데이터(tenantId 미설정)도 포함해야 하므로 클라이언트 필터 유지
+            return tid === DEFAULT_TENANT_ID ? results.filter(s => matchesTenant(s as any, tid)) : results;
         } catch (e) {
             console.error('Error fetching students:', e);
             return [];
@@ -151,10 +157,17 @@ export const dbService = {
     getFeedbacks: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
         try {
-            const q = query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'feedbacks'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
             const sn = await getDocs(q);
-            return sn.docs.map(doc => convertDoc<Feedback>(doc))
-                .filter(f => matchesTenant(f as any, tid));
+            const results = sn.docs.map(d => convertDoc<Feedback>(d));
+            const filtered = tid === DEFAULT_TENANT_ID ? results.filter(f => matchesTenant(f as any, tid)) : results;
+            // 비기본 테넌트: orderBy 없으므로 클라이언트 정렬
+            if (tid !== DEFAULT_TENANT_ID) {
+                filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            }
+            return filtered;
         } catch (e) {
             console.error(e);
             return [];
@@ -163,9 +176,12 @@ export const dbService = {
     getClasses: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
         try {
-            const classesSnap = await getDocs(collection(db, 'classes'));
-            return classesSnap.docs.map(d => convertDoc<Class>(d))
-                .filter(c => matchesTenant(c as any, tid));
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'classes'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : collection(db, 'classes');
+            const classesSnap = await getDocs(q);
+            const results = classesSnap.docs.map(d => convertDoc<Class>(d));
+            return tid === DEFAULT_TENANT_ID ? results.filter(c => matchesTenant(c as any, tid)) : results;
         } catch (e) {
             console.error("Error fetching classes:", e);
             return [];
@@ -222,8 +238,11 @@ export const dbService = {
             return 0;
         };
         try {
-            const sn = await getDocs(collection(db, 'assignments'));
-            return sn.docs.map((d, idx) => {
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'assignments'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : collection(db, 'assignments');
+            const sn = await getDocs(q);
+            const mapped = sn.docs.map((d, idx) => {
                 const data = convertDoc<Assignment>(d);
                 if (!data.classIds && data.classId) {
                     data.classIds = [data.classId];
@@ -240,10 +259,10 @@ export const dbService = {
                     if (snapTime) {
                         (data as any).createdAt = snapTime.seconds * 1000;
                     }
-                    // If still 0, leave as 0 — docId sort will handle it
                 }
                 return data;
-            }).filter(a => matchesTenant(a as any, tid));
+            });
+            return tid === DEFAULT_TENANT_ID ? mapped.filter(a => matchesTenant(a as any, tid)) : mapped;
         } catch (e) { console.error(e); return []; }
     },
     addAssignment: async (assignment: Omit<Assignment, 'id'>, tenantId?: string) => {
@@ -277,10 +296,18 @@ export const dbService = {
     getWorkbooks: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
         try {
-            const q = query(collection(db, 'workbooks'), orderBy('createdAt', 'desc'));
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'workbooks'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : query(collection(db, 'workbooks'), orderBy('createdAt', 'desc'));
             const sn = await getDocs(q);
-            return sn.docs.map(d => convertDoc<Workbook>(d))
-                .filter(w => matchesTenant(w as any, tid));
+            const results = sn.docs.map(d => convertDoc<Workbook>(d));
+            // 기본 테넌트: 기존 matchesTenant 유지, 비기본: 이미 서버필터됨
+            const filtered = tid === DEFAULT_TENANT_ID ? results.filter(w => matchesTenant(w as any, tid)) : results;
+            // 비기본 테넌트는 orderBy가 없으므로 클라이언트 정렬
+            if (tid !== DEFAULT_TENANT_ID) {
+                filtered.sort((a, b) => ((b.createdAt as number) || 0) - ((a.createdAt as number) || 0));
+            }
+            return filtered;
         } catch (e) {
             console.error('Error fetching workbooks:', e);
             return [];
@@ -328,11 +355,19 @@ export const dbService = {
     // --- Submissions ---
     getSubmissions: async (classId?: string, studentName?: string, tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
-        let q = query(collection(db, 'submissions'), orderBy('timestamp', 'desc'));
+        const q = tid !== DEFAULT_TENANT_ID
+            ? query(collection(db, 'submissions'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+            : query(collection(db, 'submissions'), orderBy('timestamp', 'desc'));
 
         const sn = await getDocs(q);
-        let results = sn.docs.map(d => normalizeSubmission(convertDoc<Submission>(d)))
-            .filter(s => matchesTenant(s as any, tid));
+        let results = sn.docs.map(d => normalizeSubmission(convertDoc<Submission>(d)));
+        // 기본 테넌트: matchesTenant 필터 유지
+        if (tid === DEFAULT_TENANT_ID) {
+            results = results.filter(s => matchesTenant(s as any, tid));
+        } else {
+            // 비기본 테넌트: orderBy 없으므로 클라이언트 정렬
+            results.sort((a, b) => ((b.timestamp as number) || 0) - ((a.timestamp as number) || 0));
+        }
 
         if (classId) results = results.filter(s => s.classId === classId);
         if (studentName) results = results.filter(s => s.studentName?.includes(studentName));
@@ -452,9 +487,12 @@ export const dbService = {
     getWordBooks: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
         try {
-            const sn = await getDocs(collection(db, 'word_books'));
-            return sn.docs.map(d => convertDoc<WordBook>(d))
-                .filter(w => matchesTenant(w as any, tid));
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'word_books'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : collection(db, 'word_books');
+            const sn = await getDocs(q);
+            const results = sn.docs.map(d => convertDoc<WordBook>(d));
+            return tid === DEFAULT_TENANT_ID ? results.filter(w => matchesTenant(w as any, tid)) : results;
         } catch (e) { console.error(e); return []; }
     },
     addWordBook: async (wb: Omit<WordBook, 'id' | 'createdAt'>, tenantId?: string) => {

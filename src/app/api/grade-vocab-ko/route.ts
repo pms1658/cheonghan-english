@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { gradeVocabKoRequestSchema } from '@/schemas/api';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -9,7 +10,9 @@ export async function POST(req: Request) {
     if (blocked) return blocked;
 
     try {
-        const { items } = await req.json();
+        const body = await req.json();
+        validateRequest(gradeVocabKoRequestSchema, body, 'grade-vocab-ko');
+        const { items } = body;
         // items: Array<{ word: string, correctMeaning: string, studentInput: string }>
 
         if (!items || !Array.isArray(items) || items.length === 0) {

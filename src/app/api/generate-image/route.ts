@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
+import { generateImageRequestSchema } from '@/schemas/api';
 
 export async function POST(req: Request) {
-    const blocked = apiGuard(req);
+    const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
 
     try {
-        const { prompt } = await req.json();
+        const body = await req.json();
+        validateRequest(generateImageRequestSchema, body, 'generate-image');
+        const { prompt } = body;
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });

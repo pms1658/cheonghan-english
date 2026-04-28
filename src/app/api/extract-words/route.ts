@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { extractWordsRequestSchema } from '@/schemas/api';
 
 export async function POST(request: Request) {
     const blocked = apiGuard(request);
@@ -27,7 +28,9 @@ export async function POST(request: Request) {
             }
         });
 
-        const { sentences, providedWords } = await request.json();
+        const body = await request.json();
+        validateRequest(extractWordsRequestSchema, body, 'extract-words');
+        const { sentences, providedWords } = body;
 
         if (!sentences && !providedWords) {
             return NextResponse.json({ error: 'Invalid input: Text or Words required' }, { status: 400 });

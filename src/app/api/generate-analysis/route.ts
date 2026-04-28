@@ -1,18 +1,21 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
+import { generateAnalysisRequestSchema } from '@/schemas/api';
 import { getPremiumAnalysisPrompt } from "@/services/geminiPrompts";
 import { cleanPassageMarkers } from "@/utils/textUtils";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
-    const blocked = apiGuard(req);
+    const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
 
     try {
-        const { sentences, grade = '2' } = await req.json();
+        const body = await req.json();
+        validateRequest(generateAnalysisRequestSchema, body, 'generate-analysis');
+        const { sentences, grade = '2' } = body;
         // Handle both string[] and AnalysisSentence[]
         const rawPassage = Array.isArray(sentences)
             ? sentences.map((s: any) => typeof s === 'string' ? s : s.original).join(' ')

@@ -139,7 +139,7 @@ export default function LoginForm() {
             }
         } catch (error: any) {
             console.error(error);
-            if (!isAuto) alert('로그인 실패: ' + (error.message || '알 수 없는 오류'));
+            if (!isAuto) toast.error('로그인 실패: ' + (error.message || '알 수 없는 오류'));
             if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
         } finally {
             setIsLoading(false);

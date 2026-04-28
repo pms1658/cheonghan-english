@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
+import { generateFullSetRequestSchema } from '@/schemas/api';
 import { getWorkbookPrompt, getVariantPrompt, getAnalysisPrompt, getBestTypesPrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
@@ -34,11 +35,13 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
-    const blocked = apiGuard(req);
+    const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
 
     try {
-        const { passage: rawPassage, problemTypes, targetGrade = '3' } = await req.json();
+        const body = await req.json();
+        validateRequest(generateFullSetRequestSchema, body, 'generate-full-set');
+        const { passage: rawPassage, problemTypes, targetGrade = '3' } = body;
         const passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) return NextResponse.json({ error: 'Passage is required' }, { status: 400 });

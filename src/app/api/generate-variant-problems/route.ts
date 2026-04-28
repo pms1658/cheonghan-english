@@ -1,10 +1,12 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
+import { generateVariantRequestSchema } from '@/schemas/api';
 import { getVariantPrompt, getBestTypesPrompt, getPassageRewritePrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+
 const genAI = new GoogleGenerativeAI(apiKey);
 
 const safetySettings = [
@@ -164,7 +166,7 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
-    const blocked = apiGuard(req);
+    const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
 
     try {
@@ -172,7 +174,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Server configuration error: Gemini API Key is missing.' }, { status: 500 });
         }
 
-        let { passage: rawPassage, problemTypes, autoGenerate, targetGrade = '3', isSpecialLevel = false } = await req.json();
+        const body = await req.json();
+        validateRequest(generateVariantRequestSchema, body, 'generate-variant-problems');
+        let { passage: rawPassage, problemTypes, autoGenerate, targetGrade = '3', isSpecialLevel = false } = body;
         let passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) {

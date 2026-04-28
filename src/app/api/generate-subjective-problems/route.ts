@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
+import { generateSubjectiveRequestSchema } from '@/schemas/api';
 import { getSubjectiveProblemsPrompt } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
@@ -61,7 +62,7 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
-    const blocked = apiGuard(req);
+    const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
 
     try {
@@ -69,7 +70,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Gemini API Key is missing.' }, { status: 500 });
         }
 
-        const { passage: rawPassage, targetGrade = '3', mode = 'auto', problemTypes } = await req.json();
+        const body = await req.json();
+        validateRequest(generateSubjectiveRequestSchema, body, 'generate-subjective-problems');
+        const { passage: rawPassage, targetGrade = '3', mode = 'auto', problemTypes } = body;
         const passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) {

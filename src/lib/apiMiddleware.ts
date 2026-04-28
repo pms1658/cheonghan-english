@@ -130,6 +130,72 @@ export function createErrorResponse(
 }
 
 // ═══════════════════════════════════════
+// Rate Limiter (인메모리)
+// ═══════════════════════════════════════
+
+/** 기본 제한: 분당 60회 */
+const DEFAULT_RATE_LIMIT = 60;
+/** AI 생성 API용: 분당 10회 */
+export const AI_RATE_LIMIT = 10;
+
+interface RateLimitEntry {
+    count: number;
+    resetAt: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+// 5분마다 만료된 항목 정리
+if (typeof setInterval !== 'undefined') {
+    setInterval(() => {
+        const now = Date.now();
+        for (const [key, entry] of rateLimitStore.entries()) {
+            if (entry.resetAt < now) {
+                rateLimitStore.delete(key);
+            }
+        }
+    }, 5 * 60 * 1000);
+}
+
+/**
+ * IP 기반 속도 제한 (프로덕션 전용)
+ * 
+ * @returns null이면 통과, NextResponse이면 차단
+ */
+export function rateLimit(req: Request, maxRequests: number = DEFAULT_RATE_LIMIT): NextResponse | null {
+    if (!IS_PRODUCTION) return null; // 개발 환경에서는 비활성
+
+    // IP 추출 (Vercel, Cloudflare 등 프록시 헤더 지원)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || req.headers.get('x-real-ip')
+        || 'unknown';
+
+    const now = Date.now();
+    const windowMs = 60 * 1000; // 1분 윈도우
+    const key = ip;
+
+    const entry = rateLimitStore.get(key);
+
+    if (!entry || entry.resetAt < now) {
+        // 새 윈도우 시작
+        rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+        return null;
+    }
+
+    entry.count++;
+
+    if (entry.count > maxRequests) {
+        console.warn(`[Rate Limit] IP ${ip} exceeded ${maxRequests} req/min`);
+        return NextResponse.json(
+            { error: 'Too many requests. Please try again later.' },
+            { status: 429 }
+        );
+    }
+
+    return null;
+}
+
+// ═══════════════════════════════════════
 // 통합 미들웨어 (한 줄로 호출)
 // ═══════════════════════════════════════
 
@@ -138,6 +204,8 @@ export interface ApiGuardOptions {
     maxBodySize?: number;
     /** Origin 검증 스킵 여부. 기본값: false */
     skipOriginCheck?: boolean;
+    /** Rate limit (분당 요청 수). 기본값: 60 */
+    rateLimit?: number;
 }
 
 /**
@@ -165,5 +233,54 @@ export function apiGuard(req: Request, options?: ApiGuardOptions): NextResponse 
     const bodyBlock = validateBodySize(req, options?.maxBodySize);
     if (bodyBlock) return bodyBlock;
 
+    // 3. Rate Limiting
+    const rateLimitBlock = rateLimit(req, options?.rateLimit);
+    if (rateLimitBlock) return rateLimitBlock;
+
     return null; // 모든 검사 통과
+}
+
+// ═══════════════════════════════════════
+// Warn-Only 입력 검증 (Zod)
+// ═══════════════════════════════════════
+
+import type { ZodSchema, ZodError } from 'zod';
+
+/**
+ * 요청 body를 Zod 스키마로 검증합니다 (warn-only).
+ * 
+ * 검증 실패 시에도 **요청을 차단하지 않습니다.**
+ * 서버 로그에 경고만 출력하여 모니터링에 활용합니다.
+ * 
+ * @param schema - Zod 스키마
+ * @param data - 검증할 데이터 (req.json() 결과)
+ * @param routeName - 로그에 표시할 API 라우트 이름
+ * @returns 검증 결과 (true = 통과, false = 실패하지만 계속 진행)
+ * 
+ * @example
+ * ```ts
+ * const body = await req.json();
+ * validateRequest(gradeRequestSchema, body, 'grade');
+ * const { assignments } = body; // 기존 로직 그대로
+ * ```
+ */
+export function validateRequest<T>(
+    schema: ZodSchema<T>,
+    data: unknown,
+    routeName: string
+): boolean {
+    try {
+        schema.parse(data);
+        return true;
+    } catch (err) {
+        const zodError = err as ZodError;
+        const issues = zodError.issues?.map(
+            (issue) => `  - ${issue.path.join('.')}: ${issue.message}`
+        ).join('\n') || 'Unknown validation error';
+
+        console.warn(
+            `[Schema Warn] /${routeName} — request body validation failed (non-blocking):\n${issues}`
+        );
+        return false;
+    }
 }

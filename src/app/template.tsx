@@ -9,16 +9,21 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         setVisible(false);
-        // Tiny delay to trigger CSS transition
-        const t = requestAnimationFrame(() => setVisible(true));
-        return () => cancelAnimationFrame(t);
+        // Double rAF to guarantee the browser paints opacity:0 first
+        // (defeats React 18 automatic batching)
+        const frame1 = requestAnimationFrame(() => {
+            const frame2 = requestAnimationFrame(() => setVisible(true));
+            return () => cancelAnimationFrame(frame2);
+        });
+        return () => cancelAnimationFrame(frame1);
     }, [pathname]);
 
     return (
         <div
             style={{
                 opacity: visible ? 1 : 0,
-                transition: 'opacity 0.15s ease-in-out',
+                transform: visible ? 'translateY(0)' : 'translateY(6px)',
+                transition: 'opacity 0.25s ease-out, transform 0.3s ease-out',
             }}
         >
             {children}

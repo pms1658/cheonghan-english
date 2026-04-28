@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { translateSentencesRequestSchema } from '@/schemas/api';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -13,7 +14,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'API key missing' }, { status: 500 });
         }
 
-        const { sentences } = await req.json();
+        const body = await req.json();
+        validateRequest(translateSentencesRequestSchema, body, 'translate-sentences');
+        const { sentences } = body;
         if (!sentences || !Array.isArray(sentences) || sentences.length === 0) {
             return NextResponse.json({ error: 'sentences array required' }, { status: 400 });
         }

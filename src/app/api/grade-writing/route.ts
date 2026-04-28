@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { gradeWritingRequestSchema } from '@/schemas/api';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -9,7 +10,9 @@ export async function POST(req: Request) {
     if (blocked) return blocked;
 
     try {
-        const { targetGrammar, koreanSentence, studentAnswer, correctAnswer } = await req.json();
+        const body = await req.json();
+        validateRequest(gradeWritingRequestSchema, body, 'grade-writing');
+        const { targetGrammar, koreanSentence, studentAnswer, correctAnswer } = body;
 
         if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json({ error: 'API Key missing' }, { status: 500 });

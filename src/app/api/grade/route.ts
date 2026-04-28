@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { gradeRequestSchema } from '@/schemas/api';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -142,6 +143,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
+    validateRequest(gradeRequestSchema, body, 'grade');
     const { assignments } = body;
 
     // Handle single assignment legacy format if necessary (fallback)

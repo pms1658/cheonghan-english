@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
+import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
+import { ttsRequestSchema } from '@/schemas/api';
 
 /**
  * Gemini TTS API 프록시 (서버 캐시 포함)
@@ -72,7 +73,9 @@ export async function POST(req: Request) {
     if (blocked) return blocked;
 
     try {
-        const { text, speaker = 'M', lang } = await req.json();
+        const body = await req.json();
+        validateRequest(ttsRequestSchema, body, 'tts');
+        const { text, speaker = 'M', lang } = body;
 
         if (!text) {
             return NextResponse.json({ error: 'Text is required' }, { status: 400 });
