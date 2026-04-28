@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { prompt } = await req.json();
 
@@ -53,8 +57,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ imageBase64: base64 });
 
-    } catch (error: any) {
-        console.error('[Imagen] System Error:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate image');
     }
 }

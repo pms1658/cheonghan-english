@@ -1,9 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { problems, targetGrammar, level } = await req.json();
 
@@ -100,8 +104,7 @@ results 배열은 반드시 ${problems.length}개여야 합니다. 문제 순서
             console.error('[GradeWritingBatch] JSON parse error:', cleaned);
             return NextResponse.json({ error: 'Failed to parse AI response', raw: cleaned }, { status: 500 });
         }
-    } catch (error: any) {
-        console.error('[GradeWritingBatch] Error:', error);
-        return NextResponse.json({ error: error.message || 'Unknown error' }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to grade writing batch');
     }
 }

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 import { getWorkbookPrompt, getVariantPrompt, getAnalysisPrompt, getBestTypesPrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
@@ -33,6 +34,9 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { passage: rawPassage, problemTypes, targetGrade = '3' } = await req.json();
         const passage = cleanPassageMarkers(rawPassage);
@@ -149,8 +153,7 @@ export async function POST(req: Request) {
             variantProblems: finalVariants
         });
 
-    } catch (error: any) {
-        console.error('Full Gen Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate full set');
     }
 }

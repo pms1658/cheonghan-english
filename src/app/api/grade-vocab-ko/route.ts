@@ -1,9 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { items } = await req.json();
         // items: Array<{ word: string, correctMeaning: string, studentInput: string }>
@@ -78,10 +82,6 @@ Example: [{"index": 1, "correct": true}, {"index": 2, "correct": false}]
 
         return NextResponse.json({ results });
     } catch (error) {
-        console.error('[grade-vocab-ko] Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to grade vocabulary', details: error instanceof Error ? error.message : String(error) },
-            { status: 500 }
-        );
+        return createErrorResponse(error, 'Failed to grade vocabulary');
     }
 }

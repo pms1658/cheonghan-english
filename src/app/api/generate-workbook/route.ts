@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 import { getWorkbookPrompt } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
@@ -14,6 +15,9 @@ const safetySettings = [
 ];
 
 export async function POST(req: Request) {
+  const blocked = apiGuard(req);
+  if (blocked) return blocked;
+
   try {
     const { passage: rawPassage, targetGrade = '3' } = await req.json();
     const passage = cleanPassageMarkers(rawPassage);
@@ -38,8 +42,7 @@ export async function POST(req: Request) {
     const text = response.text();
     return NextResponse.json(JSON.parse(text));
 
-  } catch (error: any) {
-    console.error('Workbook Generation Error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to generate workbook' }, { status: 500 });
+  } catch (error) {
+    return createErrorResponse(error, 'Failed to generate workbook');
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 // Vercel Hobby plan max: 60s
 export const maxDuration = 60;
@@ -203,6 +204,9 @@ async function generateTTS(
 }
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { lines, problemNumber } = await req.json();
 
@@ -312,8 +316,7 @@ export async function POST(req: Request) {
             sizeBytes: wavBuffer.length,
         });
 
-    } catch (error: any) {
-        console.error('[TTS-Problem] Error:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'TTS problem generation failed');
     }
 }

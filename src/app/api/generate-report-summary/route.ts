@@ -1,9 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { studentName, yearMonth, vocabScore, grammarScore, readingScore, vocab, grammar, reading, growth } = await req.json();
 
@@ -66,8 +70,7 @@ ${growth.improvements.join('\n')}
         } catch {
             return NextResponse.json({ summary: cleaned });
         }
-    } catch (error: any) {
-        console.error('[GenerateReportSummary] Error:', error);
-        return NextResponse.json({ error: error.message || 'Unknown error' }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate report summary');
     }
 }

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse, LARGE_BODY_LIMIT } from '@/lib/apiMiddleware';
 
 export async function POST(request: Request) {
+    const blocked = apiGuard(request, { maxBodySize: LARGE_BODY_LIMIT });
+    if (blocked) return blocked;
+
     console.log('PDF Parse Request Received (v1 Legacy with Filtering)');
 
     let pdf;
@@ -69,11 +73,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ text: data.text });
 
-    } catch (error: any) {
-        console.error('PDF Processing Error:', error);
-        return NextResponse.json({
-            error: 'PDF 처리 중 오류가 발생했습니다. (Processing failure)',
-            details: error.message || error.toString()
-        }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'PDF 처리 중 오류가 발생했습니다.');
     }
 }

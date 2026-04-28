@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 import { getSubjectiveGradingPrompt } from '@/services/geminiPrompts';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
@@ -52,6 +53,9 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         if (!apiKey) {
             return NextResponse.json({ error: 'Gemini API Key is missing.' }, { status: 500 });
@@ -119,11 +123,7 @@ export async function POST(req: Request) {
             totalPoints
         });
 
-    } catch (error: any) {
-        console.error('[Subjective Grade] Error:', error);
-        return NextResponse.json({
-            error: error.message || 'Failed to grade',
-            details: error.stack || error.toString()
-        }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to grade subjective problems');
     }
 }

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 import { getSubjectiveProblemsPrompt } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
@@ -60,6 +61,9 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         if (!apiKey) {
             return NextResponse.json({ error: 'Gemini API Key is missing.' }, { status: 500 });
@@ -118,11 +122,7 @@ export async function POST(req: Request) {
             modifiedPassage: data.modifiedPassage || ''
         });
 
-    } catch (error: any) {
-        console.error('[Subjective Gen] Error:', error);
-        return NextResponse.json({
-            error: error.message || 'Failed to generate subjective problems',
-            details: error.stack || error.toString()
-        }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate subjective problems');
     }
 }

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 // Allow up to 120 seconds for 7+ batch Gemini calls
 export const maxDuration = 120;
@@ -118,6 +119,9 @@ function delay(ms: number) {
 
 // ── POST Handler ──
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         if (!apiKey) {
             return NextResponse.json({ error: 'Gemini API Key missing' }, { status: 500 });
@@ -265,11 +269,7 @@ export async function POST(req: Request) {
             summary,
         });
 
-    } catch (error: any) {
-        console.error('[ListeningSet] Fatal error:', error);
-        return NextResponse.json({
-            error: error.message || 'Failed to generate listening set',
-            details: error.stack || error.toString()
-        }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate listening set');
     }
 }

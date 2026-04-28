@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createErrorResponse } from '@/lib/apiMiddleware';
 
 /**
  * TTS 진단 테스트 엔드포인트
@@ -21,6 +22,8 @@ const TEST_TEXTS: Record<string, string> = {
 };
 
 export async function GET() {
+    // Note: Origin check skipped for this diagnostic endpoint (GET, browser-accessible)
+    try {
     const apiKey = process.env.GOOGLE_TTS_API_KEY
         || process.env.GEMINI_API_KEY
         || process.env.NEXT_PUBLIC_GEMINI_API_KEY
@@ -86,4 +89,7 @@ export async function GET() {
     return NextResponse.json(results, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
     });
+    } catch (error) {
+        return createErrorResponse(error, 'TTS test failed');
+    }
 }

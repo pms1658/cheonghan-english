@@ -1,12 +1,16 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 import { getPremiumAnalysisPrompt } from "@/services/geminiPrompts";
 import { cleanPassageMarkers } from "@/utils/textUtils";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { sentences, grade = '2' } = await req.json();
         // Handle both string[] and AnalysisSentence[]
@@ -31,11 +35,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(json);
 
-    } catch (error: any) {
-        console.error("Analysis Generation Error:", error);
-        return NextResponse.json(
-            { error: "Failed to generate analysis", details: error?.message || String(error) },
-            { status: 500 }
-        );
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate analysis');
     }
 }

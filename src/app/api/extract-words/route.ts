@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 export async function POST(request: Request) {
+    const blocked = apiGuard(request);
+    if (blocked) return blocked;
+
     try {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
@@ -102,11 +106,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ words });
 
-    } catch (error: any) {
-        console.error('AI Extraction Error:', error);
-        return NextResponse.json({
-            error: error.message || 'Unknown AI Error',
-            details: error.toString()
-        }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to extract words');
     }
 }

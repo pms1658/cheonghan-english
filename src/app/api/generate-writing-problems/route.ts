@@ -1,9 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { sessionTitle, sessionFormula, sessionDescription, sessionExample, level, targetGrade, problemCount, bidirectional } = await req.json();
 
@@ -122,8 +126,7 @@ ${gradeInstruction}
             console.error('[GenerateWriting] JSON parse error:', cleaned);
             return NextResponse.json({ error: 'Failed to parse AI response', raw: cleaned }, { status: 500 });
         }
-    } catch (error: any) {
-        console.error('[GenerateWriting] Error:', error);
-        return NextResponse.json({ error: error.message || 'Unknown error' }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate writing problems');
     }
 }

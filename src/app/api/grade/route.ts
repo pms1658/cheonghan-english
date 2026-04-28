@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -136,6 +137,9 @@ Return a valid JSON object. No markdown code blocks.
 `;
 
 export async function POST(req: Request) {
+  const blocked = apiGuard(req);
+  if (blocked) return blocked;
+
   try {
     const body = await req.json();
     const { assignments } = body;
@@ -219,10 +223,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ results });
 
   } catch (error) {
-    console.error('Batch Grading Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to grade assignments', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Failed to grade assignments');
   }
 }

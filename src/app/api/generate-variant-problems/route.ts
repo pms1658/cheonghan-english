@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 import { getVariantPrompt, getBestTypesPrompt, getPassageRewritePrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers } from '@/utils/textUtils';
 
@@ -163,6 +164,9 @@ function extractJSON(text: string) {
 }
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         if (!process.env.GEMINI_API_KEY && !process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
             return NextResponse.json({ error: 'Server configuration error: Gemini API Key is missing.' }, { status: 500 });
@@ -316,11 +320,7 @@ export async function POST(req: Request) {
             ...(rewrittenPassage ? { rewrittenPassage, changesSummary } : {})
         });
 
-    } catch (error: any) {
-        console.error('AI Generation Error:', error);
-        return NextResponse.json({
-            error: error.message || 'Failed to generate problems',
-            details: error.stack || error.toString()
-        }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to generate problems');
     }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiGuard, createErrorResponse } from '@/lib/apiMiddleware';
 
 /**
  * Gemini TTS API 프록시 (서버 캐시 포함)
@@ -67,6 +68,9 @@ const VOICE_MAP: Record<string, { languageCode: string, name: string }> = {
 };
 
 export async function POST(req: Request) {
+    const blocked = apiGuard(req);
+    if (blocked) return blocked;
+
     try {
         const { text, speaker = 'M', lang } = await req.json();
 
@@ -147,8 +151,7 @@ export async function POST(req: Request) {
             audioContent: wavBase64,
         });
 
-    } catch (error: any) {
-        console.error('[TTS] Error:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return createErrorResponse(error, 'TTS generation failed');
     }
 }
