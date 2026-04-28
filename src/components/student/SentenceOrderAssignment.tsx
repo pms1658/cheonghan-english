@@ -522,12 +522,9 @@ export default function SentenceOrderAssignment({
                         {/* ═══ DRAG HANDLE ═══ */}
                         <div
                             onPointerDown={(e) => handleHandlePointerDown(idx, e)}
-                            className="flex-shrink-0 flex flex-col items-center justify-center gap-1.5 px-3 cursor-grab active:cursor-grabbing bg-slate-50 hover:bg-amber-50 border-r border-slate-200 rounded-l-xl transition-colors touch-none"
+                            className="flex-shrink-0 flex items-center justify-center px-2.5 cursor-grab active:cursor-grabbing bg-slate-50 hover:bg-amber-50 border-r border-slate-200 rounded-l-xl transition-colors touch-none"
                             style={{ touchAction: 'none' }}
                         >
-                            <span className="w-7 h-7 flex items-center justify-center bg-[#0A0E27] text-white rounded-lg text-xs font-bold shadow-sm">
-                                {idx + 1}
-                            </span>
                             <svg className="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="9" cy="6" r="1.5" />
                                 <circle cx="15" cy="6" r="1.5" />
