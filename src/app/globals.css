@@ -1,29 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* 모바일 바운스 스크롤(꿀렁꿀렁) 완전 방지 — iOS Safari 포함 */
-html {
-  height: 100%;
-  overflow: hidden;
-}
-
-body {
-  height: 100%;
-  overflow-y: auto;
+/* 모바일 바운스 스크롤 방지 (iOS 16+, Android) */
+html, body {
   overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
-  /* iOS safe-area 하단 여백 */
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* iOS 네이티브 앱 느낌 */
 * {
-  -webkit-tap-highlight-color: transparent;  /* 터치 파란 하이라이트 제거 */
-  -webkit-touch-callout: none;               /* 롱프레스 메뉴 방지 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 input, textarea, select {
-  -webkit-touch-callout: default;            /* 입력 필드는 롱프레스 허용 */
   -webkit-user-select: text;
 }
 

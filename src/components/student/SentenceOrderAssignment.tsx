@@ -115,42 +115,25 @@ export default function SentenceOrderAssignment({
         if (floatingRef.current) { floatingRef.current.remove(); floatingRef.current = null; }
     }, []);
 
-    // Find the actual scroll container (the fixed wrapper with overflow-y-auto)
-    const getScrollContainer = useCallback((): HTMLElement => {
-        let el: HTMLElement | null = containerRef.current;
-        while (el) {
-            const style = window.getComputedStyle(el);
-            if (style.overflowY === 'auto' || style.overflowY === 'scroll') return el;
-            el = el.parentElement;
-        }
-        return document.scrollingElement as HTMLElement || document.body;
-    }, []);
-
-    // Auto-scroll when near edges
+    // Auto-scroll when near edges during drag
     const startAutoScroll = useCallback(() => {
         if (scrollIntervalRef.current) return;
         const threshold = 120;
         const maxSpeed = 18;
         const tick = () => {
             const y = lastClientY.current;
-            const scrollEl = getScrollContainer();
-            const rect = scrollEl.getBoundingClientRect();
-            const topEdge = Math.max(rect.top, 0);
-            const bottomEdge = Math.min(rect.bottom, window.innerHeight);
-
-            if (y < topEdge + threshold) {
-                const dist = y - topEdge;
-                const speed = Math.max(3, maxSpeed * (1 - Math.max(0, dist) / threshold));
-                scrollEl.scrollTop -= speed;
-            } else if (y > bottomEdge - threshold) {
-                const dist = bottomEdge - y;
-                const speed = Math.max(3, maxSpeed * (1 - Math.max(0, dist) / threshold));
-                scrollEl.scrollTop += speed;
+            const viewH = window.innerHeight;
+            if (y < threshold) {
+                const speed = Math.max(3, maxSpeed * (1 - y / threshold));
+                window.scrollBy(0, -speed);
+            } else if (y > viewH - threshold) {
+                const speed = Math.max(3, maxSpeed * (1 - (viewH - y) / threshold));
+                window.scrollBy(0, speed);
             }
             scrollIntervalRef.current = requestAnimationFrame(tick);
         };
         scrollIntervalRef.current = requestAnimationFrame(tick);
-    }, [getScrollContainer]);
+    }, []);
 
     const stopAutoScroll = useCallback(() => {
         if (scrollIntervalRef.current) { cancelAnimationFrame(scrollIntervalRef.current); scrollIntervalRef.current = null; }
@@ -192,25 +175,16 @@ export default function SentenceOrderAssignment({
         pendingPointerId.current = null;
     }, []);
 
-    // Lock scroll container during drag
+    // Lock text selection + prevent scroll during drag
     const lockBodyScroll = useCallback(() => {
-        const scrollEl = getScrollContainer();
-        scrollEl.style.overflowY = 'hidden';
-        scrollEl.style.touchAction = 'none';
-        document.body.style.touchAction = 'none';
         document.body.style.userSelect = 'none';
         document.body.style.webkitUserSelect = 'none';
-    }, [getScrollContainer]);
-
+    }, []);
     const unlockBodyScroll = useCallback(() => {
-        const scrollEl = getScrollContainer();
-        scrollEl.style.overflowY = 'auto';
-        scrollEl.style.touchAction = '';
-        document.body.style.touchAction = '';
         document.body.style.userSelect = '';
         document.body.style.webkitUserSelect = '';
         window.getSelection()?.removeAllRanges();
-    }, [getScrollContainer]);
+    }, []);
 
     // Actually start dragging (called after long-press fires)
     const activateDrag = useCallback((index: number, clientX: number, clientY: number) => {

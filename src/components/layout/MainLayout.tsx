@@ -37,7 +37,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 h-[100dvh] transition-all duration-300 relative bg-slate-50 dark:bg-slate-950">
 
-                {/* Top Navigation Bar — Will conditionally hide in future if needed */}
+                {/* Top Navigation Bar */}
                 <TopBar
                     onMenuClick={() => setIsMobileMenuOpen(true)}
                 />
