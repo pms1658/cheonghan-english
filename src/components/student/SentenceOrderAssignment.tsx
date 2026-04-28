@@ -46,23 +46,20 @@ export default function SentenceOrderAssignment({
     const [correctPositions, setCorrectPositions] = useState<boolean[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [attemptCount, setAttemptCount] = useState(0);
+    const [dragActive, setDragActive] = useState(false);
 
-    // Drag state — using refs for max performance (no re-renders during drag)
+    // Drag state refs (no re-renders during drag for performance)
     const dragIndexRef = useRef<number | null>(null);
     const overIndexRef = useRef<number | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
     const floatingRef = useRef<HTMLDivElement | null>(null);
     const dragOffsetY = useRef(0);
     const dragOffsetX = useRef(0);
-    const scrollIntervalRef = useRef<number | null>(null);
+    const scrollRAF = useRef<number | null>(null);
     const lastClientY = useRef(0);
-    // Long-press detection
-    const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const pendingIndex = useRef<number | null>(null);
-    const pendingPointerId = useRef<number | null>(null);
-    const startPos = useRef({ x: 0, y: 0 });
     const isDragging = useRef(false);
+    const gapRef = useRef<HTMLDivElement | null>(null);
 
     // Load attempt count
     useEffect(() => {
@@ -75,212 +72,200 @@ export default function SentenceOrderAssignment({
         loadAttempts();
     }, [studentId, assignment.id]);
 
-    // Create floating clone of dragged item
-    const createFloatingClone = useCallback((sourceEl: HTMLElement, clientX: number, clientY: number) => {
-        const rect = sourceEl.getBoundingClientRect();
-        const clone = sourceEl.cloneNode(true) as HTMLDivElement;
-
-        clone.style.position = 'fixed';
-        clone.style.left = `${rect.left}px`;
-        clone.style.top = `${rect.top}px`;
-        clone.style.width = `${rect.width}px`;
-        clone.style.height = `${rect.height}px`;
-        clone.style.zIndex = '9999';
-        clone.style.pointerEvents = 'none';
-        clone.style.transition = 'box-shadow 0.2s ease, transform 0.15s ease';
-        clone.style.boxShadow = '0 20px 60px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.12)';
-        clone.style.transform = 'scale(1.04) rotate(0.5deg)';
-        clone.style.borderColor = '#d97706';
-        clone.style.backgroundColor = '#fffbeb';
-        clone.style.borderRadius = '12px';
-        clone.style.opacity = '0.97';
-        clone.style.willChange = 'left, top';
-
-        document.body.appendChild(clone);
-        floatingRef.current = clone;
-
-        dragOffsetY.current = clientY - rect.top;
-        dragOffsetX.current = clientX - rect.left;
-    }, []);
-
-    // Update floating clone position (direct DOM, no React)
-    const moveFloatingClone = useCallback((clientX: number, clientY: number) => {
-        if (!floatingRef.current) return;
-        floatingRef.current.style.left = `${clientX - dragOffsetX.current}px`;
-        floatingRef.current.style.top = `${clientY - dragOffsetY.current}px`;
-    }, []);
-
-    // Remove floating clone
-    const removeFloatingClone = useCallback(() => {
-        if (floatingRef.current) { floatingRef.current.remove(); floatingRef.current = null; }
-    }, []);
-
-    // Auto-scroll when near edges during drag
-    const startAutoScroll = useCallback(() => {
-        if (scrollIntervalRef.current) return;
-        const threshold = 120;
-        const maxSpeed = 18;
-        const tick = () => {
-            const y = lastClientY.current;
-            const viewH = window.innerHeight;
-            if (y < threshold) {
-                const speed = Math.max(3, maxSpeed * (1 - y / threshold));
-                window.scrollBy(0, -speed);
-            } else if (y > viewH - threshold) {
-                const speed = Math.max(3, maxSpeed * (1 - (viewH - y) / threshold));
-                window.scrollBy(0, speed);
+    // ─── Find the scrollable parent (main element in MainLayout) ───
+    const getScrollParent = useCallback((): HTMLElement => {
+        let el: HTMLElement | null = listRef.current;
+        while (el) {
+            const style = window.getComputedStyle(el);
+            if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+                return el;
             }
-            scrollIntervalRef.current = requestAnimationFrame(tick);
-        };
-        scrollIntervalRef.current = requestAnimationFrame(tick);
+            el = el.parentElement;
+        }
+        return document.documentElement;
     }, []);
+
+    // ─── Auto-scroll while dragging ───
+    const startAutoScroll = useCallback(() => {
+        if (scrollRAF.current) return;
+        const threshold = 100;
+        const maxSpeed = 14;
+        const tick = () => {
+            if (!isDragging.current) { scrollRAF.current = null; return; }
+            const y = lastClientY.current;
+            const scrollEl = getScrollParent();
+            // Use the scroll container's bounding rect for edge detection
+            const rect = scrollEl === document.documentElement
+                ? { top: 0, bottom: window.innerHeight }
+                : scrollEl.getBoundingClientRect();
+
+            if (y < rect.top + threshold) {
+                const ratio = 1 - Math.max(0, y - rect.top) / threshold;
+                scrollEl.scrollTop -= Math.max(2, maxSpeed * ratio);
+            } else if (y > rect.bottom - threshold) {
+                const ratio = 1 - Math.max(0, rect.bottom - y) / threshold;
+                scrollEl.scrollTop += Math.max(2, maxSpeed * ratio);
+            }
+            scrollRAF.current = requestAnimationFrame(tick);
+        };
+        scrollRAF.current = requestAnimationFrame(tick);
+    }, [getScrollParent]);
 
     const stopAutoScroll = useCallback(() => {
-        if (scrollIntervalRef.current) { cancelAnimationFrame(scrollIntervalRef.current); scrollIntervalRef.current = null; }
+        if (scrollRAF.current) { cancelAnimationFrame(scrollRAF.current); scrollRAF.current = null; }
     }, []);
 
-    const calcOverIndex = useCallback((clientY: number): number => {
+    // ─── Gap insertion: calculate which slot the cursor is over ───
+    const calcInsertIndex = useCallback((clientY: number): number => {
         const items = itemRefs.current;
         for (let i = 0; i < items.length; i++) {
+            if (i === dragIndexRef.current) continue;
             const el = items[i];
-            if (!el || i === dragIndexRef.current) continue;
+            if (!el) continue;
             const rect = el.getBoundingClientRect();
             if (clientY < rect.top + rect.height / 2) return i;
         }
         return sentences.length - 1;
     }, [sentences.length]);
 
-    const applyShifts = useCallback((newOverIndex: number) => {
+    // ─── Animate items to create gap ───
+    const showGap = useCallback((insertIdx: number) => {
         const dIdx = dragIndexRef.current;
         if (dIdx === null) return;
-        const dragEl = itemRefs.current[dIdx];
-        const dragH = dragEl ? dragEl.offsetHeight + 8 : 60;
         itemRefs.current.forEach((el, i) => {
             if (!el || i === dIdx) return;
             let shift = 0;
-            if (dIdx < newOverIndex && i > dIdx && i <= newOverIndex) shift = -dragH;
-            else if (dIdx > newOverIndex && i >= newOverIndex && i < dIdx) shift = dragH;
+            const dragH = itemRefs.current[dIdx]?.offsetHeight || 60;
+            const gap = dragH + 8; // card height + gap
+            if (dIdx < insertIdx) {
+                // Dragging down: items between drag and insert shift up
+                if (i > dIdx && i <= insertIdx) shift = -gap;
+            } else if (dIdx > insertIdx) {
+                // Dragging up: items between insert and drag shift down
+                if (i >= insertIdx && i < dIdx) shift = gap;
+            }
             el.style.transition = 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)';
             el.style.transform = shift !== 0 ? `translateY(${shift}px)` : '';
         });
     }, []);
 
-    const clearShifts = useCallback(() => {
-        itemRefs.current.forEach(el => { if (el) { el.style.transition = ''; el.style.transform = ''; } });
+    const clearGap = useCallback(() => {
+        itemRefs.current.forEach(el => {
+            if (el) { el.style.transition = ''; el.style.transform = ''; }
+        });
     }, []);
 
-    const cancelLongPress = useCallback(() => {
-        if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
-        pendingIndex.current = null;
-        pendingPointerId.current = null;
+    // ─── Create / move / remove floating clone ───
+    const createClone = useCallback((el: HTMLElement, cx: number, cy: number) => {
+        const rect = el.getBoundingClientRect();
+        const clone = el.cloneNode(true) as HTMLDivElement;
+        Object.assign(clone.style, {
+            position: 'fixed',
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+            zIndex: '9999',
+            pointerEvents: 'none',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.1)',
+            transform: 'scale(1.03)',
+            borderColor: '#d97706',
+            backgroundColor: '#fffbeb',
+            borderRadius: '12px',
+            opacity: '0.97',
+            willChange: 'left, top',
+            transition: 'box-shadow 0.2s, transform 0.15s',
+        });
+        document.body.appendChild(clone);
+        floatingRef.current = clone;
+        dragOffsetY.current = cy - rect.top;
+        dragOffsetX.current = cx - rect.left;
     }, []);
 
-    // Lock text selection + prevent scroll during drag
-    const lockBodyScroll = useCallback(() => {
-        document.body.style.userSelect = 'none';
-        document.body.style.webkitUserSelect = 'none';
-    }, []);
-    const unlockBodyScroll = useCallback(() => {
-        document.body.style.userSelect = '';
-        document.body.style.webkitUserSelect = '';
-        window.getSelection()?.removeAllRanges();
+    const moveClone = useCallback((cx: number, cy: number) => {
+        if (!floatingRef.current) return;
+        floatingRef.current.style.left = `${cx - dragOffsetX.current}px`;
+        floatingRef.current.style.top = `${cy - dragOffsetY.current}px`;
     }, []);
 
-    // Actually start dragging (called after long-press fires)
-    const activateDrag = useCallback((index: number, clientX: number, clientY: number) => {
+    const removeClone = useCallback(() => {
+        if (floatingRef.current) { floatingRef.current.remove(); floatingRef.current = null; }
+    }, []);
+
+    // ─── START DRAG (from handle only) ───
+    const startDrag = useCallback((index: number, cx: number, cy: number) => {
         const card = itemRefs.current[index];
-        if (!card) return;
+        if (!card || isDragging.current) return;
 
         isDragging.current = true;
         dragIndexRef.current = index;
         overIndexRef.current = index;
-        lastClientY.current = clientY;
+        lastClientY.current = cy;
+        setDragActive(true);
 
-        // Haptic feedback if available
-        if (navigator.vibrate) navigator.vibrate(30);
+        // Haptic
+        if (navigator.vibrate) navigator.vibrate(20);
 
-        // Prevent browser scroll while dragging
-        lockBodyScroll();
+        // Lock text selection
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
 
-        createFloatingClone(card, clientX, clientY);
+        // Create floating clone
+        createClone(card, cx, cy);
 
-        card.style.opacity = '0';
-        card.style.maxHeight = `${card.offsetHeight}px`;
-        card.style.transition = 'opacity 0.15s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
-        requestAnimationFrame(() => {
-            card.style.maxHeight = '0px';
-            card.style.padding = '0px';
-            card.style.marginTop = '0px';
-            card.style.marginBottom = '0px';
-            card.style.overflow = 'hidden';
-            card.style.border = 'none';
-        });
+        // Hide original with smooth collapse
+        card.style.opacity = '0.15';
+        card.style.transform = 'scale(0.95)';
+        card.style.transition = 'opacity 0.2s, transform 0.2s';
 
         startAutoScroll();
-    }, [createFloatingClone, startAutoScroll, lockBodyScroll]);
+    }, [createClone, startAutoScroll]);
 
-    // === POINTER EVENT HANDLERS ===
-
-    const handlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
-        startPos.current = { x: e.clientX, y: e.clientY };
-        pendingIndex.current = index;
-        pendingPointerId.current = e.pointerId;
-
-        // Start long-press timer (300ms)
-        cancelLongPress();
-        longPressTimer.current = setTimeout(() => {
-            const card = itemRefs.current[index];
-            if (card) {
-                try { card.setPointerCapture(pendingPointerId.current!); } catch {}
-            }
-            activateDrag(index, startPos.current.x, startPos.current.y);
-        }, 300);
-    }, [cancelLongPress, activateDrag]);
+    // ─── POINTER HANDLERS (on handle only) ───
+    const handleHandlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const target = e.currentTarget as HTMLElement;
+        try { target.setPointerCapture(e.pointerId); } catch {}
+        startDrag(index, e.clientX, e.clientY);
+    }, [startDrag]);
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
-        // If long-press pending, check if finger moved too much → cancel (it's a scroll)
-        if (longPressTimer.current) {
-            const dx = e.clientX - startPos.current.x;
-            const dy = e.clientY - startPos.current.y;
-            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-                cancelLongPress();
-            }
-            return;
-        }
-
         if (!isDragging.current || dragIndexRef.current === null) return;
-
         e.preventDefault();
         lastClientY.current = e.clientY;
-        moveFloatingClone(e.clientX, e.clientY);
+        moveClone(e.clientX, e.clientY);
 
-        const newOver = calcOverIndex(e.clientY);
+        const newOver = calcInsertIndex(e.clientY);
         if (newOver !== overIndexRef.current) {
             overIndexRef.current = newOver;
-            applyShifts(newOver);
+            showGap(newOver);
         }
-    }, [cancelLongPress, moveFloatingClone, calcOverIndex, applyShifts]);
+    }, [moveClone, calcInsertIndex, showGap]);
 
-    const restoreElement = useCallback((idx: number | null) => {
-        if (idx !== null && itemRefs.current[idx]) {
-            const el = itemRefs.current[idx]!;
-            el.style.opacity = ''; el.style.maxHeight = ''; el.style.padding = '';
-            el.style.marginTop = ''; el.style.marginBottom = ''; el.style.overflow = '';
-            el.style.border = ''; el.style.transition = ''; el.style.transform = '';
-        }
-    }, []);
-
-    const handlePointerUp = useCallback(() => {
-        cancelLongPress();
+    const finishDrag = useCallback(() => {
         const dIdx = dragIndexRef.current;
         const oIdx = overIndexRef.current;
 
-        removeFloatingClone();
+        removeClone();
         stopAutoScroll();
-        clearShifts();
-        restoreElement(dIdx);
-        unlockBodyScroll();
+        clearGap();
 
+        // Restore original card
+        if (dIdx !== null && itemRefs.current[dIdx]) {
+            const el = itemRefs.current[dIdx]!;
+            el.style.opacity = '';
+            el.style.transform = '';
+            el.style.transition = '';
+        }
+
+        // Unlock
+        document.body.style.userSelect = '';
+        document.body.style.webkitUserSelect = '';
+        window.getSelection()?.removeAllRanges();
+        setDragActive(false);
+
+        // Apply reorder
         if (isDragging.current && dIdx !== null && oIdx !== null && dIdx !== oIdx) {
             setSentences(prev => {
                 const items = [...prev];
@@ -293,27 +278,40 @@ export default function SentenceOrderAssignment({
         dragIndexRef.current = null;
         overIndexRef.current = null;
         isDragging.current = false;
-    }, [cancelLongPress, removeFloatingClone, stopAutoScroll, clearShifts, restoreElement, unlockBodyScroll]);
+    }, [removeClone, stopAutoScroll, clearGap]);
 
-    const handlePointerCancel = useCallback(() => {
-        cancelLongPress();
-        removeFloatingClone();
-        stopAutoScroll();
-        clearShifts();
-        restoreElement(dragIndexRef.current);
-        unlockBodyScroll();
-        dragIndexRef.current = null;
-        overIndexRef.current = null;
-        isDragging.current = false;
-    }, [cancelLongPress, removeFloatingClone, stopAutoScroll, clearShifts, restoreElement, unlockBodyScroll]);
+    const handlePointerUp = useCallback(() => { finishDrag(); }, [finishDrag]);
+    const handlePointerCancel = useCallback(() => { finishDrag(); }, [finishDrag]);
+
+    // Global pointer move/up for when pointer leaves cards
+    useEffect(() => {
+        const onMove = (e: PointerEvent) => {
+            if (!isDragging.current || dragIndexRef.current === null) return;
+            e.preventDefault();
+            lastClientY.current = e.clientY;
+            moveClone(e.clientX, e.clientY);
+            const newOver = calcInsertIndex(e.clientY);
+            if (newOver !== overIndexRef.current) {
+                overIndexRef.current = newOver;
+                showGap(newOver);
+            }
+        };
+        const onUp = () => { if (isDragging.current) finishDrag(); };
+
+        window.addEventListener('pointermove', onMove, { passive: false });
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+        return () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            window.removeEventListener('pointercancel', onUp);
+        };
+    }, [moveClone, calcInsertIndex, showGap, finishDrag]);
 
     // Cleanup on unmount
     useEffect(() => {
-        return () => {
-            removeFloatingClone();
-            stopAutoScroll();
-        };
-    }, [removeFloatingClone, stopAutoScroll]);
+        return () => { removeClone(); stopAutoScroll(); };
+    }, [removeClone, stopAutoScroll]);
 
     // === SUBMIT & RETRY ===
 
@@ -474,7 +472,7 @@ export default function SentenceOrderAssignment({
     //  MAIN DRAG VIEW
     // ═══════════════════════════════════════
     return (
-        <div ref={containerRef} className="min-h-screen bg-slate-50 font-sans">
+        <div className="min-h-screen bg-slate-50 font-sans">
             {/* Navy Header */}
             <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
@@ -501,58 +499,49 @@ export default function SentenceOrderAssignment({
                     </div>
                     <h2 className="text-lg font-bold text-white truncate">{assignment.title}</h2>
                     <p className="text-xs text-slate-400 mt-1">
-                        문장을 드래그하여 올바른 순서로 배열하세요 · {sentences.length}문장
-                    </p>
-                </div>
-            </div>
-
-            {/* Instructions */}
-            <div className="max-w-2xl mx-auto px-4 pt-4 pb-2">
-                <div className="flex items-center gap-2 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
-                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                    </svg>
-                    <p className="text-xs text-slate-500 font-medium">
-                        문장을 <span className="font-bold text-amber-700">꾹 눌러</span> 드래그하면 순서를 바꿀 수 있습니다. 살짝 터치하면 스크롤됩니다.
+                        ⠿ 손잡이를 잡고 드래그하여 올바른 순서로 배열하세요 · {sentences.length}문장
                     </p>
                 </div>
             </div>
 
             {/* Sentence Cards */}
             <div
-                ref={containerRef}
-                className="max-w-2xl mx-auto px-4 py-2 pb-32"
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+                ref={listRef}
+                className="max-w-2xl mx-auto px-4 py-4 pb-32 space-y-2"
             >
                 {sentences.map((sentence, idx) => (
                     <div
                         key={`${sentence}-${idx}`}
                         ref={el => { itemRefs.current[idx] = el; }}
-                        onPointerDown={(e) => handlePointerDown(idx, e)}
-                        onPointerMove={handlePointerMove}
-                        onPointerUp={handlePointerUp}
-                        onPointerCancel={handlePointerCancel}
-                        className="flex items-start gap-3 p-4 rounded-xl border-2 select-none bg-white border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md cursor-grab active:cursor-grabbing"
+                        className={`flex items-stretch rounded-xl border-2 select-none bg-white transition-colors ${
+                            dragActive && dragIndexRef.current === idx
+                                ? 'border-amber-300 bg-amber-50/30'
+                                : 'border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md'
+                        }`}
                     >
-                        {/* Drag Handle + Number */}
-                        <div className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5">
+                        {/* ═══ DRAG HANDLE ═══ */}
+                        <div
+                            onPointerDown={(e) => handleHandlePointerDown(idx, e)}
+                            className="flex-shrink-0 flex flex-col items-center justify-center gap-1.5 px-3 cursor-grab active:cursor-grabbing bg-slate-50 hover:bg-amber-50 border-r border-slate-200 rounded-l-xl transition-colors touch-none"
+                            style={{ touchAction: 'none' }}
+                        >
                             <span className="w-7 h-7 flex items-center justify-center bg-[#0A0E27] text-white rounded-lg text-xs font-bold shadow-sm">
                                 {idx + 1}
                             </span>
-                            <svg className="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="9" cy="5" r="1.5" />
-                                <circle cx="15" cy="5" r="1.5" />
-                                <circle cx="9" cy="10" r="1.5" />
-                                <circle cx="15" cy="10" r="1.5" />
-                                <circle cx="9" cy="15" r="1.5" />
-                                <circle cx="15" cy="15" r="1.5" />
-                                <circle cx="9" cy="20" r="1.5" />
-                                <circle cx="15" cy="20" r="1.5" />
+                            <svg className="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="9" cy="6" r="1.5" />
+                                <circle cx="15" cy="6" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" />
+                                <circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="18" r="1.5" />
+                                <circle cx="15" cy="18" r="1.5" />
                             </svg>
                         </div>
 
-                        {/* Sentence Text */}
-                        <p className="text-sm text-slate-700 leading-relaxed flex-1 pt-1">{sentence}</p>
+                        {/* ═══ SENTENCE TEXT (scrollable area — no drag here) ═══ */}
+                        <div className="flex-1 p-4">
+                            <p className="text-sm text-slate-700 leading-relaxed">{sentence}</p>
+                        </div>
                     </div>
                 ))}
             </div>
