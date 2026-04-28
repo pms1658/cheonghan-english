@@ -805,30 +805,55 @@ IMPORTANT: Generate ONLY for the requested types. Return ONLY valid JSON.`;
  * AI가 학생의 서술형 답안을 채점하고 피드백을 제공
  */
 export const getSubjectiveGradingPrompt = (problems: any[], answers: any[], passage: string) => {
-  const problemsWithAnswers = problems.map((p, i) => ({
-    id: p.id,
-    type: p.type,
-    instruction: p.instruction,
-    modelAnswer: p.modelAnswer || p.transformedAnswer || p.blankAnswer || '',
-    points: p.points || 0,
-    studentAnswer: answers[i]?.answer || '',
-    // Include type-specific fields
-    ...(p.englishStart ? { englishStart: p.englishStart } : {}),
-    ...(p.koreanMeaning ? { koreanMeaning: p.koreanMeaning } : {}),
-    ...(p.grammarCondition ? { grammarCondition: p.grammarCondition } : {}),
-    ...(p.hintWords ? { hintWords: p.hintWords } : {}),
-    ...(p.originalSentence ? { originalSentence: p.originalSentence } : {}),
-    ...(p.targetSentence ? { targetSentence: p.targetSentence } : {}),
-    ...(p.passageWithUnderlines ? { passageWithUnderlines: p.passageWithUnderlines } : {}),
-    ...(p.grammarItems ? { grammarItems: p.grammarItems } : {}),
-    ...(p.passageWithBlank ? { passageWithBlank: p.passageWithBlank } : {}),
-    ...(p.pronounSentence ? { pronounSentence: p.pronounSentence } : {}),
-    ...(p.underlinedPronoun ? { underlinedPronoun: p.underlinedPronoun } : {}),
-    ...(p.referenceAnswer ? { referenceAnswer: p.referenceAnswer } : {}),
-    ...(p.summaryText ? { summaryText: p.summaryText } : {}),
-    ...(p.blankAnswers ? { blankAnswers: p.blankAnswers } : {}),
-    ...(p.transformCondition ? { transformCondition: p.transformCondition } : {}),
-  }));
+  const problemsWithAnswers = problems.map((p, i) => {
+    const ans = answers[i] || {};
+    
+    // 답변 타입에 따라 학생 답안을 올바르게 직렬화
+    let studentAnswer = '';
+    if (p.type === 'grammar_correction') {
+      // 유형3: 선택한 틀린 항목 + 이유
+      const selected = ans.selectedWrong || [];
+      const reasons = ans.reasons || {};
+      studentAnswer = selected
+        .filter((s: string) => s)
+        .map((s: string) => `${s}: ${reasons[s] || '(이유 미입력)'}`)
+        .join(' / ') || '(미응답)';
+    } else if (p.type === 'summary_completion') {
+      // 유형6: 빈칸별 답안
+      const blanks = ans.blankAnswers || {};
+      studentAnswer = Object.entries(blanks)
+        .map(([k, v]) => `(${k}): ${v || '(미입력)'}`)
+        .join(', ') || '(미응답)';
+    } else {
+      // 유형1,2,4,5,7: 텍스트 답안
+      studentAnswer = ans.textAnswer || '(미응답)';
+    }
+    
+    return {
+      id: p.id,
+      type: p.type,
+      instruction: p.instruction,
+      modelAnswer: p.modelAnswer || p.transformedAnswer || p.blankAnswer || '',
+      points: p.points || 0,
+      studentAnswer,
+      // Include type-specific fields
+      ...(p.englishStart ? { englishStart: p.englishStart } : {}),
+      ...(p.koreanMeaning ? { koreanMeaning: p.koreanMeaning } : {}),
+      ...(p.grammarCondition ? { grammarCondition: p.grammarCondition } : {}),
+      ...(p.hintWords ? { hintWords: p.hintWords } : {}),
+      ...(p.originalSentence ? { originalSentence: p.originalSentence } : {}),
+      ...(p.targetSentence ? { targetSentence: p.targetSentence } : {}),
+      ...(p.passageWithUnderlines ? { passageWithUnderlines: p.passageWithUnderlines } : {}),
+      ...(p.grammarItems ? { grammarItems: p.grammarItems } : {}),
+      ...(p.passageWithBlank ? { passageWithBlank: p.passageWithBlank } : {}),
+      ...(p.pronounSentence ? { pronounSentence: p.pronounSentence } : {}),
+      ...(p.underlinedPronoun ? { underlinedPronoun: p.underlinedPronoun } : {}),
+      ...(p.referenceAnswer ? { referenceAnswer: p.referenceAnswer } : {}),
+      ...(p.summaryText ? { summaryText: p.summaryText } : {}),
+      ...(p.blankAnswers ? { blankAnswers: p.blankAnswers } : {}),
+      ...(p.transformCondition ? { transformCondition: p.transformCondition } : {}),
+    };
+  });
 
   return `You are an expert Korean high school English teacher grading subjective (서술형) exam answers.
 

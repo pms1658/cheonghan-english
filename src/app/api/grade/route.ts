@@ -5,6 +5,48 @@ import { gradeRequestSchema } from '@/schemas/api';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+// Robust JSON parser (handles AI response quirks)
+function extractJSON(text: string) {
+    if (!text || text.trim().length === 0) throw new Error('Empty AI response');
+
+    let sanitized = text.trim();
+    const markdownMatch = sanitized.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch) sanitized = markdownMatch[1].trim();
+
+    try { return JSON.parse(sanitized); } catch (e) { /* continue */ }
+
+    // Try extracting JSON from surrounding text
+    const firstBrace = sanitized.indexOf('{');
+    const lastBrace = sanitized.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const jsonSubstring = sanitized.substring(firstBrace, lastBrace + 1);
+        // Fix unescaped newlines/tabs inside JSON strings
+        let fixed = '';
+        let inString = false;
+        let i = 0;
+        while (i < jsonSubstring.length) {
+            const ch = jsonSubstring[i];
+            if (inString && ch === '\\') {
+                fixed += ch;
+                if (i + 1 < jsonSubstring.length) { fixed += jsonSubstring[i + 1]; i += 2; } else { i++; }
+                continue;
+            }
+            if (ch === '"') { inString = !inString; fixed += ch; i++; continue; }
+            if (inString) {
+                const code = ch.charCodeAt(0);
+                if (code === 0x0A) { fixed += '\\n'; i++; continue; }
+                if (code === 0x0D) { i++; continue; }
+                if (code === 0x09) { fixed += '\\t'; i++; continue; }
+            }
+            fixed += ch;
+            i++;
+        }
+        try { return JSON.parse(fixed); } catch (e) { /* fall through */ }
+    }
+
+    throw new Error('Could not parse AI response: ' + text.substring(0, 200));
+}
+
 const GRADE_PROMPT = `
 You are an expert English Syntax Analyst.
 Your goal is to grade the student's structural analysis of the provided sentence.
@@ -172,18 +214,31 @@ export async function POST(req: Request) {
 
       try {
         console.log(`[Grading] Item ${index} - Generating content...`);
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        
+        // 최대 2회 시도 (1회 실패 시 재시도)
+        let text = '';
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            text = response.text();
+            if (text && text.trim().length > 0) break;
+            console.warn(`[Grading] Item ${index} - Empty response, retry ${attempt + 1}`);
+          } catch (apiErr: any) {
+            console.warn(`[Grading] Item ${index} - API error (attempt ${attempt + 1}):`, apiErr.message);
+            if (attempt === 1) throw apiErr;
+            await new Promise(r => setTimeout(r, 1000)); // 1초 대기 후 재시도
+          }
+        }
+        
         console.log(`[Grading] Item ${index} - Response received (Length: ${text.length})`);
 
-        let jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
         try {
-          const parsed = JSON.parse(jsonStr);
+          const parsed = extractJSON(text);
 
           // SAFEGUARD: Ensure all fields are primitives or arrays of primitives
-          const safeScore = typeof parsed.score === 'number' ? parsed.score : 0;
+          const rawScore = typeof parsed.score === 'number' ? parsed.score : 0;
+          const safeScore = Math.max(0, Math.min(100, rawScore)); // 0~100 클램핑
           const safeFeedback = typeof parsed.feedback === 'object' ? JSON.stringify(parsed.feedback) : (parsed.feedback || '');
           const safeStructure = typeof parsed.correctStructure === 'object' ? JSON.stringify(parsed.correctStructure) : (parsed.correctStructure || '');
           const safeTranslation = typeof parsed.directTranslation === 'object' ? JSON.stringify(parsed.directTranslation) : (parsed.directTranslation || '');
@@ -207,14 +262,14 @@ export async function POST(req: Request) {
             details: parsed
           };
         } catch (parseError) {
-          console.error(`[Grading] Item ${index} - JSON Parse Error`, text);
+          console.error(`[Grading] Item ${index} - JSON Parse Error`, text.substring(0, 500));
           throw { message: 'JSON Parse Error', rawText: text };
         }
       } catch (err: any) {
         console.error(`[Grading] Item ${index} - Failed`, err);
         return {
           score: 0,
-          feedback: `Grading failed: ${err.message || 'Unknown error'}. \nRaw text: ${err.rawText || 'N/A'} \nModel: gemini-1.5-flash`
+          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요.`
         };
       }
     });
