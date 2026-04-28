@@ -192,27 +192,33 @@ export default function SentenceOrderAssignment({
 
     const handlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
         e.preventDefault();
-        const target = e.currentTarget as HTMLElement;
-        target.setPointerCapture(e.pointerId);
+        e.stopPropagation();
+
+        // Find the parent card element (the actual item to drag)
+        const handle = e.currentTarget as HTMLElement;
+        const card = handle.closest('[data-drag-item]') as HTMLElement;
+        if (!card) return;
+
+        handle.setPointerCapture(e.pointerId);
 
         dragIndexRef.current = index;
         overIndexRef.current = index;
         lastClientY.current = e.clientY;
 
         // Create the floating ghost that follows the pointer
-        createFloatingClone(target, e.clientX, e.clientY);
+        createFloatingClone(card, e.clientX, e.clientY);
 
         // Fade out original (it stays as a collapsed placeholder)
-        target.style.opacity = '0';
-        target.style.maxHeight = `${target.offsetHeight}px`;
-        target.style.transition = 'opacity 0.15s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
+        card.style.opacity = '0';
+        card.style.maxHeight = `${card.offsetHeight}px`;
+        card.style.transition = 'opacity 0.15s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
         requestAnimationFrame(() => {
-            target.style.maxHeight = '0px';
-            target.style.padding = '0px';
-            target.style.marginTop = '0px';
-            target.style.marginBottom = '0px';
-            target.style.overflow = 'hidden';
-            target.style.border = 'none';
+            card.style.maxHeight = '0px';
+            card.style.padding = '0px';
+            card.style.marginTop = '0px';
+            card.style.marginBottom = '0px';
+            card.style.overflow = 'hidden';
+            card.style.border = 'none';
         });
 
         startAutoScroll();
@@ -510,15 +516,18 @@ export default function SentenceOrderAssignment({
                     <div
                         key={`${sentence}-${idx}`}
                         ref={el => { itemRefs.current[idx] = el; }}
-                        onPointerDown={(e) => handlePointerDown(idx, e)}
-                        onPointerMove={handlePointerMove}
-                        onPointerUp={handlePointerUp}
-                        onPointerCancel={handlePointerCancel}
-                        className="flex items-start gap-3 p-4 rounded-xl border-2 select-none bg-white border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md cursor-grab active:cursor-grabbing"
-                        style={{ touchAction: 'none' }}
+                        data-drag-item
+                        className="flex items-start gap-3 p-4 rounded-xl border-2 select-none bg-white border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md"
                     >
-                        {/* Drag Handle + Number */}
-                        <div className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5">
+                        {/* Drag Handle + Number — only this area captures drag */}
+                        <div
+                            className="flex-shrink-0 flex flex-col items-center gap-1 pt-0.5 cursor-grab active:cursor-grabbing"
+                            style={{ touchAction: 'none' }}
+                            onPointerDown={(e) => handlePointerDown(idx, e)}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerCancel}
+                        >
                             <span className="w-7 h-7 flex items-center justify-center bg-[#0A0E27] text-white rounded-lg text-xs font-bold shadow-sm">
                                 {idx + 1}
                             </span>
@@ -534,7 +543,7 @@ export default function SentenceOrderAssignment({
                             </svg>
                         </div>
 
-                        {/* Sentence Text */}
+                        {/* Sentence Text — allows normal touch scroll */}
                         <p className="text-sm text-slate-700 leading-relaxed flex-1 pt-1">{sentence}</p>
                     </div>
                 ))}
