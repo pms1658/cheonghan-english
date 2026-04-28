@@ -176,14 +176,19 @@ export default function SentenceOrderAssignment({
         pendingPointerId.current = null;
     }, []);
 
-    // Lock body scroll during drag
+    // Lock body scroll + text selection during drag
     const lockBodyScroll = useCallback(() => {
         document.body.style.touchAction = 'none';
         document.body.style.overscrollBehavior = 'none';
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
     }, []);
     const unlockBodyScroll = useCallback(() => {
         document.body.style.touchAction = '';
         document.body.style.overscrollBehavior = '';
+        document.body.style.userSelect = '';
+        document.body.style.webkitUserSelect = '';
+        window.getSelection()?.removeAllRanges();
     }, []);
 
     // Actually start dragging (called after long-press fires)

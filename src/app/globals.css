@@ -12,6 +12,25 @@ body {
   overflow-y: auto;
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
+  /* iOS safe-area 하단 여백 */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* iOS 네이티브 앱 느낌 */
+* {
+  -webkit-tap-highlight-color: transparent;  /* 터치 파란 하이라이트 제거 */
+  -webkit-touch-callout: none;               /* 롱프레스 메뉴 방지 */
+}
+
+input, textarea, select {
+  -webkit-touch-callout: default;            /* 입력 필드는 롱프레스 허용 */
+  -webkit-user-select: text;
+}
+
+/* 가로 회전 시 텍스트 크기 변동 방지 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* 시스템 기본 폰트 적용 (애플산돌고딕 위주) */

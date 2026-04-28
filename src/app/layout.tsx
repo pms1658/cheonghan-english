@@ -18,9 +18,14 @@ export default function RootLayout({
     return (
         <html lang="ko" suppressHydrationWarning>
             <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
                 <link rel="manifest" href="/manifest.json" />
                 <meta name="theme-color" content="#0A0E27" />
+                {/* iOS PWA 완성도 */}
+                <meta name="apple-mobile-web-app-capable" content="yes" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+                <meta name="apple-mobile-web-app-title" content="청한영어" />
+                <link rel="apple-touch-icon" href="/logo.jpg" />
             </head>
             <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
