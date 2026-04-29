@@ -44,8 +44,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     />
                 )}
 
+                {/* Fixed navy strip — covers only status bar area on assignment pages */}
+                {pathname?.includes('/assignment/') && (
+                    <div className="fixed top-0 left-0 right-0 bg-[#0A0E27] z-[45]"
+                         style={{ height: 'env(safe-area-inset-top, 0px)' }} />
+                )}
+
                 {/* Page Content */}
-                <main className={`flex-1 overflow-y-auto pb-20 lg:pb-0 ${pathname?.includes('/assignment/') ? 'bg-[#0A0E27]' : 'bg-slate-50 dark:bg-slate-950'}`}>
+                <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0">
                     {children}
                 </main>
 
