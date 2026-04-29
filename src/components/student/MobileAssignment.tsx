@@ -517,73 +517,71 @@ export default function MobileAssignment({
 
     return (
         <div className="h-[100dvh] bg-slate-50 font-sans flex flex-col overflow-hidden">
-            <header className="fixed top-0 left-0 w-full bg-[#0A0E27] z-50 px-4 shadow-md" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
-                {/* Row 1: Back + Dropdown + Spacer */}
-                <div className="flex items-center justify-between py-2.5">
+            <header className="fixed top-0 left-0 w-full bg-[#0A0E27] z-50 px-4 py-3 flex items-center justify-between shadow-md" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
+                <button
+                    onClick={() => {
+                        const finalClassId = queryClassId || student?.classId || (assignment?.classIds && assignment.classIds[0]) || '';
+                        router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
+                    }}
+                    className="text-white/70 p-2 -ml-2"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+
+                {/* Sentence Dropdown */}
+                <div className="relative">
                     <button
-                        onClick={() => {
-                            const finalClassId = queryClassId || student?.classId || (assignment?.classIds && assignment.classIds[0]) || '';
-                            router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
-                        }}
-                        className="text-white/70 p-2 -ml-2"
+                        onClick={() => setIsSentenceDropdownOpen(!isSentenceDropdownOpen)}
+                        className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-bold border border-white/10 active:bg-white/20 transition-all"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                        <span>Sentence {currentActualIndex + 1}</span>
+                        <svg className={`w-4 h-4 transition-transform ${isSentenceDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
 
-                    {/* Sentence Dropdown */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsSentenceDropdownOpen(!isSentenceDropdownOpen)}
-                            className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full text-white text-sm font-bold border border-white/10 active:bg-white/20 transition-all"
-                        >
-                            <span>Sentence {currentActualIndex + 1}</span>
-                            <svg className={`w-4 h-4 transition-transform ${isSentenceDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
+                    {isSentenceDropdownOpen && (
+                        <>
+                            <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsSentenceDropdownOpen(false)}></div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 z-50 max-h-[60vh] overflow-y-auto py-2">
+                                {assignment.sentences?.map((_, idx) => {
+                                    const isTarget = targetIndices.includes(idx);
+                                    if (isRetryMode && !isTarget) return null;
+                                    const isActive = idx === currentActualIndex;
+                                    const hasAnswer = answers[idx] && (answers[idx].marks.length > 0 || answers[idx].translation.trim().length > 0);
 
-                        {isSentenceDropdownOpen && (
-                            <>
-                                <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsSentenceDropdownOpen(false)}></div>
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 z-50 max-h-[60vh] overflow-y-auto py-2">
-                                    {assignment.sentences?.map((_, idx) => {
-                                        const isTarget = targetIndices.includes(idx);
-                                        if (isRetryMode && !isTarget) return null;
-                                        const isActive = idx === currentActualIndex;
-                                        const hasAnswer = answers[idx] && (answers[idx].marks.length > 0 || answers[idx].translation.trim().length > 0);
-
-                                        return (
-                                            <button
-                                                key={idx}
-                                                onClick={() => {
-                                                    const ptr = targetIndices.indexOf(idx);
-                                                    if (ptr !== -1) setCurrentTargetIndexPtr(ptr);
-                                                    setIsSentenceDropdownOpen(false);
-                                                }}
-                                                className={`w-full text-left px-4 py-2.5 flex items-center justify-between text-sm ${isActive ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                                            >
-                                                <span>Sentence {idx + 1}</span>
-                                                {hasAnswer && <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="w-8"></div> {/* Spacer for centering */}
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                const ptr = targetIndices.indexOf(idx);
+                                                if (ptr !== -1) setCurrentTargetIndexPtr(ptr);
+                                                setIsSentenceDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2.5 flex items-center justify-between text-sm ${isActive ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        >
+                                            <span>Sentence {idx + 1}</span>
+                                            {hasAnswer && <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                {/* Row 2: Sentence label + Progress — part of header */}
-                <div className="flex items-center justify-between pb-3 border-t border-white/5 pt-2">
-                    <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold text-white/50">Sentence {currentActualIndex + 1}</span>
-                        {isRetryMode && <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded">오답 학습 중</span>}
-                    </div>
-                    <span className="text-[11px] text-white/40 font-medium">{completedCount}/{totalSentences}</span>
-                </div>
+                <div className="w-8"></div> {/* Spacer for centering */}
             </header>
 
-            <main className="flex-1 overflow-y-auto px-3 pb-32 pt-24">
+            <div className="pt-16 px-3 bg-slate-50 shrink-0 z-20 pb-2 shadow-sm relative">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded">Sentence {currentActualIndex + 1}</span>
+                    <div className="flex gap-2">
+                        {isRetryMode && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded">오답 학습 중</span>}
+                        <span className="text-xs text-slate-400 font-medium">{completedCount}/{totalSentences}</span>
+                    </div>
+                </div>
+            </div>
+
+            <main className="flex-1 overflow-y-auto px-3 pb-32 pt-2">
                 <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                     key={`m-sentence-${currentActualIndex}`}

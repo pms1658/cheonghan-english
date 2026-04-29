@@ -508,7 +508,7 @@ export default function StructureEditor({ text, initialMarks = [], onChange, rea
 
             {/* STICKY APPLY TOOLBAR - Apple Glassmorphism Pill */}
             {!readOnly && (
-                <div className="sticky top-6 z-50 flex justify-center pb-6 pointer-events-none">
+                <div className="sticky top-6 z-30 flex justify-center pb-6 pointer-events-none">
                     <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 dark:border-white/10 rounded-full px-5 py-2.5 flex items-center justify-between gap-5 pointer-events-auto transition-transform hover:scale-[1.02] duration-300">
                         <div className="flex gap-3 items-center">
                             {(Object.keys(MARK_STYLES) as MarkType[]).map(type => (
