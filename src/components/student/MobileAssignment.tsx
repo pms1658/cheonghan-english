@@ -571,17 +571,18 @@ export default function MobileAssignment({
                 <div className="w-8"></div> {/* Spacer for centering */}
             </header>
 
-            <div className="pt-16 px-3 bg-slate-50 shrink-0 z-20 pb-2 shadow-sm relative">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded">Sentence {currentActualIndex + 1}</span>
-                    <div className="flex gap-2">
-                        {isRetryMode && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded">오답 학습 중</span>}
-                        <span className="text-xs text-slate-400 font-medium">{completedCount}/{totalSentences}</span>
+            {/* Sentence label — inside navy header area */}
+            <div className="pt-16 px-4 bg-[#0A0E27] shrink-0 pb-3">
+                <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-white/50">Sentence {currentActualIndex + 1}</span>
+                    <div className="flex gap-2 items-center">
+                        {isRetryMode && <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded">오답 학습 중</span>}
+                        <span className="text-[11px] text-white/40 font-medium">{completedCount}/{totalSentences}</span>
                     </div>
                 </div>
             </div>
 
-            <main className="flex-1 overflow-y-auto px-3 pb-32 pt-2">
+            <main className="flex-1 overflow-y-auto px-3 pb-32 pt-1">
                 <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                     key={`m-sentence-${currentActualIndex}`}
