@@ -139,6 +139,7 @@ Student's Selected Sentence Form(s): {selectedForms}
 
 2.  **Sentence Form Score (10 pts)**: Compare student's selectedForms against correctForms.
     - Use exact string match. Forms: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
+    - **⚠️ CRITICAL**: correctForms must be determined INDEPENDENTLY based on the sentence's actual grammar. Do NOT match the number of items to the student's selectedForms count. The correct number of forms depends on how many independent/coordinate clauses exist in the sentence. If the sentence has 3 clauses, correctForms must have 3 items regardless of how many the student provided.
 
 3.  **Translation Score (50 pts)**: Accuracy of Korean meaning.
 
@@ -158,11 +159,12 @@ Student's Selected Sentence Form(s): {selectedForms}
   - Apply the "that" classification rule strictly.
   - **CONTAINMENT**: Marks must not leak out of their parent wrapper.
 
-- **correctForms** (string[]): Main clause form only.
+- **correctForms** (string[]): One form per independent/coordinate clause. Count clauses by the sentence grammar, NOT by the student's answer count.
   - Values: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
 
-- **directTranslation** (string): Chunk-by-chunk Korean translation.
-  - **KOREAN ONLY**. Zero English words. Translate everything.
+- **directTranslation** (string): Chunk-by-chunk Korean translation following the original English word order.
+  - **KOREAN ONLY**. Zero English words. Translate everything into Korean.
+  - **⚠️ NO MARKUP**: Do NOT include any symbols like [qn], [/qn], [V], [△], [O], <, >, /, ( ), etc. in the translation. Output PURE Korean text only. Use / (slash) ONLY as a chunk separator between translated phrases.
 
 - **vocabFeedback** (string[]): Key vocabulary with Korean meanings.
 
