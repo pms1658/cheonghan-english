@@ -1,9 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* 모바일 바운스 스크롤 방지 (iOS 16+, Android) */
+/* iOS 바운스 스크롤 완전 차단: body는 스크롤 불가, 내부 컨테이너에서만 스크롤 */
 html, body {
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
+}
+
+#__next {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: none;
 }
 
 /* iOS 네이티브 앱 느낌 */
