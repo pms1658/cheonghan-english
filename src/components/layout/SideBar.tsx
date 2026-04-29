@@ -51,6 +51,11 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
                 </Link>
             </div>
 
+            {/* Theme Toggle — under logo */}
+            <div className="flex justify-center pb-4">
+                <ThemeToggle />
+            </div>
+
             {/* Scrollable Nav Content */}
             <div className="sidebar-scroll flex-1 overflow-y-auto overflow-x-hidden flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
 
@@ -112,13 +117,7 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
 
             </div>
 
-            {/* Footer: Theme Toggle */}
-            <div className="p-4 border-t border-white/5 bg-[#0A0E27]">
-                <div className="flex items-center justify-between px-1">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Theme</span>
-                    <ThemeToggle />
-                </div>
-            </div>
+
         </aside>
     );
 }
