@@ -118,10 +118,19 @@ Provide your response ONLY as a valid JSON object with the following structure:
   "question": "The modified passage text with markers. For insertion, start with [[TARGET]]...[[/TARGET]]",
   "choices": ["Choice 1", "Choice 2", "Choice 3", "Choice 4", "Choice 5"],
   "correctAnswer": 0,
-  "explanation": "Korean explanation of the answer"
+  "explanation": "Korean explanation of why the correct answer is correct",
+  "choiceExplanations": [
+    "① 설명: 왜 이 선택지가 정답/오답인지 한국어로 설명",
+    "② 설명: 왜 이 선택지가 정답/오답인지 한국어로 설명",
+    "③ 설명: 왜 이 선택지가 정답/오답인지 한국어로 설명",
+    "④ 설명: 왜 이 선택지가 정답/오답인지 한국어로 설명",
+    "⑤ 설명: 왜 이 선택지가 정답/오답인지 한국어로 설명"
+  ]
 }
 
-**CRITICAL**: "correctAnswer" must be an integer from 0 to 4 (representing choice 1 to 5). Do NOT use markdown code blocks like \`\`\`json, just output the raw JSON string.
+**CRITICAL**: 
+- "correctAnswer" must be an integer from 0 to 4 (representing choice 1 to 5). Do NOT use markdown code blocks like \`\`\`json, just output the raw JSON string.
+- "choiceExplanations" must have exactly 5 items (one per choice). For the correct answer, explain why it is correct. For wrong answers, explain specifically why each one is wrong.
 
 ### PASSAGE:
 """

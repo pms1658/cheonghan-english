@@ -108,6 +108,7 @@ export async function POST(req: Request) {
                     choices: data.choices || [],
                     correctAnswer: data.correctAnswer ?? 0,
                     explanation: data.explanation || '',
+                    choiceExplanations: data.choiceExplanations || [],
                     points: 0 // Will verify later
                 };
             } catch (e) {

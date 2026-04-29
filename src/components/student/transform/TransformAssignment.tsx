@@ -485,17 +485,36 @@ export default function TransformAssignment({
                                             />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                                                {prob.choices.map((choice, cIdx) => (
-                                                    <div key={cIdx} className={`px-4 py-3 rounded-xl text-[13px] font-medium flex gap-3 ${cIdx === prob.correctAnswer
-                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
-                                                        : cIdx === currentSession?.answers[idx]
-                                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-500/20'
-                                                            : 'bg-transparent text-slate-500'
-                                                        }`}>
-                                                        <span className="opacity-70">{cIdx + 1}.</span>
-                                                        <span className="flex-1">{choice}</span>
-                                                    </div>
-                                                ))}
+                                                {prob.choices.map((choice, cIdx) => {
+                                                    const isAnswer = cIdx === prob.correctAnswer;
+                                                    const isStudentPick = cIdx === currentSession?.answers[idx];
+                                                    const choiceExp = (prob as any).choiceExplanations?.[cIdx];
+                                                    return (
+                                                        <div key={cIdx} className={`px-4 py-3 rounded-xl text-[13px] font-medium border ${isAnswer
+                                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                                                            : isStudentPick
+                                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-500/20'
+                                                                : 'bg-transparent text-slate-500 border-transparent'
+                                                            }`}>
+                                                            <div className="flex gap-3">
+                                                                <span className="opacity-70 flex-shrink-0">{cIdx + 1}.</span>
+                                                                <div className="flex-1">
+                                                                    <span>{choice}</span>
+                                                                    {choiceExp && (
+                                                                        <p className={`text-[12px] mt-1.5 leading-relaxed ${isAnswer
+                                                                            ? 'text-emerald-600/80 dark:text-emerald-400/70'
+                                                                            : isStudentPick
+                                                                                ? 'text-red-500/80 dark:text-red-400/70'
+                                                                                : 'text-slate-400'
+                                                                            }`}>
+                                                                            → {choiceExp}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
 
                                             {prob.explanation && (

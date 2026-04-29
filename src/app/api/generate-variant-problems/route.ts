@@ -279,7 +279,8 @@ export async function POST(req: Request) {
                     question: problemData.question,
                     choices: problemData.choices.slice(0, 5),
                     correctAnswer: problemData.correctAnswer ?? 0,
-                    explanation: problemData.explanation || ''
+                    explanation: problemData.explanation || '',
+                    choiceExplanations: problemData.choiceExplanations || []
                 };
             } catch (err) {
                 console.error(`[API] Failed type: ${type}`, err);
