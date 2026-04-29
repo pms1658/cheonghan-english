@@ -272,9 +272,7 @@ export default function TransformAssignment({
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200 selection:bg-blue-600/20 selection:text-slate-900">
             {/* Navy Header — Unified Design */}
-            <header className="bg-[#0A0E27] sticky top-0 z-50 px-4 py-4 shadow-xl relative overflow-hidden" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+            <header className="bg-[#0A0E27] sticky top-0 z-50 px-4 py-4 shadow-xl" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
                 <div className="max-w-4xl mx-auto relative z-10">
                     {/* Row 1: Badge + Title + Meta + Exit */}
                     <div className="flex items-center gap-3 mb-3">

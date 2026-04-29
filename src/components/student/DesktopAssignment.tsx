@@ -532,9 +532,7 @@ export default function DesktopAssignment({
     return (
         <div className="bg-slate-50 dark:bg-slate-950 flex flex-col font-sans text-slate-900 dark:text-slate-200 selection:bg-blue-600/20">
             {/* Navy Header — Unified Design */}
-            <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+            <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl">
                 <div className="max-w-5xl mx-auto relative z-10">
                     {/* Row 1: Badge + Title + Progress + Exit */}
                     <div className="flex items-center gap-3 mb-3">

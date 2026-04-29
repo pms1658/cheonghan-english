@@ -18,9 +18,7 @@ export default function VocabOverview({ title, words = [], config = {}, isStudie
     return (
         <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900">
             {/* Navy Header — flex-shrink-0 */}
-            <div className="flex-shrink-0 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+            <div className="flex-shrink-0 bg-[#0A0E27] px-4 py-4 shadow-xl">
 
                 <div className="max-w-4xl mx-auto relative z-10">
                     <div className="flex items-center justify-between mb-2">

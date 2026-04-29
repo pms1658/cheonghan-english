@@ -257,9 +257,7 @@ export default function WritingAssignment({ assignment, studentId, studentName, 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
             {/* Navy Header */}
-            <header className="bg-[#0A0E27] sticky top-0 z-30 relative overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+            <header className="bg-[#0A0E27] sticky top-0 z-30" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                 <div className="max-w-3xl mx-auto px-4 py-4 relative z-10">
                     <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">

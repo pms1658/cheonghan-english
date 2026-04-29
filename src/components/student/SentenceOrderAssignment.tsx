@@ -381,9 +381,7 @@ export default function SentenceOrderAssignment({
         return (
             <div className="min-h-screen bg-slate-50 font-sans">
                 {/* Result Header */}
-                <div className="bg-[#0A0E27] px-4 py-8 text-center relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+                <div className="bg-[#0A0E27] px-4 py-8 text-center">
                     <div className="relative z-10">
                         <div className="inline-block bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-[0.2em] mb-3 border border-white/10 text-white">
                             RESULT REPORT
@@ -474,9 +472,7 @@ export default function SentenceOrderAssignment({
     return (
         <div className="min-h-screen bg-slate-50 font-sans">
             {/* Navy Header */}
-            <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl relative overflow-hidden" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+            <div className="sticky top-0 z-40 bg-[#0A0E27] px-4 py-4 shadow-xl" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
                 <div className="max-w-2xl mx-auto relative z-10">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
