@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { getAdminDisplayName, getAdminDisplayNameEn } from '@/lib/adminConfig';
 import { useRouter, usePathname } from 'next/navigation';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { dbService, dbSubscriptions } from '@/services/db';
 import { toast } from 'sonner';
 
@@ -158,8 +157,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
             {/* Right: Global Actions */}
             <div className="flex items-center gap-2 md:gap-3">
-                {/* Theme Toggle */}
-                <ThemeToggle />
 
                 {/* 1. Homework */}
                 <Link

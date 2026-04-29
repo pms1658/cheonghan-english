@@ -112,13 +112,12 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
 
             </div>
 
-            {/* Footer: Theme Toggle + Info */}
-            <div className="p-4 border-t border-white/5 bg-[#0A0E27] space-y-3">
+            {/* Footer: Theme Toggle */}
+            <div className="p-4 border-t border-white/5 bg-[#0A0E27]">
                 <div className="flex items-center justify-between px-1">
                     <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Theme</span>
                     <ThemeToggle />
                 </div>
-                <p className="text-[10px] text-slate-600 font-medium tracking-wide text-center lg:text-left">Tel. 010-5616-2833</p>
             </div>
         </aside>
     );
