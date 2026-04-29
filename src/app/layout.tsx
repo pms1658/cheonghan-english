@@ -25,7 +25,7 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="apple-mobile-web-app-title" content="청한영어" />
-                <link rel="apple-touch-icon" href="/logo.jpg" />
+                <link rel="apple-touch-icon" href="/logo_final.png" />
             </head>
             <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
