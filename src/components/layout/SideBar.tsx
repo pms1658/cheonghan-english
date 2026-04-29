@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ClassTree from './ClassTree';
 import Logo from '@/components/common/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface SideBarProps {
     isOpen: boolean;
@@ -27,7 +28,9 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
             w-[280px] lg:w-[220px] xl:w-[280px] h-[100dvh] bg-[#0A0E27] text-slate-300 flex flex-col
             transform transition-transform duration-300 ease-in-out
             ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
-        `}>
+        `}
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
             {/* Header / Logo Area */}
             <div className="pt-6 pb-6 xl:pt-10 xl:pb-10 flex justify-center">
                 <Link href="/dashboard" className="block relative group cursor-pointer">
@@ -109,9 +112,13 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
 
             </div>
 
-            {/* Footer Info */}
-            <div className="p-5 border-t border-white/5 text-center lg:text-left bg-[#0A0E27]">
-                <p className="text-[10px] text-slate-600 font-medium tracking-wide">Tel. 010-5616-2833</p>
+            {/* Footer: Theme Toggle + Info */}
+            <div className="p-4 border-t border-white/5 bg-[#0A0E27] space-y-3">
+                <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Theme</span>
+                    <ThemeToggle />
+                </div>
+                <p className="text-[10px] text-slate-600 font-medium tracking-wide text-center lg:text-left">Tel. 010-5616-2833</p>
             </div>
         </aside>
     );

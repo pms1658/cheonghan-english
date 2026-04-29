@@ -395,7 +395,7 @@ export default function SubjectiveAssignment({
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200">
             {/* Header — Dark Navy */}
-            <header className="bg-[#0A0E27] sticky top-0 z-40 px-4 py-4 shadow-xl relative overflow-hidden">
+            <header className="bg-[#0A0E27] sticky top-0 z-40 px-4 py-4 shadow-xl relative overflow-hidden" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#1e3a5f]/20 rounded-full blur-3xl -mr-32 -mt-32" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -ml-24 -mb-24" />
                 <div className="max-w-4xl mx-auto relative z-10">

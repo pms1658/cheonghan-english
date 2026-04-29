@@ -121,7 +121,10 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
     const isSuperAdmin = (user as any)?.isSuperAdmin;
 
     return (
-        <header className="px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#0A0E27]/90 backdrop-blur-md sticky top-0 z-20">
+        <header
+            className="px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#0A0E27]/90 backdrop-blur-md sticky top-0 z-20"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+        >
             {/* Left: Mobile Menu & Breadcrumb/Title */}
             <div className="flex items-center gap-4">
                 <button

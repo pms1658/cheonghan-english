@@ -517,7 +517,7 @@ export default function MobileAssignment({
 
     return (
         <div className="h-[100dvh] bg-slate-50 font-sans flex flex-col overflow-hidden">
-            <header className="fixed top-0 left-0 w-full bg-[#0A0E27] z-50 px-4 py-3 flex items-center justify-between shadow-md h-14">
+            <header className="fixed top-0 left-0 w-full bg-[#0A0E27] z-50 px-4 py-3 flex items-center justify-between shadow-md" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
                 <button
                     onClick={() => {
                         const finalClassId = queryClassId || student?.classId || (assignment?.classIds && assignment.classIds[0]) || '';
