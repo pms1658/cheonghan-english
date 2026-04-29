@@ -113,11 +113,11 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
             <div
                 ref={nodeRef}
                 className={`
-                    group relative flex items-center justify-between px-3 py-3 rounded-2xl cursor-pointer transition-all duration-200
-                    ${isAdmin ? 'hover:pr-10' : ''}
+                    group relative flex items-center justify-between px-3 py-3 rounded-2xl cursor-pointer transition-all duration-300 ease-spring
+                    ${isAdmin ? 'hover:pr-10' : ''} /* Space for admin button */
                     ${isActive
                         ? 'bg-white/10 text-white font-bold shadow-sm'
-                        : 'text-white/60 hover:text-white hover:bg-white/5 active:bg-white/10'}
+                        : 'text-white/60 hover:text-white hover:bg-white/5 hover:translate-x-1'}
                 `}
                 style={{ paddingLeft: `${paddingLeft}px` }}
                 onClick={handleTextClick}
