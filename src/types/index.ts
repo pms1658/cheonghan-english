@@ -229,7 +229,8 @@ export type VariantProblemType =
     | 'flow'         // 흐름
     | 'summary'      // 요약
     | 'meaning'      // 함축 의미
-    | 'special';     // SL: 지문 변형 (Special Level)
+    | 'special'      // SL: 지문 변형 (Special Level)
+    | 'mismatch';    // 내용 불일치 (내신 26~28번, 45번 스타일)
 
 export interface VariantProblem {
     id: string;
@@ -255,8 +256,8 @@ export interface VariantSession {
 }
 
 export interface VariantConfig {
-    problemTypes: VariantProblemType[]; // Selected 6 types
-    totalProblems: number;              // Usually 6
+    problemTypes: VariantProblemType[]; // Selected types (no limit)
+    totalProblems: number;              // Number of problems
     passingScore?: number;              // Optional passing threshold
 }
 

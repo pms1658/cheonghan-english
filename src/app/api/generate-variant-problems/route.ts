@@ -231,7 +231,7 @@ export async function POST(req: Request) {
                 const suggestedTypes = extractJSON(rawTypeResponse);
 
                 if (Array.isArray(suggestedTypes) && suggestedTypes.length > 0) {
-                    problemTypes = suggestedTypes.slice(0, 6);
+                    problemTypes = suggestedTypes;
                 } else {
                     problemTypes = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
                 }
@@ -242,7 +242,7 @@ export async function POST(req: Request) {
         }
 
         const finalProblems: any[] = [];
-        const fallbackPool = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion', 'title', 'claim', 'flow', 'summary', 'meaning']
+        const fallbackPool = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion', 'title', 'claim', 'flow', 'summary', 'meaning', 'mismatch']
             .filter(t => !problemTypes.includes(t));
 
         async function attemptGeneration(type: string, index: number, retryCount = 0): Promise<any> {

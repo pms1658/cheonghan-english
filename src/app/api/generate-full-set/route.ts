@@ -79,7 +79,7 @@ export async function POST(req: Request) {
                     generationConfig: { responseMimeType: "application/json", temperature: 0.3 }
                 });
                 const suggestedTypes = extractJSON(result.response.text());
-                typesToGen = Array.isArray(suggestedTypes) ? suggestedTypes.slice(0, 6) : ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
+                typesToGen = Array.isArray(suggestedTypes) ? suggestedTypes : ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
             } catch (e) {
                 console.warn("Smart Type Selection Failed in Full Set, using default:", e);
                 typesToGen = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];

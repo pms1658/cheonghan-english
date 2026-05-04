@@ -121,6 +121,7 @@ export default function TransformAssignmentForm({
         { value: 'flow', label: '무관한 문장', desc: 'Flow' },
         { value: 'summary', label: '요약문', desc: 'Summary' },
         { value: 'meaning', label: '함축 의미', desc: 'Meaning' },
+        { value: 'mismatch', label: '내용 불일치', desc: '26~28번' },
     ];
 
     const allGrades = [
@@ -135,7 +136,7 @@ export default function TransformAssignmentForm({
         setSelectedTypes(prev =>
             prev.includes(type)
                 ? prev.filter(t => t !== type)
-                : prev.length < 6 ? [...prev, type] : prev
+                : [...prev, type]
         );
     };
 

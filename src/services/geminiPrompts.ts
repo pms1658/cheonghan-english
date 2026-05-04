@@ -22,7 +22,8 @@ export const PROBLEM_DEFINITIONS: Record<string, string> = {
   order: '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.',
   insertion: '글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.',
   flow: '글의 흐름상 관계 없는 문장을 고르시오.',
-  summary: '다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸에 들어갈 말로 가장 적절한 것을 고르시오.'
+  summary: '다음 글의 내용을 한 문장으로 요약하고자 한다. 빈칸에 들어갈 말로 가장 적절한 것을 고르시오.',
+  mismatch: '다음 글의 내용과 일치하지 않는 것을 고르시오.'
 };
 
 const CONSTRUCTION_RULES: Record<string, string> = {
@@ -81,6 +82,23 @@ const CONSTRUCTION_RULES: Record<string, string> = {
     - **Structure**: Generate a NEW one-sentence or short paragraph summary of the passage with two blanks (A) and (B).
     - **Formatting**: Wrap the ENTIRE summary paragraph in \`[[BOX]]...[[/BOX]]\`.
     - **Choices**: Provide word pairs for (A) and (B).
+  `,
+  mismatch: `
+    - **유형**: 수능 26~28번 (인물 설명문/안내문 불일치) 및 45번 (장문 내용 불일치) 스타일
+    - **STRICT**: DO NOT include any markers like ①, ②, ③, ④, ⑤ in the passage text itself.
+    - **Passage**: Present the ORIGINAL passage text exactly as given. Do NOT modify the passage.
+    - **Choices**: Create 5 choices in **Korean (한국어)**. Each choice is a factual statement about the passage content.
+    - **Logic**:
+      - 4 choices must ACCURATELY reflect what the passage states.
+      - 1 choice (the correct answer) must contain a SUBTLE factual error — a detail that CONTRADICTS the passage.
+    - **불일치 왜곡 방식 (기출 기반)**:
+      - 수치/연도 변경 (예: 1920년 → 1930년)
+      - 대상/주어 바꿈 (예: 아버지 → 어머니)
+      - 인과 역전 (예: A 때문에 B → B 때문에 A)
+      - 긍정/부정 전환 (예: 성공했다 → 실패했다)
+      - 세부 사항 왜곡 (예: 3개국 → 5개국)
+    - **주의**: 불일치 항목은 반드시 지문에서 명확히 언급된 사실을 기반으로 왜곡할 것. 추론해야 하는 내용을 불일치로 만들면 안 됨.
+    - **선택지 배열**: 지문에 언급된 순서대로 선택지를 구성하되, 정답(불일치) 위치는 ①~⑤ 중 자연스러운 곳에 배치.
   `
 };
 
@@ -143,7 +161,7 @@ ${passage}
 export const getBestTypesPrompt = (grade: string, passage: string) => {
   return `
 You are a veteran English Teacher analyzing a text.
-Determine the **6 Best Variant Problem Types** for this passage.
+Determine the **Best Variant Problem Types** for this passage. Select 6 to 8 types that fit the passage well.
 
 Target Grade: ${GRADE_LABELS[grade]}
 
@@ -158,6 +176,7 @@ Available Types:
 8. insertion
 9. flow
 10. meaning
+11. mismatch (내용 불일치 — 지문 세부 사실 중 1개가 틀린 선택지 찾기. 사실 정보가 풍부한 지문에 적합)
 
 Passage:
 """
@@ -168,11 +187,12 @@ Requirements:
 - **PRIORITY**: Always include "grammar" and "vocabulary" if the text length allows.
 - Analyze the text logic for "blank", "order", "insertion".
 - **STRICT**: Only select "insertion" if there is a sentence with a clear logical anchor (this, however, etc.).
-- Select strictly 6 types.
+- Only select "mismatch" if the passage contains enough concrete factual details (names, numbers, dates, events) to create meaningful T/F-style choices.
+- Select 6 to 8 types that best match this passage.
 - Return ONLY a JSON list of strings.
 
 Example Output:
-["grammar", "vocabulary", "blank", "insertion", "topic", "meaning"]
+["grammar", "vocabulary", "blank", "insertion", "topic", "meaning", "mismatch"]
   `;
 };
 
