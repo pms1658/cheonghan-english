@@ -87,18 +87,22 @@ const CONSTRUCTION_RULES: Record<string, string> = {
     - **유형**: 수능 26~28번 (인물 설명문/안내문 불일치) 및 45번 (장문 내용 불일치) 스타일
     - **STRICT**: DO NOT include any markers like ①, ②, ③, ④, ⑤ in the passage text itself.
     - **Passage**: Present the ORIGINAL passage text exactly as given. Do NOT modify the passage.
-    - **Choices**: Create 5 choices in **Korean (한국어)**. Each choice is a factual statement about the passage content.
+    - **Choices**: Create 5 choices in **English**. Each choice is a factual statement about the passage content.
+    - **CRITICAL — PARAPHRASING**: Each choice MUST be **paraphrased** using DIFFERENT vocabulary and sentence structures from the original passage. Do NOT copy phrases directly from the passage. Use synonyms, restructure sentences, and change word order. This forces students to truly comprehend the content rather than pattern-match words.
+      - Example: Passage says "He was born in 1892" → Choice: "His birth year was 1892" (NOT just copying "He was born in 1892")
+      - Example: Passage says "She won three awards" → Choice: "Three prizes were given to her" (paraphrased)
     - **Logic**:
-      - 4 choices must ACCURATELY reflect what the passage states.
+      - 4 choices must ACCURATELY reflect what the passage states (but paraphrased).
       - 1 choice (the correct answer) must contain a SUBTLE factual error — a detail that CONTRADICTS the passage.
     - **불일치 왜곡 방식 (기출 기반)**:
-      - 수치/연도 변경 (예: 1920년 → 1930년)
-      - 대상/주어 바꿈 (예: 아버지 → 어머니)
-      - 인과 역전 (예: A 때문에 B → B 때문에 A)
-      - 긍정/부정 전환 (예: 성공했다 → 실패했다)
-      - 세부 사항 왜곡 (예: 3개국 → 5개국)
+      - 수치/연도 변경 (예: 1920 → 1930)
+      - 대상/주어 바꿈 (예: father → mother)
+      - 인과 역전 (예: A caused B → B caused A)
+      - 긍정/부정 전환 (예: succeeded → failed)
+      - 세부 사항 왜곡 (예: three countries → five countries)
     - **주의**: 불일치 항목은 반드시 지문에서 명확히 언급된 사실을 기반으로 왜곡할 것. 추론해야 하는 내용을 불일치로 만들면 안 됨.
     - **선택지 배열**: 지문에 언급된 순서대로 선택지를 구성하되, 정답(불일치) 위치는 ①~⑤ 중 자연스러운 곳에 배치.
+    - **explanation**: 한국어로 작성. 어떤 선택지가 왜 지문과 불일치하는지 구체적으로 설명.
   `
 };
 
