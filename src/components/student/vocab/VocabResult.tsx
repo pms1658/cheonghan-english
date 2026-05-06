@@ -116,43 +116,27 @@ export default function VocabResult({ score, words, finalAnswers, testMode = 'de
                             </button>
                         ) : (
                             <button
-                                onClick={() => onRetry(false)}
-                                className="flex-1 py-3 rounded-xl bg-[#0A0E27] text-white font-bold hover:bg-[#1a1f3d] transition-all text-sm"
+                                onClick={onOverview}
+                                className="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm"
                             >
-                                다시하기
+                                단어 리스트
                             </button>
                         )}
-                        <button
-                            onClick={onOverview}
-                            className="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm"
-                        >
-                            단어 리스트
-                        </button>
-                    </div>
-                    <div className="flex gap-2">
                         {onNewAttempt && (
                             <button
                                 onClick={onNewAttempt}
-                                className="flex-1 py-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 font-bold hover:bg-indigo-100 transition-all text-sm"
+                                className="flex-1 py-3 rounded-xl bg-[#0A0E27] text-white font-bold hover:bg-[#1a1f3d] transition-all text-sm"
                             >
-                                🔄 새로 학습하기
-                            </button>
-                        )}
-                        <button
-                            onClick={onExit}
-                            className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-all text-sm"
-                        >
-                            나가기
-                        </button>
-                        {score < 100 && (
-                            <button
-                                onClick={() => onRetry(false)}
-                                className="text-slate-400 font-bold text-xs underline decoration-1 underline-offset-4 hover:text-slate-600 px-3"
-                            >
-                                전체 다시하기
+                                🔄 학습하기
                             </button>
                         )}
                     </div>
+                    <button
+                        onClick={onExit}
+                        className="w-full py-3 rounded-xl bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-all text-sm"
+                    >
+                        나가기
+                    </button>
                 </div>
             </div>
         </div>

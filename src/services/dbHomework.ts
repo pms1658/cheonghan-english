@@ -161,23 +161,60 @@ export const homeworkService = {
     checkLinkedAssignmentCompletion: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number): Promise<string[]> => {
         if (!assignmentIds.length) return [];
         try {
+            // 1. 해당 학생의 모든 submission 조회
             const q = query(
                 collection(db, 'submissions'),
                 where('studentId', '==', studentId)
             );
             const sn = await getDocs(q);
-            const submittedAssignmentIds = new Set(
-                sn.docs
-                    .filter(d => {
-                        if (!sinceTimestamp) return true;
-                        const data = d.data();
-                        const submittedAt = data.submittedAt || data.timestamp || 0;
-                        return submittedAt >= sinceTimestamp;
-                    })
-                    .map(d => d.data().assignmentId)
-                    .filter(Boolean)
-            );
-            return assignmentIds.filter(id => submittedAssignmentIds.has(id));
+
+            // 2. 과제 유형 조회 (유형별 완료 기준 적용용)
+            const assignmentTypes: Record<string, string> = {};
+            await Promise.all(assignmentIds.map(async (aid) => {
+                try {
+                    const aDoc = await getDoc(doc(db, 'assignments', aid));
+                    if (aDoc.exists()) {
+                        assignmentTypes[aid] = (aDoc.data().type as string) || '';
+                    }
+                } catch { /* ignore */ }
+            }));
+
+            // 3. 유형별 완료 기준 점수
+            const getPassScore = (type: string): number => {
+                switch (type) {
+                    case 'structure':
+                    case 'analysis':
+                        return 80;  // 구조독해/분석: 80점
+                    case 'writing':
+                    case 'writing_session':
+                        return 90;  // 구조작문: 90점
+                    default:
+                        return 100; // 단어/변형/워크북 등: 100점
+                }
+            };
+
+            // 4. assignmentId별로 최고 점수 추적 (sinceTimestamp 이후)
+            const bestScores: Record<string, number> = {};
+            sn.docs.forEach(d => {
+                const data = d.data();
+                const aid = data.assignmentId;
+                if (!aid || !assignmentIds.includes(aid)) return;
+
+                // sinceTimestamp 이후 제출만 인정
+                if (sinceTimestamp) {
+                    const submittedAt = data.submittedAt || data.timestamp || 0;
+                    if (submittedAt < sinceTimestamp) return;
+                }
+
+                const score = data.score ?? 0;
+                bestScores[aid] = Math.max(bestScores[aid] || 0, score);
+            });
+
+            // 5. 유형별 기준 충족 여부 판단
+            return assignmentIds.filter(aid => {
+                const passScore = getPassScore(assignmentTypes[aid] || '');
+                return (bestScores[aid] || 0) >= passScore;
+            });
         } catch (e) {
             console.error('Error checking linked assignment completion:', e);
             return [];
