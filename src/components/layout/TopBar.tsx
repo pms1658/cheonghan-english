@@ -45,7 +45,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                 if (hasOffline && !st?.completed) { count++; continue; }
                 if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                     const ids = hw.linkedAssignments.map((la: any) => la.assignmentId);
-                    const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids);
+                    const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids, hw.createdAt);
                     const allLinkedDone = hw.linkedAssignments.every((la: any) => completed.includes(la.assignmentId));
                     if (!allLinkedDone) count++;
                 }

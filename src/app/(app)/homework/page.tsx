@@ -66,7 +66,7 @@ export default function StudentHomeworkPage() {
                 await Promise.all(mine.map(async (hw) => {
                     if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                         const ids = hw.linkedAssignments.map(la => la.assignmentId);
-                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids);
+                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids, hw.createdAt);
                         if (completed.length > 0) linkedStatuses[hw.id] = completed;
                     }
                 }));

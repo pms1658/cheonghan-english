@@ -390,6 +390,18 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
         setMode('test');
     };
 
+    // ★ New Attempt: 처음부터 다시 학습하기 (재학습)
+    const handleNewAttempt = () => {
+        setWords(baseWords);
+        setTestAnswers({});
+        setTestScore(0);
+        setTestCurrentIndex(0);
+        setShuffleOrder(undefined);
+        setAiGradingResults(null);
+        setIsStudied(false);
+        setMode('overview');
+        toast.info('새로 학습을 시작합니다.');
+    };
 
 
     if (mode === 'loading') return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -516,6 +528,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
                         testMode={currentTestMode}
                         aiResults={aiGradingResults}
                         onRetry={handleRetry}
+                        onNewAttempt={handleNewAttempt}
                         onExit={onExit}
                         onOverview={() => {
                             setWords(baseWords);

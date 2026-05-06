@@ -158,7 +158,7 @@ export const homeworkService = {
             return null;
         }
     },
-    checkLinkedAssignmentCompletion: async (studentId: string, assignmentIds: string[]): Promise<string[]> => {
+    checkLinkedAssignmentCompletion: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number): Promise<string[]> => {
         if (!assignmentIds.length) return [];
         try {
             const q = query(
@@ -167,7 +167,15 @@ export const homeworkService = {
             );
             const sn = await getDocs(q);
             const submittedAssignmentIds = new Set(
-                sn.docs.map(d => d.data().assignmentId).filter(Boolean)
+                sn.docs
+                    .filter(d => {
+                        if (!sinceTimestamp) return true;
+                        const data = d.data();
+                        const submittedAt = data.submittedAt || data.timestamp || 0;
+                        return submittedAt >= sinceTimestamp;
+                    })
+                    .map(d => d.data().assignmentId)
+                    .filter(Boolean)
             );
             return assignmentIds.filter(id => submittedAssignmentIds.has(id));
         } catch (e) {

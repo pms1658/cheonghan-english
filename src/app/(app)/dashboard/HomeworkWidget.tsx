@@ -48,7 +48,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                     if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                         const laIds = hw.linkedAssignments.map(la => la.assignmentId);
                         await Promise.all((hw.studentIds || []).map(async sid => {
-                            const completedIds = await dbService.checkLinkedAssignmentCompletion(sid, laIds);
+                            const completedIds = await dbService.checkLinkedAssignmentCompletion(sid, laIds, hw.createdAt);
                             if (completedIds.length > 0) {
                                 const key = `${hw.id}_${sid}`;
                                 if (!adminStatuses[key]) {
@@ -79,7 +79,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                 await Promise.all(mine.map(async hw => {
                     if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                         const ids = hw.linkedAssignments.map(la => la.assignmentId);
-                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids);
+                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids, hw.createdAt);
                         if (completed.length > 0) linkedMap[hw.id] = completed;
                     }
                 }));

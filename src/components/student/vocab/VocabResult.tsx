@@ -7,11 +7,12 @@ interface VocabResultProps {
     testMode?: 'default' | 'reverse' | 'typing' | 'typing-ko';
     aiResults?: Record<number, boolean> | null;
     onRetry: (onlyWrong?: boolean) => void;
+    onNewAttempt?: () => void;
     onOverview: () => void;
     onExit: () => void;
 }
 
-export default function VocabResult({ score, words, finalAnswers, testMode = 'default', aiResults, onRetry, onOverview, onExit }: VocabResultProps) {
+export default function VocabResult({ score, words, finalAnswers, testMode = 'default', aiResults, onRetry, onNewAttempt, onOverview, onExit }: VocabResultProps) {
     // [Request] Vocab requires 100% to pass
     const isPass = score === 100;
 
@@ -129,6 +130,14 @@ export default function VocabResult({ score, words, finalAnswers, testMode = 'de
                         </button>
                     </div>
                     <div className="flex gap-2">
+                        {onNewAttempt && (
+                            <button
+                                onClick={onNewAttempt}
+                                className="flex-1 py-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 font-bold hover:bg-indigo-100 transition-all text-sm"
+                            >
+                                🔄 새로 학습하기
+                            </button>
+                        )}
                         <button
                             onClick={onExit}
                             className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-all text-sm"
