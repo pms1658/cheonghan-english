@@ -217,6 +217,13 @@ export const parseAnalysisString = (text: string, analysis: string): Mark[] => {
         }
     }
 
+    // Auto-close any remaining unclosed slash-based nominals
+    if (slashDepth > 0) {
+        for (let d = 0; d < slashDepth; d++) {
+            events.push({ kind: 'close', markType: 'nominal' });
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════
     // PHASE 2: Match word events to original tokens (fuzzy)
     // ═══════════════════════════════════════════════════════════
@@ -229,6 +236,7 @@ export const parseAnalysisString = (text: string, analysis: string): Mark[] => {
 
     const positioned: PositionedEvent[] = [];
     let origIdx = 0;
+    let lastMatchedOrigIdx = -1; // Track last successfully matched token for close-event accuracy
 
     for (const ev of events) {
         if (ev.kind === 'word') {
@@ -244,6 +252,7 @@ export const parseAnalysisString = (text: string, analysis: string): Mark[] => {
 
                 // Exact match
                 if (candidate === target) {
+                    lastMatchedOrigIdx = origIdx + look;
                     origIdx = origIdx + look + 1;
                     found = true;
                     break;
@@ -258,6 +267,7 @@ export const parseAnalysisString = (text: string, analysis: string): Mark[] => {
                         concat += norm(originalTokens[origIdx + look + span].text);
                         span++;
                         if (concat === target) {
+                            lastMatchedOrigIdx = origIdx + look + span - 1;
                             origIdx = origIdx + look + span;
                             found = true;
                             break;
@@ -276,18 +286,31 @@ export const parseAnalysisString = (text: string, analysis: string): Mark[] => {
 
                 // Single-token partial match for contractions: "don" matches "don't"
                 if (candidate.startsWith(target) || target.startsWith(candidate)) {
+                    lastMatchedOrigIdx = origIdx + look;
                     origIdx = origIdx + look + 1;
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                // Fallback: just advance by 1 to avoid getting stuck
-                origIdx++;
+                // Improved fallback: skip punctuation-only tokens to reduce drift
+                while (origIdx < originalTokens.length && norm(originalTokens[origIdx].text) === '') {
+                    origIdx++;
+                }
+                if (origIdx < originalTokens.length) {
+                    origIdx++;
+                }
             }
         } else {
-            // Markup event — record current position
-            const idx = Math.min(origIdx, originalTokens.length - 1);
+            // Markup event — use smarter position based on event type
+            let idx: number;
+            if (ev.kind === 'close' && lastMatchedOrigIdx >= 0) {
+                // Close events: position AFTER the last matched word for accurate mark end
+                idx = Math.min(lastMatchedOrigIdx + 1, originalTokens.length - 1);
+            } else {
+                // Open/point events: position at current origIdx (where next match begins)
+                idx = Math.min(origIdx, originalTokens.length - 1);
+            }
             positioned.push({
                 kind: ev.kind,
                 markType: ev.markType,
@@ -354,6 +377,21 @@ export const parseAnalysisString = (text: string, analysis: string): Mark[] => {
                     marks.push({ id: Math.random().toString(36).substr(2, 9), type: 'connector', start: idx, end: idx });
                 }
             }
+        }
+    }
+
+    // Auto-close any unclosed marks remaining on the stack
+    // This prevents missing symbols when AI output has unbalanced brackets
+    while (stack.length > 0) {
+        const unclosed = stack.pop()!;
+        const endIdx = originalTokens.length - 1;
+        if (endIdx >= unclosed.start && endIdx >= 0) {
+            marks.push({
+                id: Math.random().toString(36).substr(2, 9),
+                type: unclosed.type,
+                start: unclosed.start,
+                end: endIdx
+            });
         }
     }
 
