@@ -1871,11 +1871,31 @@ export const LISTENING_START_SCRIPT: ScriptLineShape[] = [
 // 듣기 종료 멘트
 // ══════════════════════════════════════
 
-/** 15번 끝난 후 16~17번 안내 */
+/** 15번 끝난 후 16~17번 안내 — 실제 수능 방송 순서:
+ *  "16번부터 17번까지는 두 번 들려줍니다."
+ *  (짧은 pause)
+ *  "16번과 17번"
+ *  (짧은 pause)
+ *  "다음을 듣고, 물음에 답하시오."
+ */
 export const LONG_SET_INTRO_SCRIPT: ScriptLineShape[] = [
     {
         speaker: 'N',
-        text: '16번부터 17번까지는 두 번 들려줍니다. 16번과 17번. 다음을 듣고 물음에 답하시오.',
+        text: '16번부터 17번까지는 두 번 들려줍니다.',
+        lang: 'ko'
+    },
+];
+
+/** 16번과 17번 + 다음을 듣고 물음에 답하시오 */
+export const LONG_SET_QUESTION_INTRO: ScriptLineShape[] = [
+    {
+        speaker: 'N',
+        text: '16번과 17번',
+        lang: 'ko'
+    },
+    {
+        speaker: 'N',
+        text: '다음을 듣고, 물음에 답하시오.',
         lang: 'ko'
     },
 ];

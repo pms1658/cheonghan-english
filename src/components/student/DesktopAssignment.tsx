@@ -724,7 +724,7 @@ export default function DesktopAssignment({
                 </motion.div>
                 </AnimatePresence>
 
-                <div className="fixed bottom-6 left-[calc(50%+110px)] lg:left-[calc(50%+110px)] xl:left-[calc(50%+140px)] transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between">
+                <div className="fixed bottom-6 left-[calc(50%+110px)] lg:left-[calc(50%+110px)] xl:left-[calc(50%+140px)] transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between whitespace-nowrap">
                     <button
                         onClick={() => setCurrentTargetIndexPtr(Math.max(0, currentTargetIndexPtr - 1))}
                         disabled={isFirst}
@@ -742,7 +742,7 @@ export default function DesktopAssignment({
                     {isLast ? (
                         <button
                             onClick={handleSubmit}
-                            className="px-8 py-3 bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 hover:shadow-emerald-500/40 hover:scale-105 transition-all flex items-center gap-2 group"
+                            className="px-8 py-3 bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 hover:shadow-emerald-500/40 hover:scale-105 transition-all flex items-center gap-2 group whitespace-nowrap"
                         >
                             <span>{isRetryMode ? '재채점' : '제출하기'}</span>
                             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
@@ -752,7 +752,7 @@ export default function DesktopAssignment({
                     ) : (
                         <button
                             onClick={() => setCurrentTargetIndexPtr(Math.min(targetIndices.length - 1, currentTargetIndexPtr + 1))}
-                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:scale-105 transition-all flex items-center gap-2 group"
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:scale-105 transition-all flex items-center gap-2 group whitespace-nowrap"
                         >
                             <span>다음</span>
                             <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>

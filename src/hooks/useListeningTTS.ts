@@ -22,6 +22,7 @@ import {
     PAGE_TURN_DELAY_SECONDS,
     LISTENING_START_SCRIPT,
     LONG_SET_INTRO_SCRIPT,
+    LONG_SET_QUESTION_INTRO,
     REPLAY_INTRO_SCRIPT,
     TRANSITION_SCRIPT,
     TRANSITION_DELAY_SECONDS,
@@ -746,11 +747,15 @@ export function useListeningTTS({
                 if (problem.number === 16) {
                     const prob17 = problems.find(p => p.number === 17);
 
-                    // ── Step 1: 딩동 + 안내 멘트 ──
+                    // ── Step 1: 딩동 + 안내 멘트 (실제 수능 순서) ──
                     try { await playChime(audioCtxRef.current); } catch {}
                     await delay(300);
                     try {
+                        // "16번부터 17번까지는 두 번 들려줍니다."
                         await speakLines(LONG_SET_INTRO_SCRIPT);
+                        await delay(600);
+                        // "16번과 17번" + "다음을 듣고, 물음에 답하시오."
+                        await speakLines(LONG_SET_QUESTION_INTRO);
                         await delay(800);
                     } catch (e) {
                         console.warn('[TTS] Long set intro failed:', e);

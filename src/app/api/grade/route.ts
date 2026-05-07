@@ -139,7 +139,10 @@ Student's Selected Sentence Form(s): {selectedForms}
 
 2.  **Sentence Form Score (10 pts)**: Compare student's selectedForms against correctForms.
     - Use exact string match. Forms: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
-    - **⚠️ CRITICAL**: correctForms must be determined INDEPENDENTLY based on the sentence's actual grammar. Do NOT match the number of items to the student's selectedForms count. The correct number of forms depends on how many independent/coordinate clauses exist in the sentence. If the sentence has 3 clauses, correctForms must have 3 items regardless of how many the student provided.
+    - **⚠️ CRITICAL — MAIN CLAUSE ONLY**: correctForms must contain the sentence form(s) of the **MAIN CLAUSE(s) (주절) ONLY**. Do NOT include forms for subordinate clauses (종속절), relative clauses (관계대명사절/관계부사절), adverbial clauses (부사절), or noun clauses (명사절). Only independent clauses and coordinate clauses joined by coordinators (and/but/or/so) count.
+    - Example: "When he arrived, she gave him the book" → correctForms: ["4형식"] (main clause only; "When he arrived" is an adverbial clause — IGNORE its form)
+    - Example: "He studies hard and she reads books" → correctForms: ["1형식", "3형식"] (two coordinate main clauses)
+    - Do NOT match the number of items to the student's selectedForms count. Determine correctForms independently based on how many main/coordinate clauses exist.
 
 3.  **Translation Score (50 pts)**: Accuracy of Korean meaning.
 
@@ -159,7 +162,7 @@ Student's Selected Sentence Form(s): {selectedForms}
   - Apply the "that" classification rule strictly.
   - **CONTAINMENT**: Marks must not leak out of their parent wrapper.
 
-- **correctForms** (string[]): One form per independent/coordinate clause. Count clauses by the sentence grammar, NOT by the student's answer count.
+- **correctForms** (string[]): One form per MAIN CLAUSE only (주절). Subordinate clauses (부사절, 관대절, 명사절, 종속절) are excluded. Count only independent/coordinate main clauses.
   - Values: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
 
 - **directTranslation** (string): Chunk-by-chunk Korean translation following the original English word order.
