@@ -724,7 +724,7 @@ export default function DesktopAssignment({
                 </motion.div>
                 </AnimatePresence>
 
-                <div className="fixed bottom-6 left-[calc(50%+110px)] lg:left-[calc(50%+110px)] xl:left-[calc(50%+140px)] transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between whitespace-nowrap">
+                <div className="fixed bottom-6 left-1/2 lg:left-[calc(50%+110px)] xl:left-[calc(50%+140px)] transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between whitespace-nowrap overflow-hidden">
                     <button
                         onClick={() => setCurrentTargetIndexPtr(Math.max(0, currentTargetIndexPtr - 1))}
                         disabled={isFirst}
