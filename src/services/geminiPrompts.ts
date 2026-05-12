@@ -84,22 +84,25 @@ const CONSTRUCTION_RULES: Record<string, string> = {
     - **Choices**: Provide word pairs for (A) and (B).
   `,
   mismatch: `
-    - **유형**: 수능 26~28번 (인물 설명문/안내문 불일치) 및 45번 (장문 내용 불일치) 스타일
+    - **유형**: 내신 대비용 내용 일치/불일치 (수능 26~28번, 45번 스타일을 내신용으로 변환)
     - **STRICT**: DO NOT include any markers like ①, ②, ③, ④, ⑤ in the passage text itself.
     - **Passage**: Present the ORIGINAL passage text exactly as given. Do NOT modify the passage.
-    - **Choices**: Create 5 choices in **English**. Each choice is a factual statement about the passage content.
-    - **CRITICAL — PARAPHRASING**: Each choice MUST be **paraphrased** using DIFFERENT vocabulary and sentence structures from the original passage. Do NOT copy phrases directly from the passage. Use synonyms, restructure sentences, and change word order. This forces students to truly comprehend the content rather than pattern-match words.
+    - **★★★ CRITICAL — CHOICES MUST BE IN ENGLISH ★★★**: All 5 choices MUST be written in **ENGLISH ONLY**. Do NOT write choices in Korean (한국어 선지 절대 금지). Each choice is an English factual statement about the passage content. This is for 내신 (school exam), NOT 수능, so English choices are required.
+      - ✅ CORRECT: "He was born in a small village in 1892."
+      - ✅ CORRECT: "Three awards were given to her for outstanding performance."
+      - ❌ WRONG: "그는 1892년에 태어났다." ← 한국어 선지 금지!
+    - **CRITICAL — PARAPHRASING**: Each English choice MUST be **paraphrased** using DIFFERENT vocabulary and sentence structures from the original passage. Do NOT copy phrases directly from the passage. Use synonyms, restructure sentences, and change word order. This forces students to truly comprehend the content rather than pattern-match words.
       - Example: Passage says "He was born in 1892" → Choice: "His birth year was 1892" (NOT just copying "He was born in 1892")
       - Example: Passage says "She won three awards" → Choice: "Three prizes were given to her" (paraphrased)
     - **Logic**:
-      - 4 choices must ACCURATELY reflect what the passage states (but paraphrased).
+      - 4 choices must ACCURATELY reflect what the passage states (but paraphrased in English).
       - 1 choice (the correct answer) must contain a SUBTLE factual error — a detail that CONTRADICTS the passage.
-    - **불일치 왜곡 방식 (기출 기반)**:
-      - 수치/연도 변경 (예: 1920 → 1930)
-      - 대상/주어 바꿈 (예: father → mother)
-      - 인과 역전 (예: A caused B → B caused A)
-      - 긍정/부정 전환 (예: succeeded → failed)
-      - 세부 사항 왜곡 (예: three countries → five countries)
+    - **Distortion methods for the incorrect choice (기출 기반)**:
+      - Number/year change (e.g., 1920 → 1930)
+      - Subject swap (e.g., father → mother)
+      - Cause-effect reversal (e.g., A caused B → B caused A)
+      - Positive/negative flip (e.g., succeeded → failed)
+      - Detail distortion (e.g., three countries → five countries)
     - **주의**: 불일치 항목은 반드시 지문에서 명확히 언급된 사실을 기반으로 왜곡할 것. 추론해야 하는 내용을 불일치로 만들면 안 됨.
     - **선택지 배열**: 지문에 언급된 순서대로 선택지를 구성하되, 정답(불일치) 위치는 ①~⑤ 중 자연스러운 곳에 배치.
     - **explanation**: 한국어로 작성. 어떤 선택지가 왜 지문과 불일치하는지 구체적으로 설명.
