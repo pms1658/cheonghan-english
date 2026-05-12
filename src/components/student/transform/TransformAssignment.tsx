@@ -240,6 +240,7 @@ export default function TransformAssignment({
             'underline': '다음 밑줄 친 부분이 가리키는 대상이 나머지와 다른 것은?',
             'flow': '다음 글에서 전체 흐름과 관계 없는 문장은?',
             'special': '다음 글을 읽고 물음에 답하시오.',
+            'mismatch': '다음 글의 내용과 일치하지 않는 것은?',
         };
         return questionMap[type] || '다음 글을 읽고 물음에 답하시오.';
     };
