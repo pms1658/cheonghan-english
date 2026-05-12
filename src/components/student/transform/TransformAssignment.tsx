@@ -258,7 +258,19 @@ export default function TransformAssignment({
     const formatQuestionText = (text: string) => {
         if (!text) return '';
         return stripKoreanQuestion(text)
+            // Normalize line endings
             .replace(/\r/g, '')
+            // Strip stray markdown code fences
+            .replace(/```(?:json)?\s*/gi, '')
+            // Convert markdown bold **text** → plain text (avoid confusion with passage)
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            // Convert markdown italic *text* → <i>text</i>
+            .replace(/(?<!\w)\*([^*\n]+)\*(?!\w)/g, '<i>$1</i>')
+            // Normalize inconsistent blank markers
+            .replace(/_{3,}/g, '__________')
+            // Remove stray "Question:" / "Passage:" headers
+            .replace(/^\s*(?:Question|Passage|Text)\s*:\s*\n?/i, '')
+            // Process structural markers
             .replace(/\[\[BOX\]\]\s*\n?/gi, "<div class='box-sentence'>")
             .replace(/\n?\s*\[\[\/BOX\]\]\n?/gi, "</div>")
             .replace(/\[\[TARGET\]\]\s*\n?/gi, "<div class='target-sentence'>")
@@ -267,7 +279,9 @@ export default function TransformAssignment({
             .replace(/\[\[\/U\]\]/gi, "</u>")
             .replace(/\[\[BR\]\]/gi, "<br/>")
             // Add subtle spacing before (A), (B), (C) paragraph markers in order-type questions
-            .replace(/\n(\([A-C]\))/g, "<div style='margin-top:0.6em'></div>$1");
+            .replace(/\n(\([A-C]\))/g, "<div style='margin-top:0.6em'></div>$1")
+            // Collapse excessive blank lines (3+ newlines → 2)
+            .replace(/\n{3,}/g, '\n\n');
     };
 
     return (

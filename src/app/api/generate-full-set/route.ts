@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateFullSetRequestSchema } from '@/schemas/api';
 import { getWorkbookPrompt, getVariantPrompt, getAnalysisPrompt, getBestTypesPrompt, GRADE_LABELS } from '@/services/geminiPrompts';
-import { cleanPassageMarkers } from '@/utils/textUtils';
+import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText } from '@/utils/textUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -104,11 +104,11 @@ export async function POST(req: Request) {
                 return {
                     id: `prob_${Date.now()}_${i}`,
                     type,
-                    question: data.question,
-                    choices: data.choices || [],
+                    question: sanitizeAIQuestionText(data.question),
+                    choices: (data.choices || []).map((c: string) => sanitizeChoiceText(c)),
                     correctAnswer: data.correctAnswer ?? 0,
-                    explanation: data.explanation || '',
-                    choiceExplanations: data.choiceExplanations || [],
+                    explanation: (data.explanation || '').trim(),
+                    choiceExplanations: (data.choiceExplanations || []).map((e: string) => (e || '').trim()),
                     points: 0 // Will verify later
                 };
             } catch (e) {

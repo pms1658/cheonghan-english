@@ -256,14 +256,28 @@ export default function TransformAssignmentForm({
     const formatQuestionText = (text: string) => {
         if (!text) return '';
         return text
+            // Normalize line endings
             .replace(/\r/g, '')
+            // Strip stray markdown code fences
+            .replace(/```(?:json)?\s*/gi, '')
+            // Convert markdown bold **text** → plain text
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            // Convert markdown italic *text* → <i>text</i>
+            .replace(/(?<!\w)\*([^*\n]+)\*(?!\w)/g, '<i>$1</i>')
+            // Normalize inconsistent blank markers
+            .replace(/_{3,}/g, '__________')
+            // Remove stray "Question:" / "Passage:" headers
+            .replace(/^\s*(?:Question|Passage|Text)\s*:\s*\n?/i, '')
+            // Process structural markers
             .replace(/\[\[BOX\]\]\s*\n?/gi, "<div class='box-sentence'>")
             .replace(/\n?\s*\[\[\/BOX\]\]\n?/gi, "</div>")
             .replace(/\[\[TARGET\]\]\s*\n?/gi, "<div class='target-sentence'>")
             .replace(/\n?\s*\[\[\/TARGET\]\]\n?/gi, "</div>")
             .replace(/\[\[U\]\]/gi, "<u>")
             .replace(/\[\[\/U\]\]/gi, "</u>")
-            .replace(/\[\[BR\]\]/gi, "<br/>");
+            .replace(/\[\[BR\]\]/gi, "<br/>")
+            // Collapse excessive blank lines
+            .replace(/\n{3,}/g, '\n\n');
     };
 
     return (
