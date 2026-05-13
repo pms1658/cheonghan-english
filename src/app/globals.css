@@ -1,14 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* iOS 바운스 스크롤 완전 차단: body는 스크롤 불가, 내부 컨테이너에서만 스크롤 */
-html, body {
-  overscroll-behavior: none;
-  overflow: hidden;
+/* iOS 바운스 스크롤 차단 (App Router: #__next 없으므로 body에서 스크롤 처리) */
+html {
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
-#__next {
+body {
   height: 100%;
   overflow-y: auto;
   overscroll-behavior: none;

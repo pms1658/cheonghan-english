@@ -87,9 +87,9 @@ export function sanitizeAIQuestionText(text: string): string {
     // 4. Normalize blank markers: various underscore counts → standard 10 underscores
     cleaned = cleaned.replace(/_{3,}/g, '__________');
 
-    // 5. Remove stray Korean question headers the AI sometimes prepends
-    cleaned = cleaned.replace(/^\s*다음[^\n]*(?:것은\?|답하시오\.|것을 고르시오\.|고르시오\.)\s*\n?/i, '');
-    cleaned = cleaned.replace(/^\s*(?:위|아래|주어진)[^\n]*(?:것은\?|답하시오\.|것을 고르시오\.)\s*\n?/i, '');
+    // 5. Remove stray Korean question headers the AI sometimes prepends (anywhere in text)
+    const koreanQuestionPattern = /(?:다음|글의|주어진|위|아래|밑줄)[^\n]*?(?:것은\??|곳은\??|문장은\??|답하시오\.?|것을 고르시오\.?|고르시오\.?|적절한 것은\??)\s*\n?/gi;
+    cleaned = cleaned.replace(koreanQuestionPattern, '');
 
     // 6. Remove stray "Question:" or "Passage:" headers AI sometimes adds
     cleaned = cleaned.replace(/^\s*(?:Question|Passage|Text)\s*:\s*\n?/i, '');

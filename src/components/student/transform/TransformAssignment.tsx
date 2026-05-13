@@ -248,10 +248,12 @@ export default function TransformAssignment({
     // AI가 question에 이미 넣은 한글 질문 패턴 제거 (우리가 위에서 별도로 표시하므로)
     const stripKoreanQuestion = (text: string): string => {
         if (!text) return '';
-        // "다음 ~ 것은?" 또는 "다음 ~ 답하시오." 패턴 제거 (첫 줄만)
+        // 공통 한글 발문 패턴: "다음 ~ ?", "글의 ~ ?", "주어진 ~ ?", "밑줄 ~ ?" 등
+        // 끝 패턴: 것은?, 곳은?, 문장은?, 답하시오., 고르시오. 등 모든 한국어 질문 종결
+        const koreanQuestionPattern = /(?:다음|글의|주어진|위|아래|밑줄)[^\n]*?(?:것은\??|곳은\??|문장은\??|답하시오\.?|것을 고르시오\.?|고르시오\.?|적절한 것은\??)\s*\n?/gi;
         return text
-            .replace(/^[\s\n]*다음[^\n]*(?:것은\?|답하시오\.|것을 고르시오\.|고르시오\.)[\s\n]*/i, '')
-            .replace(/^[\s\n]*(?:위|아래|주어진)[^\n]*(?:것은\?|답하시오\.|것을 고르시오\.)[\s\n]*/i, '')
+            .replace(koreanQuestionPattern, '')
+            .replace(/^\s*\n/, '') // 제거 후 남은 빈 줄 정리
             .trim();
     };
 
