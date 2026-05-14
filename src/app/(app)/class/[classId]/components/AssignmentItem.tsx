@@ -63,6 +63,7 @@ interface AssignmentItemProps {
     setIsStructurePrintOpen?: (v: boolean) => void;
     classId?: string;
     onConvertType?: (assignment: Assignment) => void;
+    setMoveAssignmentModal?: (v: { assignmentId: string; title: string } | null) => void;
 }
 
 export const AssignmentItem = ({
@@ -94,6 +95,7 @@ export const AssignmentItem = ({
     setIsStructurePrintOpen,
     classId = '',
     onConvertType,
+    setMoveAssignmentModal,
 }: AssignmentItemProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -322,6 +324,19 @@ export const AssignmentItem = ({
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                     전체 초기화
+                                </button>
+                                <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
+                                {/* Move to another class */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMenuOpen(false);
+                                        setMoveAssignmentModal?.({ assignmentId: assignment.id, title: assignment.title });
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                    다른 과제방으로 이동
                                 </button>
                                 <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
                                 <button

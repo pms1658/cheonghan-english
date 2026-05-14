@@ -12,9 +12,10 @@ interface HybridNodeProps {
     onSettingsClick?: (node: any) => void; // Admin only
     onNavigate?: () => void;
     isAdmin: boolean;
+    onNodeContextMenu?: (node: any, position: { x: number; y: number }) => void;
 }
 
-export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, onSettingsClick, onNavigate, isAdmin }: HybridNodeProps) {
+export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, onSettingsClick, onNavigate, isAdmin, onNodeContextMenu }: HybridNodeProps) {
     const router = useRouter();
     const params = useParams();
     const activeId = params?.classId as string;
@@ -106,6 +107,31 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
         if (onAddChild) onAddChild(node.id || node.name);
     }
 
+    const handleContextMenu = (e: React.MouseEvent) => {
+        if (!isAdmin || !onNodeContextMenu) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onNodeContextMenu(node, { x: e.clientX, y: e.clientY });
+    };
+
+    // Long press for mobile context menu
+    const longPressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (!isAdmin || !onNodeContextMenu) return;
+        const touch = e.touches[0];
+        const pos = { x: touch.clientX, y: touch.clientY };
+        longPressTimer.current = setTimeout(() => {
+            e.preventDefault();
+            onNodeContextMenu(node, pos);
+        }, 500);
+    };
+    const handleTouchEnd = () => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    };
+
     const paddingLeft = depth * 8 + 12;
 
     return (
@@ -121,6 +147,10 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
                 `}
                 style={{ paddingLeft: `${paddingLeft}px` }}
                 onClick={handleTextClick}
+                onContextMenu={handleContextMenu}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onTouchMove={handleTouchEnd}
             >
                 <div className="flex items-center gap-3 overflow-custom min-w-0 flex-1">
                     {/* Chevron: Only if children exist */}

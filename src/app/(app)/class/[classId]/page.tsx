@@ -38,12 +38,13 @@ export default function ClassRoomPage() {
         writingDetailTarget, setWritingDetailTarget,
         approvalModal, setApprovalModal, splitWordsPerChunk, setSplitWordsPerChunk,
         searchTerm, setSearchTerm, selectedStudentIds, setSelectedStudentIds,
+        moveAssignmentModal, setMoveAssignmentModal,
         sensors,
         toggleAssignmentSelection, handleMergeAssignments, handleSplitAssignment,
         loadData, handleCreateClick, handleEditClick, handleDeleteClick, handleResetClick,
         handleExecuteReset, toggleResetStudentSelection, handleAddSelectedStudents, toggleStudentSelection,
         handleSortChange, handleDragEnd, handleSaveOrder, handleToggleReorder,
-        handleUpdateClass, handleDeleteClass,
+        handleUpdateClass, handleDeleteClass, handleMoveAssignment,
         handleApproveSubmission, handleApproveWithSplit, handleRejectSubmission, handleConvertAssignmentType,
         handleToggleGuidance, handleManualPass, handlePrint, handleDirectPrint,
     } = state;
@@ -522,6 +523,7 @@ export default function ClassRoomPage() {
                                             setIsStructurePrintOpen={setIsStructurePrintOpen}
                                             classId={classId}
                                             onConvertType={handleConvertAssignmentType}
+                                            setMoveAssignmentModal={setMoveAssignmentModal}
                                         />
                                     </SortableItem>
                                 </div>
@@ -619,6 +621,44 @@ export default function ClassRoomPage() {
                 handleApproveWithSplit={handleApproveWithSplit}
                 handleRejectSubmission={handleRejectSubmission}
             />
+
+            {/* Move Assignment Modal */}
+            {moveAssignmentModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+                        <h3 className="text-lg font-bold text-slate-800 mb-1">과제 이동</h3>
+                        <p className="text-sm text-slate-500 mb-4">
+                            <span className="font-bold text-blue-600">{moveAssignmentModal.title}</span>을(를) 다른 과제방으로 이동합니다.
+                        </p>
+                        <p className="text-[11px] text-slate-400 mb-3">※ 학생/제출 기록은 이동되지 않습니다.</p>
+
+                        <div className="space-y-1 max-h-60 overflow-y-auto mb-4 border border-slate-100 rounded-xl p-2">
+                            {allClasses
+                                .filter(c => c.id !== classId)
+                                .map(c => (
+                                    <button
+                                        key={c.id}
+                                        onClick={() => handleMoveAssignment(moveAssignmentModal.assignmentId, c.id)}
+                                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 text-sm font-medium text-slate-600 transition-colors flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        <span className="truncate">{c.name}</span>
+                                    </button>
+                                ))}
+                            {allClasses.filter(c => c.id !== classId).length === 0 && (
+                                <p className="text-sm text-slate-400 text-center py-4">이동 가능한 과제방이 없습니다.</p>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setMoveAssignmentModal(null)}
+                            className="w-full py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                        >
+                            취소
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

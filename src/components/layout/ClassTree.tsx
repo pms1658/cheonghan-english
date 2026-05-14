@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { dbService, Class, ClassFolder } from '@/services/db';
 import { useAuth } from '@/context/AuthContext';
@@ -13,7 +13,10 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    DragEndEvent
+    DragEndEvent,
+    DragOverEvent,
+    DragOverlay,
+    DragStartEvent
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -56,10 +59,33 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
     const [newItemName, setNewItemName] = useState('');
     const [newItemType, setNewItemType] = useState<'class' | 'folder'>('class');
 
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<{ node: any; x: number; y: number } | null>(null);
+    const [clipboard, setClipboard] = useState<{ id: string; type: 'class' | 'folder'; name: string } | null>(null);
+    const [isMoveModalOpen, setIsMoveModalOpen] = useState<{ id: string; type: 'class' | 'folder'; name: string } | null>(null);
+    const [isOperating, setIsOperating] = useState(false);
+    const contextMenuRef = useRef<HTMLDivElement>(null);
+
+    // Drag State
+    const [activeDragId, setActiveDragId] = useState<string | null>(null);
+    const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    // Close context menu on outside click
+    useEffect(() => {
+        if (!contextMenu) return;
+        const handler = (e: MouseEvent) => {
+            if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+                setContextMenu(null);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [contextMenu]);
 
     // --- Data Fetching & Tree Building ---
     const loadData = async () => {
@@ -169,18 +195,155 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
         setOpenNodes(newOpen);
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-            setNodes((prev) => {
-                const oldIndex = prev.findIndex(c => c.id === active.id);
-                const newIndex = prev.findIndex(c => c.id === over.id);
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    return arrayMove(prev, oldIndex, newIndex);
-                }
-                return prev;
-            });
+    // --- Drag Handlers ---
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveDragId(event.active.id as string);
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        const { over } = event;
+        if (!over) {
+            setDragOverFolderId(null);
+            return;
         }
+        // Find if the over target is a folder
+        const overNode = findNodeById(nodes, over.id as string);
+        if (overNode && overNode.type === 'folder' && overNode.id !== activeDragId) {
+            setDragOverFolderId(overNode.id);
+        } else {
+            setDragOverFolderId(null);
+        }
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveDragId(null);
+        setDragOverFolderId(null);
+
+        if (!over || active.id === over.id) return;
+
+        const draggedNode = findNodeById(nodes, active.id as string);
+        const overNode = findNodeById(nodes, over.id as string);
+
+        if (!draggedNode) return;
+
+        // Case 1: Dropped onto a folder → MOVE into that folder
+        if (overNode && overNode.type === 'folder') {
+            // Prevent circular: can't drop a folder into itself or its own descendants
+            if (draggedNode.type === 'folder' && isDescendant(draggedNode, overNode.originalId)) {
+                toast.error('자기 자신의 하위 폴더로는 이동할 수 없습니다.');
+                return;
+            }
+            try {
+                if (draggedNode.type === 'class') {
+                    await dbService.updateClass(draggedNode.originalId, { folderId: overNode.originalId });
+                } else {
+                    await dbService.updateClassFolder(draggedNode.originalId, draggedNode.name, overNode.originalId);
+                }
+                toast.success(`'${draggedNode.name}'을(를) '${overNode.name}'으로 이동했습니다.`);
+                await loadData();
+                // Auto-open the target folder
+                setOpenNodes(prev => new Set(prev).add(overNode.id));
+            } catch (e) {
+                toast.error('이동 실패');
+            }
+            return;
+        }
+
+        // Case 2: Same-level reorder (original behavior)
+        setNodes((prev) => {
+            const oldIndex = prev.findIndex(c => c.id === active.id);
+            const newIndex = prev.findIndex(c => c.id === over.id);
+            if (oldIndex !== -1 && newIndex !== -1) {
+                return arrayMove(prev, oldIndex, newIndex);
+            }
+            return prev;
+        });
+    };
+
+    const handleDragCancel = () => {
+        setActiveDragId(null);
+        setDragOverFolderId(null);
+    };
+
+    // Helper: find node by ID in tree
+    const findNodeById = (nodeList: TreeNode[], id: string): TreeNode | null => {
+        for (const node of nodeList) {
+            if (node.id === id) return node;
+            const found = findNodeById(node.children, id);
+            if (found) return found;
+        }
+        return null;
+    };
+
+    // Helper: check if targetId is a descendant of node
+    const isDescendant = (node: TreeNode, targetId: string): boolean => {
+        if (node.originalId === targetId) return true;
+        return node.children.some(child => isDescendant(child, targetId));
+    };
+
+    // --- Context Menu Handlers ---
+    const handleNodeContextMenu = useCallback((node: any, position: { x: number; y: number }) => {
+        setContextMenu({ node, x: position.x, y: position.y });
+    }, []);
+
+    const handleCopy = () => {
+        if (!contextMenu) return;
+        const { node } = contextMenu;
+        setClipboard({ id: node.id, type: node.type, name: node.name });
+        toast.success(`'${node.name}' 복사됨 (붙여넣기 할 폴더에서 우클릭)`);
+        setContextMenu(null);
+    };
+
+    const handlePaste = async (targetFolderId: string | null) => {
+        if (!clipboard) return;
+        if (clipboard.type !== 'class') {
+            toast.error('현재 과제방만 복사/붙여넣기가 가능합니다.');
+            return;
+        }
+        setIsOperating(true);
+        try {
+            const result = await dbService.duplicateClass(clipboard.id, targetFolderId);
+            toast.success(`'${result.name}' 생성 완료 (과제 ${result.assignmentCount}개 복사)`);
+            await loadData();
+            if (targetFolderId) {
+                setOpenNodes(prev => new Set(prev).add(targetFolderId));
+            }
+        } catch (e) {
+            toast.error('복사 실패');
+        } finally {
+            setIsOperating(false);
+            setContextMenu(null);
+        }
+    };
+
+    const handleMoveToFolder = async (targetFolderId: string | null) => {
+        if (!isMoveModalOpen) return;
+        setIsOperating(true);
+        try {
+            if (isMoveModalOpen.type === 'class') {
+                await dbService.updateClass(isMoveModalOpen.id, { folderId: targetFolderId || undefined });
+            } else {
+                // Find current name for the folder
+                const folderNode = findNodeById(nodes, isMoveModalOpen.id);
+                const name = folderNode?.name || isMoveModalOpen.name;
+                await dbService.updateClassFolder(isMoveModalOpen.id, name, targetFolderId);
+            }
+            toast.success(`'${isMoveModalOpen.name}' 이동 완료`);
+            await loadData();
+            if (targetFolderId) {
+                setOpenNodes(prev => new Set(prev).add(targetFolderId));
+            }
+        } catch (e) {
+            toast.error('이동 실패');
+        } finally {
+            setIsOperating(false);
+            setIsMoveModalOpen(null);
+        }
+    };
+
+    const handleMoveToRoot = async () => {
+        await handleMoveToFolder(null);
     };
 
     // Add Logic
@@ -292,7 +455,7 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
         };
 
         const content = (
-            <div key={node.id}>
+            <div key={node.id} className="relative">
                 <HybridNode
                     node={hybridNodeData}
                     depth={depth}
@@ -302,7 +465,12 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
                     onAddChild={(parentId) => openCreateModal(node.originalId, node.name)}
                     onSettingsClick={(n) => handleSettingsClick(node)}
                     onNavigate={onNavigate}
+                    onNodeContextMenu={handleNodeContextMenu}
                 />
+                {/* Drop target highlight */}
+                {dragOverFolderId === node.id && node.type === 'folder' && (
+                    <div className="absolute inset-0 rounded-2xl border-2 border-blue-400 bg-blue-400/10 pointer-events-none z-10 animate-pulse" />
+                )}
 
                 {/* Children — Animated Expand/Collapse */}
                 {node.children.length > 0 && (
@@ -358,11 +526,39 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
             </div>
 
             {/* Tree Content */}
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+            >
                 <SortableContext items={nodes.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {nodes.map(node => renderNode(node, 0, true))}
                 </SortableContext>
+                <DragOverlay>
+                    {activeDragId ? (
+                        <div className="bg-white/10 backdrop-blur-sm text-white text-sm font-bold px-4 py-2 rounded-xl border border-blue-400/50 shadow-lg">
+                            {findNodeById(nodes, activeDragId)?.name || '이동 중...'}
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </DndContext>
+
+            {/* Clipboard Indicator */}
+            {clipboard && isAdmin && (
+                <div className="mx-3 mt-3 px-3 py-2 bg-blue-500/10 border border-blue-400/20 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-blue-400 text-xs">📋</span>
+                        <span className="text-[11px] text-blue-300 font-medium truncate">{clipboard.name}</span>
+                    </div>
+                    <button
+                        onClick={() => setClipboard(null)}
+                        className="text-[10px] text-white/40 hover:text-red-400 transition-colors flex-shrink-0 ml-2"
+                    >✕</button>
+                </div>
+            )}
 
             {/* Creation Modal */}
             {isCreating && (
@@ -482,6 +678,124 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
                     </div>
                 </div>
             )}
+
+            {/* Context Menu (Floating) */}
+            {contextMenu && isAdmin && (
+                <div
+                    ref={contextMenuRef}
+                    className="fixed z-[200] bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 w-48 animate-in fade-in zoom-in-95 duration-150"
+                    style={{ top: Math.min(contextMenu.y, window.innerHeight - 250), left: Math.min(contextMenu.x, window.innerWidth - 200) }}
+                >
+                    <div className="px-3 py-1.5 border-b border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{contextMenu.node.name}</span>
+                    </div>
+
+                    {/* Copy (과제방만) */}
+                    {contextMenu.node.type === 'class' && (
+                        <button
+                            onClick={handleCopy}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                            <span>📋</span> 복사
+                        </button>
+                    )}
+
+                    {/* Paste (폴더에만 — 클립보드에 뭔가 있을 때) */}
+                    {contextMenu.node.type === 'folder' && clipboard && (
+                        <button
+                            onClick={() => handlePaste(contextMenu.node.id)}
+                            disabled={isOperating}
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-green-50 hover:text-green-700 transition-colors disabled:opacity-50"
+                        >
+                            <span>📌</span> 여기에 붙여넣기
+                            {isOperating && <span className="text-[10px] text-slate-400 ml-auto">처리중...</span>}
+                        </button>
+                    )}
+
+                    {/* Move */}
+                    <button
+                        onClick={() => {
+                            setIsMoveModalOpen({
+                                id: contextMenu.node.id,
+                                type: contextMenu.node.type,
+                                name: contextMenu.node.name
+                            });
+                            setContextMenu(null);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                    >
+                        <span>➡️</span> 다른 폴더로 이동
+                    </button>
+
+                    <div className="my-1 border-t border-slate-100" />
+
+                    {/* Settings (existing) */}
+                    <button
+                        onClick={() => {
+                            handleSettingsClick(contextMenu.node);
+                            setContextMenu(null);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                        <span>⚙️</span> 설정 (이름변경/삭제)
+                    </button>
+                </div>
+            )}
+
+            {/* Move Modal — Folder Picker */}
+            {isMoveModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+                        <h3 className="text-lg font-bold text-slate-800 mb-1">이동할 위치 선택</h3>
+                        <p className="text-sm text-slate-500 mb-4">
+                            <span className="font-bold text-blue-600">{isMoveModalOpen.name}</span>을(를) 이동합니다.
+                        </p>
+
+                        <div className="space-y-1 max-h-60 overflow-y-auto mb-4">
+                            {/* Root option */}
+                            <button
+                                onClick={handleMoveToRoot}
+                                disabled={isOperating}
+                                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 text-sm font-bold text-slate-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <span className="text-slate-400">🏠</span> 최상위 (루트)
+                            </button>
+                            {/* Folder options (recursive render) */}
+                            {renderFolderOptions(nodes, 0)}
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-slate-100">
+                            <button
+                                onClick={() => setIsMoveModalOpen(null)}
+                                className="flex-1 py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                            >
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
+
+    // Render folder options for move modal (recursive)
+    function renderFolderOptions(nodeList: TreeNode[], depth: number): React.ReactNode {
+        return nodeList
+            .filter(n => n.type === 'folder')
+            .filter(n => !isMoveModalOpen || n.originalId !== isMoveModalOpen.id) // Can't move into self
+            .map(folder => (
+                <div key={folder.id}>
+                    <button
+                        onClick={() => handleMoveToFolder(folder.originalId)}
+                        disabled={isOperating}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-slate-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        style={{ paddingLeft: `${depth * 16 + 12}px` }}
+                    >
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                        {folder.name}
+                    </button>
+                    {folder.children.length > 0 && renderFolderOptions(folder.children, depth + 1)}
+                </div>
+            ));
+    }
 }

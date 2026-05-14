@@ -222,6 +222,89 @@ export const dbService = {
         await updateDoc(doc(db, 'class_folders', id), data);
     },
 
+    // --- Class/Folder Operations (Move, Copy) ---
+
+    /** 과제방을 통째로 복사 (컨텐츠만, 학생/제출 제외) */
+    duplicateClass: async (sourceClassId: string, targetFolderId?: string | null, tenantId?: string) => {
+        const tid = tenantId || _activeTenantId;
+        try {
+            // 1. 원본 과제방 정보 가져오기
+            const sourceDoc = await getDoc(doc(db, 'classes', sourceClassId));
+            if (!sourceDoc.exists()) throw new Error('Source class not found');
+            const sourceData = sourceDoc.data();
+
+            // 2. 새 과제방 생성 (학생 연결 제외)
+            const newClass = {
+                name: `${sourceData.name} (복사본)`,
+                folderId: targetFolderId ?? sourceData.folderId ?? null,
+                tenantId: tid,
+            };
+            const newClassRef = await addDoc(collection(db, 'classes'), newClass);
+            const newClassId = newClassRef.id;
+
+            // 3. 원본 과제방의 모든 과제 가져오기
+            const assignmentsSnap = await getDocs(collection(db, 'assignments'));
+            const sourceAssignments = assignmentsSnap.docs
+                .map(d => ({ docId: d.id, ...d.data() }))
+                .filter((a: any) => (a.classIds || []).includes(sourceClassId))
+                // 분할 과제(자식)는 제외 — 부모 과제만 복사
+                .filter((a: any) => !a.parentAssignmentId);
+
+            // 4. 각 과제를 새 과제방으로 복사 (학생/제출 관련 필드 제외)
+            for (const assignment of sourceAssignments) {
+                const { docId, ...rest } = assignment as any;
+                const copied = {
+                    ...rest,
+                    classIds: [newClassId],
+                    classId: newClassId,
+                    // 학생 관련 필드 초기화
+                    studentIds: [],
+                    parentAssignmentId: undefined,
+                    parentStudentId: undefined,
+                    // 메타데이터 갱신
+                    createdAt: Date.now(),
+                    tenantId: tid,
+                };
+                // undefined 필드 제거 (Firestore는 undefined를 허용하지 않음)
+                Object.keys(copied).forEach(key => {
+                    if (copied[key] === undefined) delete copied[key];
+                });
+                await addDoc(collection(db, 'assignments'), copied);
+            }
+
+            return { id: newClassId, name: newClass.name, assignmentCount: sourceAssignments.length };
+        } catch (e) {
+            console.error('Error duplicating class:', e);
+            throw e;
+        }
+    },
+
+    /** 과제를 다른 과제방으로 이동 (컨텐츠만, 학생/제출 미이동) */
+    moveAssignmentToClass: async (assignmentId: string, sourceClassId: string, targetClassId: string) => {
+        try {
+            const assignmentDoc = await getDoc(doc(db, 'assignments', assignmentId));
+            if (!assignmentDoc.exists()) throw new Error('Assignment not found');
+            const data = assignmentDoc.data();
+
+            // classIds 배열에서 source 제거, target 추가
+            let classIds: string[] = data.classIds || [];
+            classIds = classIds.filter((id: string) => id !== sourceClassId);
+            if (!classIds.includes(targetClassId)) {
+                classIds.push(targetClassId);
+            }
+
+            await updateDoc(doc(db, 'assignments', assignmentId), {
+                classIds,
+                classId: targetClassId, // Legacy 호환
+            });
+
+            return true;
+        } catch (e) {
+            console.error('Error moving assignment:', e);
+            throw e;
+        }
+    },
+
     // --- Assignments ---
     getAssignments: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;

@@ -94,6 +94,9 @@ export function useClassRoom() {
     const [structurePrintStudentName, setStructurePrintStudentName] = useState<string>('');
     const [writingDetailTarget, setWritingDetailTarget] = useState<{ studentName: string; submissions: any[] } | null>(null);
 
+    // Move Assignment Modal
+    const [moveAssignmentModal, setMoveAssignmentModal] = useState<{ assignmentId: string; title: string } | null>(null);
+
     // Selection Approval Modal States
     const [approvalModal, setApprovalModal] = useState<{
         submissionId: string;
@@ -587,6 +590,20 @@ export function useClassRoom() {
         }
     };
 
+    // --- Move Assignment to Another Class ---
+    const handleMoveAssignment = async (assignmentId: string, targetClassId: string) => {
+        try {
+            await dbService.moveAssignmentToClass(assignmentId, classId, targetClassId);
+            const targetClass = allClasses.find(c => c.id === targetClassId);
+            toast.success(`과제가 '${targetClass?.name || '대상 과제방'}'으로 이동했습니다.`);
+            setMoveAssignmentModal(null);
+            loadData();
+        } catch (e) {
+            console.error(e);
+            toast.error("이동 중 오류가 발생했습니다.");
+        }
+    };
+
     // Approval/submission handlers (extracted to useClassApproval)
     const {
         openApprovalModal, handleApproveSubmission, handleApproveWithSplit,
@@ -630,13 +647,14 @@ export function useClassRoom() {
         writingDetailTarget, setWritingDetailTarget,
         approvalModal, setApprovalModal, splitWordsPerChunk, setSplitWordsPerChunk,
         searchTerm, setSearchTerm, selectedStudentIds, setSelectedStudentIds,
+        moveAssignmentModal, setMoveAssignmentModal,
         sensors,
         // Handlers
         toggleAssignmentSelection, handleMergeAssignments, handleSplitAssignment,
         loadData, handleCreateClick, handleEditClick, handleDeleteClick, handleResetClick,
         handleExecuteReset, toggleResetStudentSelection, handleAddSelectedStudents, toggleStudentSelection,
         handleSortChange, handleDragEnd, handleSaveOrder, handleToggleReorder,
-        handleUpdateClass, handleDeleteClass,
+        handleUpdateClass, handleDeleteClass, handleMoveAssignment,
         handleApproveSubmission, handleApproveWithSplit, handleRejectSubmission, handleConvertAssignmentType,
         handleToggleGuidance, handleManualPass, handlePrint, handleDirectPrint,
     };
