@@ -217,7 +217,7 @@ function BatchPrintContent() {
                         </div>
 
                         {/* ═══ FULL PASSAGE VIEW ═══ */}
-                        {sections.has('passage') && (printMode === 'passage' || annotationCount > 0) && (
+                        {sections.has('passage') && (
                             <div className="mb-3 border border-slate-300 rounded-lg p-3 allow-break-if-needed">
                                 <h2 className="text-[10px] font-bold text-slate-600 mb-2 uppercase tracking-wider">
                                     📖 전체 지문 {annotationCount > 0 && <span className="text-amber-600 normal-case">({annotationCount}개 메모)</span>}
@@ -331,7 +331,7 @@ function BatchPrintContent() {
                         )}
 
                         {/* ═══ SENTENCE ANALYSIS ═══ */}
-                        {sections.has('sentences') && printMode !== 'passage' && (
+                        {sections.has('sentences') && (
                             <div className="space-y-1.5 mb-3">
                                 {assignment.sentences?.map((sent: any, idx: number) => {
                                     const sentId = typeof sent.id === 'number' ? sent.id : idx + 1;
