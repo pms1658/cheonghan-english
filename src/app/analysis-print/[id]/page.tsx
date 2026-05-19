@@ -73,16 +73,28 @@ export default function AnalysisPrintPage() {
         <div className="max-w-[780px] mx-auto px-4 py-3 print:p-0 print:max-w-none font-sans text-slate-800" style={{ fontSize: '10px' }}>
             <style jsx global>{`
                 @media print {
-                    body { 
+                    html, body { 
                         -webkit-print-color-adjust: exact !important; 
                         print-color-adjust: exact !important;
                         font-size: 9px !important;
                         margin: 0;
                         padding: 0;
+                        overflow: visible !important;
+                        height: auto !important;
                     }
                     .no-print { display: none !important; }
-                    .page-break { page-break-before: always; }
-                    .avoid-break { page-break-inside: avoid; }
+                    .page-break { 
+                        page-break-before: always !important; 
+                        break-before: page !important;
+                    }
+                    .avoid-break { 
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                    .allow-break-if-needed {
+                        page-break-inside: auto !important;
+                        break-inside: auto !important;
+                    }
                     .print-sentence span[class*="leading-"] {
                         font-size: 12px !important;
                         line-height: 2 !important;
@@ -165,7 +177,7 @@ export default function AnalysisPrintPage() {
 
             {/* ═══ FULL PASSAGE VIEW (with memos) ═══ */}
             {(printMode === 'passage' || annotationCount > 0) && (
-                <div className="mb-3 border border-slate-300 rounded-lg p-3 avoid-break">
+                <div className="mb-3 border border-slate-300 rounded-lg p-3 allow-break-if-needed">
                     <h2 className="text-[10px] font-bold text-slate-600 mb-2 uppercase tracking-wider">
                         📖 전체 지문 {annotationCount > 0 && <span className="text-amber-600 normal-case">({annotationCount}개 메모)</span>}
                     </h2>
@@ -211,7 +223,7 @@ export default function AnalysisPrintPage() {
 
             {/* ═══ STRUCTURE + TRANSLATIONS ═══ */}
             {structure && assignment.sentences?.length > 0 && (
-                <div className="mb-2 border border-indigo-200 rounded-lg p-2 bg-indigo-50/30 avoid-break">
+                <div className="mb-2 border border-indigo-200 rounded-lg p-2 bg-indigo-50/30 allow-break-if-needed">
                     <h2 className="text-[10px] font-bold text-indigo-800 mb-1.5 flex items-center gap-1">
                         📐 글의 구조 · 해석
                     </h2>
