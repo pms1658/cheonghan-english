@@ -17,6 +17,16 @@ function BatchPrintContent() {
     const ids = (searchParams.get('ids') || '').split(',').filter(Boolean);
     const studentId = searchParams.get('studentId');
     const printMode = searchParams.get('mode') || 'detail';
+    const sectionsParam = searchParams.get('sections');
+    const ALL_SECTION_KEYS = ['passage', 'summary', 'structure', 'sentences', 'grammar', 'vocab'];
+    const sections = new Set(
+        sectionsParam ? sectionsParam.split(',').filter(s => ALL_SECTION_KEYS.includes(s)) : ALL_SECTION_KEYS
+    );
+    // Dynamic sizing: fewer sections → bigger passage text
+    const sectionCount = sections.size;
+    const passageFontSize = sectionCount <= 2 ? '14px' : sectionCount <= 4 ? '12px' : '11px';
+    const passageLineHeight = sectionCount <= 2 ? '3.2' : sectionCount <= 4 ? '2.8' : '2.6';
+    const sentenceFontScale = sectionCount <= 3 ? '14px' : '12px';
 
     const [loaded, setLoaded] = useState<LoadedAssignment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -207,12 +217,12 @@ function BatchPrintContent() {
                         </div>
 
                         {/* ═══ FULL PASSAGE VIEW ═══ */}
-                        {(printMode === 'passage' || annotationCount > 0) && (
+                        {sections.has('passage') && (printMode === 'passage' || annotationCount > 0) && (
                             <div className="mb-3 border border-slate-300 rounded-lg p-3 allow-break-if-needed">
                                 <h2 className="text-[10px] font-bold text-slate-600 mb-2 uppercase tracking-wider">
                                     📖 전체 지문 {annotationCount > 0 && <span className="text-amber-600 normal-case">({annotationCount}개 메모)</span>}
                                 </h2>
-                                <div className="print-passage-flow leading-[2.6] text-[11px] font-medium tracking-tight">
+                                <div className="print-passage-flow font-medium tracking-tight" style={{ fontSize: passageFontSize, lineHeight: passageLineHeight }}>
                                     {assignment.sentences?.map((sent: any, idx: number) => {
                                         const analyzed = normalizeAnalyzedString(sent.analyzed || '');
                                         const marks = analyzed ? parseAnalysisString(sent.original, analyzed) : [];
@@ -234,7 +244,7 @@ function BatchPrintContent() {
                         )}
 
                         {/* ═══ SUMMARY BAR ═══ */}
-                        {(assignment.topic || assignment.claim) && (
+                        {sections.has('summary') && (assignment.topic || assignment.claim) && (
                             <div className="mb-2 bg-slate-900 text-white rounded-lg p-2 avoid-break">
                                 <div className="text-[8px] font-bold bg-white/20 px-1.5 py-0.5 rounded inline-block uppercase tracking-wider mb-1">SUMMARY</div>
                                 {assignment.topic && (
@@ -253,7 +263,7 @@ function BatchPrintContent() {
                         )}
 
                         {/* ═══ STRUCTURE + TRANSLATIONS ═══ */}
-                        {structure && assignment.sentences?.length > 0 && (
+                        {sections.has('structure') && structure && assignment.sentences?.length > 0 && (
                             <div className="mb-2 border border-indigo-200 rounded-lg p-2 bg-indigo-50/30 allow-break-if-needed">
                                 <h2 className="text-[10px] font-bold text-indigo-800 mb-1.5 flex items-center gap-1">
                                     📐 글의 구조 · 해석
@@ -321,7 +331,7 @@ function BatchPrintContent() {
                         )}
 
                         {/* ═══ SENTENCE ANALYSIS ═══ */}
-                        {printMode !== 'passage' && (
+                        {sections.has('sentences') && printMode !== 'passage' && (
                             <div className="space-y-1.5 mb-3">
                                 {assignment.sentences?.map((sent: any, idx: number) => {
                                     const sentId = typeof sent.id === 'number' ? sent.id : idx + 1;
@@ -358,7 +368,7 @@ function BatchPrintContent() {
                                                         <span className="flex-shrink-0 w-4 h-4 rounded-full bg-slate-800 text-white flex items-center justify-center text-[7px] font-bold mt-1">
                                                             {sentId}
                                                         </span>
-                                                        <div className="flex-1 min-w-0 print-sentence">
+                                                        <div className="flex-1 min-w-0 print-sentence" style={{ fontSize: sentenceFontScale }}>
                                                             <AnalysisViewer sentences={[sent]} expandAll={true} />
                                                         </div>
                                                     </div>
@@ -390,7 +400,7 @@ function BatchPrintContent() {
                         )}
 
                         {/* ═══ KEY GRAMMAR ═══ */}
-                        {keyGrammar && keyGrammar.length > 0 && (
+                        {sections.has('grammar') && keyGrammar && keyGrammar.length > 0 && (
                             <div className="mb-2 border border-purple-200 rounded-lg p-2 bg-purple-50/30 avoid-break">
                                 <h2 className="text-[10px] font-bold text-purple-800 mb-2 flex items-center gap-1">
                                     📝 핵심 문법 사항
@@ -413,7 +423,7 @@ function BatchPrintContent() {
                         )}
 
                         {/* ═══ VOCAB SUMMARY ═══ */}
-                        {vocabSummary && vocabSummary.length > 0 && (
+                        {sections.has('vocab') && vocabSummary && vocabSummary.length > 0 && (
                             <div className="mb-2 border border-emerald-200 rounded-lg p-2 bg-emerald-50/20 avoid-break">
                                 <h2 className="text-[10px] font-bold text-emerald-800 mb-1.5 flex items-center gap-1">📚 어휘 종합</h2>
                                 <table className="w-full text-[9px]">

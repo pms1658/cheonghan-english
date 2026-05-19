@@ -24,6 +24,17 @@ export default function AnalysisPrintModal({
     const [completedAssignments, setCompletedAssignments] = useState<{ id: string; title: string; timestamp: number; memoCount: number }[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+    // Section selection for print
+    const ALL_SECTIONS = [
+        { key: 'passage', label: '📖 전체지문', emoji: '📖' },
+        { key: 'summary', label: '📋 써머리', emoji: '📋' },
+        { key: 'structure', label: '📐 구조·해석', emoji: '📐' },
+        { key: 'sentences', label: '🔍 문장분석', emoji: '🔍' },
+        { key: 'grammar', label: '📝 핵심문법', emoji: '📝' },
+        { key: 'vocab', label: '📚 어휘종합', emoji: '📚' },
+    ] as const;
+    const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set(ALL_SECTIONS.map(s => s.key)));
+
     // For admin: student selection
     const [students, setStudents] = useState<{ id: string; name: string; classIds: string[] }[]>([]);
     const [selectedStudentId, setSelectedStudentId] = useState<string>(studentId);
@@ -123,6 +134,20 @@ export default function AnalysisPrintModal({
         }
     };
 
+    const toggleSection = (key: string) => {
+        setSelectedSections(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) {
+                // Don't allow deselecting all sections
+                if (next.size <= 1) return prev;
+                next.delete(key);
+            } else {
+                next.add(key);
+            }
+            return next;
+        });
+    };
+
     const handlePrint = () => {
         if (selectedIds.length === 0) {
             toast.warning('인쇄할 과제를 선택해주세요.');
@@ -130,7 +155,8 @@ export default function AnalysisPrintModal({
         }
         // Single tab with all selected assignments (avoids popup blocker)
         const idsParam = selectedIds.join(',');
-        window.open(`/analysis-batch-print?ids=${encodeURIComponent(idsParam)}&studentId=${encodeURIComponent(selectedStudentId)}&mode=detail`, '_blank');
+        const sectionsParam = Array.from(selectedSections).join(',');
+        window.open(`/analysis-batch-print?ids=${encodeURIComponent(idsParam)}&studentId=${encodeURIComponent(selectedStudentId)}&mode=detail&sections=${encodeURIComponent(sectionsParam)}`, '_blank');
     };
 
     const filteredStudents = students.filter(s =>
@@ -297,6 +323,34 @@ export default function AnalysisPrintModal({
                         </div>
                     )}
                 </div>
+
+                {/* Section Selection */}
+                {completedAssignments.length > 0 && selectedIds.length > 0 && (
+                    <div className="px-6 pb-2">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">인쇄 항목 선택</div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {ALL_SECTIONS.map(s => {
+                                const isOn = selectedSections.has(s.key);
+                                return (
+                                    <button
+                                        key={s.key}
+                                        onClick={() => toggleSection(s.key)}
+                                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                                            isOn
+                                                ? 'bg-teal-50 border-teal-200 text-teal-700'
+                                                : 'bg-slate-50 border-slate-200 text-slate-400 line-through'
+                                        }`}
+                                    >
+                                        {s.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {selectedSections.size < ALL_SECTIONS.length && (
+                            <p className="text-[10px] text-amber-500 font-medium mt-1.5">✨ 선택 항목이 적을수록 지문이 더 크게 인쇄됩니다</p>
+                        )}
+                    </div>
+                )}
 
                 {/* Footer */}
                 {completedAssignments.length > 0 && (

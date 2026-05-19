@@ -221,17 +221,64 @@ export default function ClassRoomPage() {
                                     const analysisIds = assignments.filter(a => selectedAssignments.has(a.id) && a.type === 'analysis').map(a => a.id);
                                     if (analysisIds.length === 0) return null;
                                     return (
-                                        <button
-                                            onClick={() => {
-                                                // Open each analysis print page in new tabs
-                                                const idsParam = analysisIds.join(',');
-                                                window.open(`/analysis-batch-print?ids=${encodeURIComponent(idsParam)}&mode=passage`, '_blank');
-                                            }}
-                                            className="px-5 py-3 bg-blue-100 text-blue-700 font-bold rounded-2xl hover:bg-blue-200 transition-all shadow-sm flex items-center gap-2 mr-1"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                            본문분석 인쇄 ({analysisIds.length})
-                                        </button>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => {
+                                                    const el = document.getElementById('analysis-print-dropdown');
+                                                    if (el) el.classList.toggle('hidden');
+                                                }}
+                                                className="px-5 py-3 bg-blue-100 text-blue-700 font-bold rounded-2xl hover:bg-blue-200 transition-all shadow-sm flex items-center gap-2 mr-1"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                본문분석 인쇄 ({analysisIds.length})
+                                            </button>
+                                            <div id="analysis-print-dropdown" className="hidden absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-[280px]">
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">인쇄 항목 선택</div>
+                                                {[
+                                                    { id: 'ap-passage', key: 'passage', label: '📖 전체 지문' },
+                                                    { id: 'ap-summary', key: 'summary', label: '📋 써머리' },
+                                                    { id: 'ap-structure', key: 'structure', label: '📐 글의 구조·해석' },
+                                                    { id: 'ap-sentences', key: 'sentences', label: '🔍 문장별 분석' },
+                                                    { id: 'ap-grammar', key: 'grammar', label: '📝 핵심 문법 사항' },
+                                                    { id: 'ap-vocab', key: 'vocab', label: '📚 어휘 종합' },
+                                                ].map(s => (
+                                                    <label key={s.key} className="flex items-center gap-2 cursor-pointer select-none p-1.5 rounded-lg hover:bg-slate-50">
+                                                        <input
+                                                            type="checkbox"
+                                                            id={s.id}
+                                                            defaultChecked={true}
+                                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <span className="text-sm font-bold text-slate-700">{s.label}</span>
+                                                    </label>
+                                                ))}
+                                                <div className="text-[11px] text-amber-500 mt-2 px-1.5 font-medium">
+                                                    ✨ 선택 항목이 적을수록 지문이 더 크게 인쇄됩니다
+                                                </div>
+                                                <div className="flex gap-2 mt-3">
+                                                    <button
+                                                        onClick={() => {
+                                                            const sectionKeys = ['passage', 'summary', 'structure', 'sentences', 'grammar', 'vocab'];
+                                                            const checked = sectionKeys.filter(k => (document.getElementById(`ap-${k}`) as HTMLInputElement)?.checked);
+                                                            if (checked.length === 0) checked.push('passage');
+                                                            const idsParam = analysisIds.join(',');
+                                                            const sectionsParam = checked.join(',');
+                                                            window.open(`/analysis-batch-print?ids=${encodeURIComponent(idsParam)}&mode=detail&sections=${encodeURIComponent(sectionsParam)}`, '_blank');
+                                                            document.getElementById('analysis-print-dropdown')?.classList.add('hidden');
+                                                        }}
+                                                        className="flex-1 py-2 bg-[#0A0E27] text-white font-bold rounded-lg text-xs hover:bg-[#1a1f3d] transition-all flex items-center justify-center gap-1"
+                                                    >
+                                                        인쇄하기
+                                                    </button>
+                                                    <button
+                                                        onClick={() => document.getElementById('analysis-print-dropdown')?.classList.add('hidden')}
+                                                        className="py-2 px-3 bg-slate-100 text-slate-500 font-bold rounded-lg text-xs hover:bg-slate-200 transition-all"
+                                                    >
+                                                        취소
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     );
                                 })()}
                                 {selectedAssignments.size >= 1 && (() => {
