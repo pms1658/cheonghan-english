@@ -227,12 +227,37 @@ export default function SubjectiveAssignment({
         toast.success(`${wrongIndices.length}개 오답 문제를 다시 풀 수 있습니다.`);
     };
 
-    // Grammar underline rendering
     const renderGrammarPassage = (html: string) => {
         if (!html) return '';
         return html
             .replace(/\[\[UL:\(([a-f])\)\]\]/gi, '<u class="subj-ul" data-label="$1"><span class="subj-label">($1)</span> ')
             .replace(/\[\[\/UL\]\]/gi, '</u>');
+    };
+
+    // Mask eng_composition answers from passage so students can't copy
+    const maskPassageForComposition = (passageText: string): string => {
+        if (!passageText || problems.length === 0) return passageText;
+        let masked = passageText;
+        problems.forEach(p => {
+            if (p.type === 'eng_composition' && p.modelAnswer) {
+                // Replace the model answer portion with underscores
+                const answer = p.modelAnswer.trim();
+                if (answer.length > 3) {
+                    // Try exact match first
+                    if (masked.includes(answer)) {
+                        masked = masked.replace(answer, '________________________________________');
+                    }
+                }
+                // Also mask the full originalSentence and replace with englishStart + blank
+                if (p.originalSentence && p.englishStart) {
+                    const original = p.originalSentence.trim();
+                    if (masked.includes(original)) {
+                        masked = masked.replace(original, p.englishStart + ' ______________________');
+                    }
+                }
+            }
+        });
+        return masked;
     };
 
     if (problems.length === 0) {
@@ -462,11 +487,11 @@ export default function SubjectiveAssignment({
                                 <div
                                     className="text-sm leading-[2] text-slate-700 dark:text-slate-300 exam-passage"
                                     dangerouslySetInnerHTML={{
-                                        __html: renderGrammarPassage(assignment.modifiedPassage)
+                                        __html: renderGrammarPassage(maskPassageForComposition(assignment.modifiedPassage))
                                     }}
                                 />
                             ) : (
-                                <p className="text-sm leading-[1.9] text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{assignment.content}</p>
+                                <p className="text-sm leading-[1.9] text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{maskPassageForComposition(assignment.content)}</p>
                             )}
                         </div>
                     </div>
