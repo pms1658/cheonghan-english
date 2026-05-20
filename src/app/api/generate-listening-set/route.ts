@@ -25,7 +25,7 @@ const safetySettings = [
     { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
 
-// ?€?€ Robust JSON Parser ?€?€
+// â”€â”€ Robust JSON Parser â”€â”€
 function extractJSON(text: string): any {
     if (!text || text.trim().length === 0) throw new Error('Empty AI response');
 
@@ -65,7 +65,7 @@ function extractJSON(text: string): any {
     throw new Error('Could not parse AI response: ' + text.substring(0, 300));
 }
 
-// ?€?€ Single batch generator with retry ?€?€
+// â”€â”€ Single batch generator with retry â”€â”€
 async function generateBatch(
     model: any,
     prompt: string,
@@ -113,12 +113,12 @@ async function generateBatch(
     return { label: batchLabel, data: null, error: 'All retries failed' };
 }
 
-// ?€?€ Delay helper to avoid rate limits ?€?€
+// â”€â”€ Delay helper to avoid rate limits â”€â”€
 function delay(ms: number) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-// ?€?€ POST Handler ?€?€
+// â”€â”€ POST Handler â”€â”€
 export async function POST(req: Request) {
     const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
 
         console.log('[ListeningSet] Starting generation for grade:', targetGrade);
 
-        // ?€?€ Run batches in groups of 3 to avoid rate limits ?€?€
+        // â”€â”€ Run batches in groups of 3 to avoid rate limits â”€â”€
         // Group 1: Listening 1-5, 6-10, 11-15
         const group1 = await Promise.allSettled([
             generateBatch(model, getListeningBatch1Prompt(targetGrade), 'listening_1_5'),
@@ -164,7 +164,7 @@ export async function POST(req: Request) {
 
         const results = [...group1, ...group2, ...group3];
 
-        // ?€?€ Aggregate results ?€?€
+        // â”€â”€ Aggregate results â”€â”€
         const listeningProblems: any[] = [];
         const readingProblems: any[] = [];
         const errors: string[] = [];
@@ -210,12 +210,12 @@ export async function POST(req: Request) {
         listeningProblems.sort((a, b) => a.number - b.number);
         readingProblems.sort((a, b) => a.number - b.number);
 
-        // ?€?€ Generate picture for problem 4 via Imagen API ?€?€
+        // â”€â”€ Generate picture for problem 4 via Imagen API â”€â”€
         let pictureUrl: string | null = null;
         if (pictureDescription) {
             try {
                 console.log('[ListeningSet] Generating picture for problem 4...');
-                const imagePrompt = `Create a simple, clean black-and-white line drawing illustration for a Korean CSAT English listening test. Do NOT include any numbers, labels, or text annotations (? â‘¡?¢â‘£??etc.) in the image. Numbers will be added as separate overlays. Style: textbook illustration, simple line art, clear and easy to read, no text. Scene: ${pictureDescription}`;
+                const imagePrompt = `Create a simple, clean black-and-white line drawing illustration for a Korean CSAT English listening test. Do NOT include any numbers, labels, or text annotations (â‘ â‘¡â‘¢â‘£â‘¤ etc.) in the image. Numbers will be added as separate overlays. Style: textbook illustration, simple line art, clear and easy to read, no text. Scene: ${pictureDescription}`;
                 
                 const imagenResponse = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
@@ -252,7 +252,7 @@ export async function POST(req: Request) {
             }
         }
 
-        // ?€?€ Summary ?€?€
+        // â”€â”€ Summary â”€â”€
         const summary = {
             listeningCount: listeningProblems.length,
             readingCount: readingProblems.length,
