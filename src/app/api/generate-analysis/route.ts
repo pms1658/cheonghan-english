@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             : sentences;
         const passage = cleanPassageMarkers(rawPassage);
 
-        const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
         const prompt = getPremiumAnalysisPrompt(passage, grade);
 
         const result = await model.generateContent({
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         const response = await result.response;
         const text = response.text();
 
-        // Clean JSON — remove markdown code blocks if present
+        // Clean JSON ??remove markdown code blocks if present
         const cleanedText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
         const json = JSON.parse(cleanedText);
 

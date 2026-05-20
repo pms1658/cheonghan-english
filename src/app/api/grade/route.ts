@@ -64,15 +64,15 @@ Student's Selected Sentence Form(s): {selectedForms}
     - Mark ALL main verbs and auxiliary verbs.
     - **Passive Voice**: Marking only "be" OR the full "be + p.p." are BOTH correct.
     - **Auxiliary + Adverb + Main Verb** (e.g., "will always love", "can really do", "has never been"):
-        - Grouped: [will always love](V) — **CORRECT**
-        - Grouped with inner modifier: [will (always) love](V) — **CORRECT**
-        - Split: [will](V) (always) [love](V) — **CORRECT**
-        - Split: [can](V) (really) [do](V) — **CORRECT**
-        - Split without adverb bracket: [can](V) really [do](V) — **CORRECT**
-        - **⚠️ ZERO DEDUCTION: ALL styles above are EQUALLY valid. You MUST NOT deduct ANY points for choosing one style over another. This is the #1 most common grading error — do NOT make it.**
+        - Grouped: [will always love](V) ??**CORRECT**
+        - Grouped with inner modifier: [will (always) love](V) ??**CORRECT**
+        - Split: [will](V) (always) [love](V) ??**CORRECT**
+        - Split: [can](V) (really) [do](V) ??**CORRECT**
+        - Split without adverb bracket: [can](V) really [do](V) ??**CORRECT**
+        - **?�️ ZERO DEDUCTION: ALL styles above are EQUALLY valid. You MUST NOT deduct ANY points for choosing one style over another. This is the #1 most common grading error ??do NOT make it.**
     - **Phrasal Verbs** (e.g., "look at"):
-        - Grouped: [look at](V) — **CORRECT**
-        - Split: [look](V) (at) — **CORRECT**
+        - Grouped: [look at](V) ??**CORRECT**
+        - Split: [look](V) (at) ??**CORRECT**
     - **All styles above are equally valid. Never penalize for style differences.**
 
 2.  **QUASI-NOUNS (Slash) / ... /**
@@ -81,11 +81,11 @@ Student's Selected Sentence Form(s): {selectedForms}
         - Gerund phrases (noun usage)
         - Noun Clauses: that-clause, what-clause, if/whether-clause, interrogative clause, compound relative clause
     - Including or excluding the conjunction from the slash boundary are BOTH fine.
-    - **CRITICAL**: Do NOT slash to-infinitives used as adjectives/adverbs → use ( ) instead.
+    - **CRITICAL**: Do NOT slash to-infinitives used as adjectives/adverbs ??use ( ) instead.
 
-3.  **COORDINATORS (Triangle) [△] word**
+3.  **COORDINATORS (Triangle) [?? word**
     - And, But, Or, So, For, Yet, Nor.
-    - Exception: Sentence-initial "But/And/Yet" → treat as CONNECTIVE [O] instead.
+    - Exception: Sentence-initial "But/And/Yet" ??treat as CONNECTIVE [O] instead.
 
 4.  **CONNECTIVES (Circle) [O] word / [phrase](O)**
     - Sentence-starting discourse transitions: However, Therefore, Thus, For example, Indeed, In addition, etc.
@@ -93,21 +93,21 @@ Student's Selected Sentence Form(s): {selectedForms}
 5.  **SUBORDINATORS (Angle Brackets) < ... >**
     - Adverbial Clauses with an explicit subordinating conjunction: because, since, when, if, although, as, etc.
     - **DUAL ACCEPTANCE**: Student may use < > OR ( ) for subordinate clauses. Both are correct since subordinate clauses are not part of the sentence backbone.
-    - **⚠️ PARTICIPIAL CONSTRUCTIONS are NOT subordinate clauses.** They are phrases (conjunction + subject omitted), so they MUST use ( ) modifier brackets:
-      - (Moving into a new situation), many people decide... — CORRECT
-      - (Having finished the work), he left early. — CORRECT
-      - <Moving into a new situation> — WRONG (no conjunction = not a clause)
+    - **?�️ PARTICIPIAL CONSTRUCTIONS are NOT subordinate clauses.** They are phrases (conjunction + subject omitted), so they MUST use ( ) modifier brackets:
+      - (Moving into a new situation), many people decide... ??CORRECT
+      - (Having finished the work), he left early. ??CORRECT
+      - <Moving into a new situation> ??WRONG (no conjunction = not a clause)
 
 6.  **MODIFIERS (Parentheses) ( ... )**
     - ANY non-backbone element:
         - Adjective/Adverb phrases, Prepositional phrases
         - Relative clauses (who/which/that + incomplete sentence)
         - Relative adverb clauses (where/when/why)
-        - Participial phrases (-ing/-ed modifying a noun) — these are adjective role, NOT verbs
-        - **Participial constructions** (분사구문: -ing/-ed at sentence start/end, reduced from subordinate clause) — these are PHRASES, not clauses. Always ( ).
+        - Participial phrases (-ing/-ed modifying a noun) ??these are adjective role, NOT verbs
+        - **Participial constructions** (분사구문: -ing/-ed at sentence start/end, reduced from subordinate clause) ??these are PHRASES, not clauses. Always ( ).
         - Comma-separated appositives
         - Supplementary content after dash/colon/semicolon
-    - **Appositive "that"**: Abstract noun + that + COMPLETE sentence → modifier ( ), NOT noun clause.
+    - **Appositive "that"**: Abstract noun + that + COMPLETE sentence ??modifier ( ), NOT noun clause.
     - **Determiners** (the, a, an): Do NOT wrap in parentheses.
     - **Literal parentheses** in original text: Double (( )) is correct.
 
@@ -118,10 +118,10 @@ Student's Selected Sentence Form(s): {selectedForms}
 | Common Noun | Incomplete sentence | Relative Pronoun that (Adj. Clause) | ( ... ) |
 | Abstract Noun | Complete sentence | Appositive that | ( ... ) |
 
-### Complement Position — Dual Acceptance
+### Complement Position ??Dual Acceptance
 - When a prepositional phrase or to-infinitive serves as complement in a 2nd-form sentence:
-  - / ... / (quasi-noun treatment) — **CORRECT**
-  - ( ... ) (modifier treatment) — **CORRECT**
+  - / ... / (quasi-noun treatment) ??**CORRECT**
+  - ( ... ) (modifier treatment) ??**CORRECT**
 
 ---
 
@@ -130,18 +130,18 @@ Student's Selected Sentence Form(s): {selectedForms}
 **Philosophy: The goal is to see the BACKBONE of a sentence. Grade backbone markers strictly, but be lenient on modifier boundaries.**
 
 1.  **Structure Score (40 pts)**: Focus on BACKBONE accuracy.
-    - **STRICT grading** for: Verbs [](V), Quasi-nouns / /, Coordinators [△], Connectives [O]
+    - **STRICT grading** for: Verbs [](V), Quasi-nouns / /, Coordinators [??, Connectives [O]
     - **LENIENT grading** for: Modifiers ( ), Subordinators < >
-      - If a modifier element is NOT inside any bracket but should be → mild deduction only (1-2 pts max per instance)
-      - If a student used ( ) instead of < > for a subordinate clause → **NO deduction**
-      - If a student didn't bracket some modifiers but the overall backbone (S, V, O, C) is clearly visible → **minimal deduction**
+      - If a modifier element is NOT inside any bracket but should be ??mild deduction only (1-2 pts max per instance)
+      - If a student used ( ) instead of < > for a subordinate clause ??**NO deduction**
+      - If a student didn't bracket some modifiers but the overall backbone (S, V, O, C) is clearly visible ??**minimal deduction**
     - Accept all style variations listed in the rules above.
 
 2.  **Sentence Form Score (10 pts)**: Compare student's selectedForms against correctForms.
-    - Use exact string match. Forms: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
-    - **⚠️ CRITICAL — MAIN CLAUSE ONLY**: correctForms must contain the sentence form(s) of the **MAIN CLAUSE(s) (주절) ONLY**. Do NOT include forms for subordinate clauses (종속절), relative clauses (관계대명사절/관계부사절), adverbial clauses (부사절), or noun clauses (명사절). Only independent clauses and coordinate clauses joined by coordinators (and/but/or/so) count.
-    - Example: "When he arrived, she gave him the book" → correctForms: ["4형식"] (main clause only; "When he arrived" is an adverbial clause — IGNORE its form)
-    - Example: "He studies hard and she reads books" → correctForms: ["1형식", "3형식"] (two coordinate main clauses)
+    - Use exact string match. Forms: "1?�식", "2?�식", "3?�식", "4?�식", "5?�식", "3?�식 ?�동??, "4?�식 ?�동??, "5?�식 ?�동??
+    - **?�️ CRITICAL ??MAIN CLAUSE ONLY**: correctForms must contain the sentence form(s) of the **MAIN CLAUSE(s) (주절) ONLY**. Do NOT include forms for subordinate clauses (종속??, relative clauses (관계�?명사??관계�??�절), adverbial clauses (부?�절), or noun clauses (명사??. Only independent clauses and coordinate clauses joined by coordinators (and/but/or/so) count.
+    - Example: "When he arrived, she gave him the book" ??correctForms: ["4?�식"] (main clause only; "When he arrived" is an adverbial clause ??IGNORE its form)
+    - Example: "He studies hard and she reads books" ??correctForms: ["1?�식", "3?�식"] (two coordinate main clauses)
     - Do NOT match the number of items to the student's selectedForms count. Determine correctForms independently based on how many main/coordinate clauses exist.
 
 3.  **Translation Score (50 pts)**: Accuracy of Korean meaning.
@@ -157,17 +157,17 @@ Student's Selected Sentence Form(s): {selectedForms}
   - Mark Subordinate Clauses with **< ... >**.
   - Mark Modifiers with **( ... )**.
   - Mark Verbs with **[word](V)**.
-  - Mark Coordinators with **[△]**.
+  - Mark Coordinators with **[??**.
   - Mark Connectives with **[word](O)** or **[O] word**.
   - Apply the "that" classification rule strictly.
   - **CONTAINMENT**: Marks must not leak out of their parent wrapper.
 
-- **correctForms** (string[]): One form per MAIN CLAUSE only (주절). Subordinate clauses (부사절, 관대절, 명사절, 종속절) are excluded. Count only independent/coordinate main clauses.
-  - Values: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
+- **correctForms** (string[]): One form per MAIN CLAUSE only (주절). Subordinate clauses (부?�절, 관?�?? 명사?? 종속?? are excluded. Count only independent/coordinate main clauses.
+  - Values: "1?�식", "2?�식", "3?�식", "4?�식", "5?�식", "3?�식 ?�동??, "4?�식 ?�동??, "5?�식 ?�동??
 
 - **directTranslation** (string): Chunk-by-chunk Korean translation following the original English word order.
   - **KOREAN ONLY**. Zero English words. Translate everything into Korean.
-  - **⚠️ NO MARKUP**: Do NOT include any symbols like [qn], [/qn], [V], [△], [O], <, >, /, ( ), etc. in the translation. Output PURE Korean text only. Use / (slash) ONLY as a chunk separator between translated phrases.
+  - **?�️ NO MARKUP**: Do NOT include any symbols like [qn], [/qn], [V], [??, [O], <, >, /, ( ), etc. in the translation. Output PURE Korean text only. Use / (slash) ONLY as a chunk separator between translated phrases.
 
 - **vocabFeedback** (string[]): Key vocabulary with Korean meanings.
 
@@ -204,11 +204,11 @@ export async function POST(req: Request) {
 
     // Use user-requested model (found in extract-words route)
     const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.5-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    console.log(`[Grading] Starting batch grading for ${assignments.length} items using gemini-3-flash-preview`);
+    console.log(`[Grading] Starting batch grading for ${assignments.length} items using gemini-3.5-flash`);
 
     const gradingPromises = assignments.map(async (task: any, index: number) => {
       const prompt = GRADE_PROMPT
@@ -220,7 +220,7 @@ export async function POST(req: Request) {
       try {
         console.log(`[Grading] Item ${index} - Generating content...`);
         
-        // 최대 2회 시도 (1회 실패 시 재시도)
+        // 최�? 2???�도 (1???�패 ???�시??
         let text = '';
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
@@ -232,7 +232,7 @@ export async function POST(req: Request) {
           } catch (apiErr: any) {
             console.warn(`[Grading] Item ${index} - API error (attempt ${attempt + 1}):`, apiErr.message);
             if (attempt === 1) throw apiErr;
-            await new Promise(r => setTimeout(r, 1000)); // 1초 대기 후 재시도
+            await new Promise(r => setTimeout(r, 1000)); // 1�??��????�시??
           }
         }
         
@@ -243,7 +243,7 @@ export async function POST(req: Request) {
 
           // SAFEGUARD: Ensure all fields are primitives or arrays of primitives
           const rawScore = typeof parsed.score === 'number' ? parsed.score : 0;
-          const safeScore = Math.max(0, Math.min(100, rawScore)); // 0~100 클램핑
+          const safeScore = Math.max(0, Math.min(100, rawScore)); // 0~100 ?�램??
           const safeFeedback = typeof parsed.feedback === 'object' ? JSON.stringify(parsed.feedback) : (parsed.feedback || '');
           const safeStructure = typeof parsed.correctStructure === 'object' ? JSON.stringify(parsed.correctStructure) : (parsed.correctStructure || '');
           const safeTranslation = typeof parsed.directTranslation === 'object' ? JSON.stringify(parsed.directTranslation) : (parsed.directTranslation || '');
@@ -274,7 +274,7 @@ export async function POST(req: Request) {
         console.error(`[Grading] Item ${index} - Failed`, err);
         return {
           score: 0,
-          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요.`
+          feedback: `채점 �??�류가 발생?�습?�다. ?�시 ?�도?�주?�요.`
         };
       }
     });

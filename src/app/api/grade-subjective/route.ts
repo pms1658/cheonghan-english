@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         }
 
         const model = genAI.getGenerativeModel({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.5-flash',
             generationConfig: { responseMimeType: 'application/json' }
         });
 
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
                 return {
                     problemId: p.id,
                     score: typeof gradeResult.score === 'number' ? gradeResult.score : 0,
-                    feedback: typeof gradeResult.feedback === 'string' ? gradeResult.feedback : '채점 결과를 불러올 수 없습니다.',
+                    feedback: typeof gradeResult.feedback === 'string' ? gradeResult.feedback : '채점 결과�?불러?????�습?�다.',
                     modelAnswer: gradeResult.modelAnswer || p.modelAnswer || p.transformedAnswer || p.blankAnswer || '',
                     detailedScores: gradeResult.detailedScores || {}
                 };
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
             return {
                 problemId: p.id,
                 score: 0,
-                feedback: '채점에 실패했습니다. 다시 시도해주세요.',
+                feedback: '채점???�패?�습?�다. ?�시 ?�도?�주?�요.',
                 modelAnswer: '',
                 detailedScores: {}
             };

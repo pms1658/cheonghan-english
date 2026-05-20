@@ -183,9 +183,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Passage is required' }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
-        // ★ SL MODE: Rewrite passage first, then generate problems from rewritten version
+        // ??SL MODE: Rewrite passage first, then generate problems from rewritten version
         let rewrittenPassage: string | null = null;
         let changesSummary: string | null = null;
         
@@ -202,7 +202,7 @@ export async function POST(req: Request) {
                 
                 if (rewriteData.rewrittenPassage) {
                     rewrittenPassage = rewriteData.rewrittenPassage;
-                    changesSummary = rewriteData.changes || '지문이 변형되었습니다.';
+                    changesSummary = rewriteData.changes || '지문이 변?�되?�습?�다.';
                     // Use rewritten passage for problem generation
                     passage = rewrittenPassage!;
                     // SL uses the user-selected targetGrade (no longer forced to H2)
@@ -214,7 +214,7 @@ export async function POST(req: Request) {
                 }
             } catch (e) {
                 console.error('[API] SL Rewrite failed:', e);
-                return NextResponse.json({ error: 'SL 지문 변형 실패: ' + (e as any).message }, { status: 500 });
+                return NextResponse.json({ error: 'SL 지�?변???�패: ' + (e as any).message }, { status: 500 });
             }
         }
 

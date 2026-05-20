@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
         // Using user's preferred model that is confirmed to work in other parts of the app
         const model = genAI.getGenerativeModel({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3.5-flash",
             generationConfig: {
                 // Ensure JSON mode is supported by the model
                 responseMimeType: "application/json",
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
             Instructions:
             1. For each Target Word, find where it appears in the Source Context.
             2. "meaning": Provide the Korean meaning of the word AS IT IS USED in that specific context. 
-            3. "pronunciation": Provide the IPA (International Phonetic Alphabet) pronunciation guide (e.g., /wɜːrd/).
+            3. "pronunciation": Provide the IPA (International Phonetic Alphabet) pronunciation guide (e.g., /w??rd/).
             4. "contextSentence": Copy the EXACT sentence from the Source Context where the word appears. 
                - If the word is NOT found in the Source Context, create a natural example sentence yourself and mark "partOfSpeech" as "Generic".
             5. "partOfSpeech": n, v, adj, adv, etc.
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         console.log('Gemini Call Start', {
             textLength: fullText.length,
             wordsCount: providedWords?.length,
-            model: "gemini-3-flash-preview"
+            model: "gemini-3.5-flash"
         });
 
         const result = await model.generateContent(prompt);
