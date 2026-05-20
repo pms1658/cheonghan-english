@@ -152,7 +152,7 @@ export const AssignmentItem = ({
                 }}
             >
                 {/* Checkbox for Merge / Print */}
-                {userRole === 'admin' && (assignment.type === 'vocabulary' || assignment.type === 'selection' || assignment.type === 'transform' || assignment.type === 'transform_subjective' || assignment.type === 'structure' || assignment.type === 'workbook' || assignment.type === 'analysis' || assignment.type === 'sentence_order') && (
+                {userRole === 'admin' && (assignment.type === 'vocabulary' || assignment.type === 'selection' || assignment.type === 'transform' || assignment.type === 'transform_subjective' || assignment.type === 'external_subjective' || assignment.type === 'structure' || assignment.type === 'workbook' || assignment.type === 'analysis' || assignment.type === 'sentence_order') && (
                     <div className="flex items-center justify-center pl-2 sm:pl-4" onClick={e => e.stopPropagation()}>
                         <input
                             type="checkbox"
@@ -199,6 +199,11 @@ export const AssignmentItem = ({
 
                             {/* Subjective: Problems */}
                             {assignment.type === 'transform_subjective' && (assignment as any).subjectiveProblems && (
+                                <span>문제: {(assignment as any).subjectiveProblems.length}개</span>
+                            )}
+
+                            {/* External Subjective: Problems */}
+                            {assignment.type === 'external_subjective' && (assignment as any).subjectiveProblems && (
                                 <span>문제: {(assignment as any).subjectiveProblems.length}개</span>
                             )}
 

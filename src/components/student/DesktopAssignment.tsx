@@ -215,6 +215,29 @@ export default function DesktopAssignment({
         );
     }
 
+    // External Subjective Assignment Routing
+    if (assignment && assignment.type === 'external_subjective') {
+        const studentData = getStudentData(student);
+        if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
+
+        return (
+            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+                <ErrorBoundary>
+                    <SubjectiveAssignment
+                        assignment={assignment as any}
+                        studentId={studentData.id}
+                        studentName={studentData.name || 'Anonymous'}
+                        classId={queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || ''}
+                        onComplete={() => {
+                            const finalClassId = queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || '';
+                            router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
+                        }}
+                    />
+                </ErrorBoundary>
+            </div>
+        );
+    }
+
     // Analysis Assignment Routing
     if (assignment && assignment.type === 'analysis') {
         const studentData = getStudentData(student);

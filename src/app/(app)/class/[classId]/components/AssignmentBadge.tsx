@@ -59,6 +59,11 @@ export const Badge = ({ type }: { type: string }) => {
             bgClass = 'bg-gradient-to-r from-amber-50 to-white dark:from-amber-900/30 dark:to-slate-800 text-amber-900 dark:text-amber-300';
             label = '세부순서';
             break;
+        case 'external_subjective':
+            borderClass = 'border-l-[3px] border-purple-400';
+            bgClass = 'bg-gradient-to-r from-purple-50 to-white dark:from-purple-800/30 dark:to-slate-800 text-purple-700 dark:text-purple-300';
+            label = '외부지문';
+            break;
         default:
             borderClass = 'border-l-[3px] border-slate-500';
             bgClass = 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-300';
@@ -169,7 +174,7 @@ export const StudentStatusBadge = ({ assignment, submissions, userId, allAssignm
                 statusText = '학습 중';
                 statusColor = 'bg-blue-50 text-blue-600 border-blue-100';
             }
-        } else if (assignment.type === 'transform' || (assignment as any).type === 'variant_session' || assignment.type === 'transform_subjective') {
+        } else if (assignment.type === 'transform' || (assignment as any).type === 'variant_session' || assignment.type === 'transform_subjective' || assignment.type === 'external_subjective') {
             const maxScore = Math.max(...mySubs.map((s: any) => s.score || 0));
             if (maxScore >= 80) {
                 const completionCount = mySubs.filter((s: any) => (s.score || 0) >= 80).length;

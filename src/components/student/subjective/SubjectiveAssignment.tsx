@@ -23,6 +23,8 @@ const TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
     pronoun_reference: { label: '지칭 추론', emoji: '👆' },
     summary_completion: { label: '요약문 완성', emoji: '📋' },
     sentence_transform: { label: '문장 전환', emoji: '🔄' },
+    korean_summary: { label: '한국어 요약', emoji: '🇰🇷' },
+    english_answer: { label: '영어로 답하기', emoji: '🇬🇧' },
 };
 
 const GRAMMAR_LABELS = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)'];
@@ -400,7 +402,7 @@ export default function SubjectiveAssignment({
                     <div className="flex items-center gap-3 mb-3">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1.5">
-                                <span className="px-2 py-0.5 rounded bg-[#1e3a5f]/60 text-blue-200 text-[10px] font-bold border border-[#1e3a5f]">변형주관</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${assignment.type === 'external_subjective' ? 'bg-purple-500/20 text-purple-200 border-purple-400/40' : 'bg-[#1e3a5f]/60 text-blue-200 border-[#1e3a5f]'}`}>{assignment.type === 'external_subjective' ? '외부지문' : '변형주관'}</span>
                             </div>
                             <h1 className="text-lg font-bold text-white truncate">{assignment.title}</h1>
                             <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 mt-1">
@@ -671,6 +673,38 @@ export default function SubjectiveAssignment({
                                             onChange={e => updateTextAnswer(currentIdx, e.target.value)}
                                             placeholder="변환된 문장을 쓰세요..."
                                             className="w-full h-28 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-[#1e3a5f] outline-none resize-none"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* TYPE 8: 한국어 요약 */}
+                                {currentProblem.type === 'korean_summary' && (
+                                    <div className="space-y-3">
+                                        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-700">
+                                            <div className="text-[10px] font-bold text-purple-500 uppercase mb-1">안내</div>
+                                            <p className="text-sm text-purple-900 dark:text-purple-200 leading-relaxed">위 지문 전체의 내용을 한국어로 2~3문장으로 요약하여 서술하시오.</p>
+                                        </div>
+                                        <textarea
+                                            value={currentAnswer?.textAnswer || ''}
+                                            onChange={e => updateTextAnswer(currentIdx, e.target.value)}
+                                            placeholder="한국어로 요약을 작성하세요..."
+                                            className="w-full h-32 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none resize-none"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* TYPE 9: 영어로 답하기 */}
+                                {currentProblem.type === 'english_answer' && (
+                                    <div className="space-y-3">
+                                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                                            <div className="text-[10px] font-bold text-indigo-500 uppercase mb-1">Question</div>
+                                            <p className="text-[15px] leading-relaxed font-medium text-indigo-900 dark:text-indigo-200">{currentProblem.comprehensionQuestion}</p>
+                                        </div>
+                                        <textarea
+                                            value={currentAnswer?.textAnswer || ''}
+                                            onChange={e => updateTextAnswer(currentIdx, e.target.value)}
+                                            placeholder="Answer in English..."
+                                            className="w-full h-28 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
                                         />
                                     </div>
                                 )}

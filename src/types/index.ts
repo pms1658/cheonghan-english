@@ -33,7 +33,7 @@ export interface Word {
 
 // Assignment types
 export type AssignmentCategory = 'sat' | 'midterm';
-export type AssignmentType = 'vocabulary' | 'structure' | 'writing' | 'selection' | 'transform' | 'workbook' | 'analysis' | 'transform_subjective' | 'listening_set' | 'sentence_order';
+export type AssignmentType = 'vocabulary' | 'structure' | 'writing' | 'selection' | 'transform' | 'workbook' | 'analysis' | 'transform_subjective' | 'listening_set' | 'sentence_order' | 'external_subjective';
 export type VocabularySource = 'custom' | 'workbook';
 export type StructureSource = 'general' | 'textbook';
 
@@ -54,7 +54,7 @@ export interface Assignment {
 
     // Category system
     category: AssignmentCategory; // 'sat' | 'midterm'
-    type: AssignmentType; // 'vocabulary' | 'structure' | 'writing' | 'selection' | 'transform'
+    type: AssignmentType; // 'vocabulary' | 'structure' | 'writing' | 'selection' | 'transform' | 'external_subjective'
 
     // Source tracking
     vocabularySource?: VocabularySource; // For vocabulary assignments
@@ -93,7 +93,7 @@ export interface Assignment {
     variantConfig?: VariantConfig;
     variantProblems?: VariantProblem[];
 
-    // Subjective Problem fields (only for type='transform_subjective')
+    // Subjective Problem fields (for type='transform_subjective' | 'external_subjective')
     subjectiveConfig?: SubjectiveConfig;
     subjectiveProblems?: SubjectiveProblem[];
 
@@ -272,7 +272,9 @@ export type SubjectiveProblemType =
     | 'blank_fill'               // 빈칸 서술 (선택지 없이 직접 작성)
     | 'pronoun_reference'        // 지칭 추론 (대명사 가리키는 대상)
     | 'summary_completion'       // 요약문 완성 (빈칸 단어 직접 작성)
-    | 'sentence_transform';      // 문장 전환 (능동↔수동, 분사구문↔절 등)
+    | 'sentence_transform'       // 문장 전환 (능동↔수동, 분사구문↔절 등)
+    | 'korean_summary'           // 한국어 요약 (지문 전체를 한국어로 요약 서술)
+    | 'english_answer';          // 영어로 답하기 (내용 이해 질문에 영어로 답변)
 
 export interface GrammarItem {
     label: string;               // "(a)" ~ "(f)"
@@ -321,6 +323,13 @@ export interface SubjectiveProblem {
     originalForTransform?: string;  // 원문
     transformCondition?: string;    // 변환 조건
     transformedAnswer?: string;     // 모범 변환 답안
+
+    // === 유형8: 한국어 요약 ===
+    koreanSummaryModelAnswer?: string;  // 한국어 요약 모범답안
+
+    // === 유형9: 영어로 답하기 ===
+    comprehensionQuestion?: string;     // 내용 이해 질문 (영어)
+    englishModelAnswer?: string;        // 영어 모범답안
 }
 
 export interface SubjectiveConfig {

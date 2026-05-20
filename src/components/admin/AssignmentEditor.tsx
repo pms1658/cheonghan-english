@@ -6,6 +6,7 @@ import { Class, Assignment } from '@/types';
 import AssignmentImportModal from './AssignmentImportModal';
 import TransformAssignmentForm from './TransformAssignmentForm';
 import SubjectiveAssignmentForm from './SubjectiveAssignmentForm';
+import ExternalSubjectiveForm from './ExternalSubjectiveForm';
 import WorkbookAssignmentForm from './WorkbookAssignmentForm';
 import WritingAssignmentForm from './WritingAssignmentForm';
 import ListeningSetForm from './ListeningSetForm';
@@ -22,7 +23,7 @@ interface AssignmentEditorProps {
     initialData?: Assignment | null;
 }
 
-type AssignmentType = 'structure' | 'vocabulary' | 'selection' | 'transform' | 'transform_subjective' | 'writing' | 'workbook' | 'analysis' | 'listening_set' | 'sentence_order';
+type AssignmentType = 'structure' | 'vocabulary' | 'selection' | 'transform' | 'transform_subjective' | 'external_subjective' | 'writing' | 'workbook' | 'analysis' | 'listening_set' | 'sentence_order';
 
 export default function AssignmentEditor({ initialClassId, classes, allStudents, onClose, onSave, initialData }: AssignmentEditorProps) {
     const [creationStep, setCreationStep] = useState<'type_select' | 'form'>('type_select');
@@ -172,6 +173,10 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
                         title="세부순서" desc="지문을 문장 단위로 분리하여 드래그로 순서를 맞추는 학습입니다."
                         icon={<span className="text-3xl">🔀</span>}
                         newBadge={true} />
+                    <TypeCard type="external_subjective" color="purple"
+                        title="외부지문 서술형" desc="외부 지문으로 내신 서술형 대비 문제를 AI가 출제하고 채점합니다."
+                        icon={<span className="text-3xl">📝</span>}
+                        newBadge={true} />
                 </div>
 
                 {isImportModalOpen && (
@@ -215,6 +220,20 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
                     initialData={initialData}
                     onBack={handleBack}
                     onSave={makeSaveHandler('변형주관')}
+                />
+            </div>
+        );
+    }
+
+    // External Subjective
+    if (assignmentType === 'external_subjective') {
+        return (
+            <div className="h-full overflow-y-auto">
+                <ExternalSubjectiveForm
+                    selectedClass={selectedClass}
+                    initialData={initialData}
+                    onBack={handleBack}
+                    onSave={makeSaveHandler('외부지문')}
                 />
             </div>
         );

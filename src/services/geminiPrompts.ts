@@ -733,7 +733,9 @@ export const getSubjectiveProblemsPrompt = (passage: string, grade: string, prob
       "blank_fill": "### TYPE: blank_fill (빈칸 서술)\n- Select a KEY position in the passage.\n- Remove 1-3 words, replace with __________.\n- Student writes the missing word(s). Provide correct answer.",
       "pronoun_reference": "### TYPE: pronoun_reference (지칭 추론)\n- Find a pronoun (it, they, this, etc.) referring to a specific concept.\n- Student writes in Korean what it refers to.",
       "summary_completion": "### TYPE: summary_completion (요약문 완성)\n- Write 1-2 sentence English summary with 2 blanks (A) and (B).\n- Student fills blanks with appropriate English words.",
-      "sentence_transform": "### TYPE: sentence_transform (문장 전환)\n- Select ONE transformable sentence.\n- Condition: Active↔Passive, 분사구문↔절, Direct↔Indirect speech, etc.\n- Provide the model transformed sentence."
+      "sentence_transform": "### TYPE: sentence_transform (문장 전환)\n- Select ONE transformable sentence.\n- Condition: Active↔Passive, 분사구문↔절, Direct↔Indirect speech, etc.\n- Provide the model transformed sentence.",
+      "korean_summary": "### TYPE: korean_summary (한국어 요약)\n- The student must summarize the ENTIRE passage in Korean (2-3 sentences).\n- Provide a model answer (한국어 모범답안, 2-3 sentences).\n- The model answer should capture the main idea, key arguments, and conclusion.",
+      "english_answer": "### TYPE: english_answer (영어로 답하기)\n- Ask ONE comprehension question about the passage content in English.\n- The student must answer IN ENGLISH (1-2 sentences).\n- The question should test understanding of key details or implications.\n- Provide a model answer in English."
   };
   
   let typeInstruction: string;
@@ -743,7 +745,7 @@ export const getSubjectiveProblemsPrompt = (passage: string, grade: string, prob
     typeInstruction = 'Generate problems ONLY for these ' + problemTypes.length + ' types: ' + problemTypes.join(', ') + '. Do NOT generate any other types.';
     typeBlock = problemTypes.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
   } else {
-    typeInstruction = 'Generate ALL 7 types of problems (one problem per type).';
+    typeInstruction = 'Generate ALL 9 types of problems (one problem per type).';
     typeBlock = Object.values(allTypes).join('\n\n');
   }
 
@@ -823,6 +825,17 @@ ${typeBlock}
       "originalSentence": "Original sentence",
       "transformCondition": "능동태를 수동태로 바꾸시오",
       "transformedAnswer": "Model transformed sentence"
+    },
+    {
+      "type": "korean_summary",
+      "instruction": "다음 글의 내용을 한국어로 2~3문장으로 요약하시오.",
+      "koreanSummaryModelAnswer": "한국어 모범 요약 답안 (2-3문장)"
+    },
+    {
+      "type": "english_answer",
+      "instruction": "다음 질문에 영어로 답하시오.",
+      "comprehensionQuestion": "What is the main point the author is trying to make?",
+      "englishModelAnswer": "English model answer (1-2 sentences)"
     }
   ],
   "modifiedPassage": ""
@@ -888,6 +901,9 @@ export const getSubjectiveGradingPrompt = (problems: any[], answers: any[], pass
       ...(p.summaryText ? { summaryText: p.summaryText } : {}),
       ...(p.blankAnswers ? { blankAnswers: p.blankAnswers } : {}),
       ...(p.transformCondition ? { transformCondition: p.transformCondition } : {}),
+      ...(p.koreanSummaryModelAnswer ? { koreanSummaryModelAnswer: p.koreanSummaryModelAnswer } : {}),
+      ...(p.comprehensionQuestion ? { comprehensionQuestion: p.comprehensionQuestion } : {}),
+      ...(p.englishModelAnswer ? { englishModelAnswer: p.englishModelAnswer } : {}),
     };
   });
 
@@ -912,6 +928,8 @@ For each problem, grade the student's answer on a scale of 0-100.
 - **pronoun_reference**: Check if the student correctly identified the referent. Score 100 for correct, 50 for partially correct, 0 for wrong.
 - **summary_completion**: Check each blank separately. Accept synonyms and minor variations.
 - **sentence_transform**: Check if the transformation follows the condition (50%) and is grammatically correct (50%).
+- **korean_summary**: Check if the summary captures the main idea (40%), includes key details (30%), and is well-written in Korean (30%). Accept reasonable variations in expression.
+- **english_answer**: Check if the answer is factually correct based on the passage (50%), grammatically correct (30%), and complete (20%). Accept valid synonyms and alternative phrasings.
 
 **Important:**
 - Be generous with minor spelling errors that don't affect meaning
