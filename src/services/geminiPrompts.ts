@@ -81,7 +81,10 @@ const CONSTRUCTION_RULES: Record<string, string> = {
   summary: `
     - **Structure**: Generate a NEW one-sentence or short paragraph summary of the passage with two blanks (A) and (B).
     - **Formatting**: Wrap the ENTIRE summary paragraph in \`[[BOX]]...[[/BOX]]\`.
-    - **Choices**: Provide word pairs for (A) and (B).
+    - **★★★ CRITICAL — BLANKS MUST BE EMPTY ★★★**: (A) and (B) MUST be followed by a blank marker \`__________\`, NOT the actual answer word. The answer words go ONLY in the choices.
+      - ✅ CORRECT: "The passage explains that (A) __________ is essential for (B) __________."
+      - ❌ WRONG: "The passage explains that (A) cooperation is essential for (B) success." ← 정답 단어가 직접 노출됨! 절대 금지!
+    - **Choices**: Provide word pairs for (A) and (B). The correct pair fills the blanks.
   `,
   mismatch: `
     - **유형**: 내신 대비용 내용 일치/불일치 (수능 26~28번, 45번 스타일을 내신용으로 변환)

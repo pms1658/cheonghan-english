@@ -108,6 +108,53 @@ export function sanitizeAIQuestionText(text: string): string {
 }
 
 /**
+ * For summary-type questions: ensure (A) and (B) are followed by blanks,
+ * not the actual answer words. AI sometimes leaks the answer directly.
+ * 
+ * Detects patterns like "(A) cooperation" and replaces with "(A) __________".
+ * Only replaces if a word (not a blank) follows (A)/(B).
+ */
+export function sanitizeSummaryBlanks(questionText: string, choices: string[]): string {
+    if (!questionText || !choices || choices.length === 0) return questionText;
+
+    // Extract answer words from choices (summary choices are typically "word — word" or "(A) word - (B) word" pairs)
+    const answerWords: string[] = [];
+    for (const choice of choices) {
+        // Match patterns like "cooperation — competition", "word1 - word2", "(A) word1 — (B) word2"
+        const words = choice
+            .replace(/\([A-B]\)\s*/g, '')  // Remove (A)/(B) labels from choices
+            .split(/\s*[—\-–\/]\s*/)       // Split by dash/slash separators
+            .map(w => w.trim())
+            .filter(w => w.length > 0);
+        answerWords.push(...words);
+    }
+
+    if (answerWords.length === 0) return questionText;
+
+    let result = questionText;
+
+    // Pattern: (A) followed by a word (not a blank or newline) — replace the word with blank
+    // Same for (B). Handle both uppercase and lowercase.
+    result = result.replace(
+        /(\([A-B]\))\s+(?!_)([A-Za-z][A-Za-z\s]*?)(?=[\s,.\-—;:!?\n]|$)/g,
+        (match, label, word) => {
+            const trimmedWord = word.trim();
+            // Only replace if the word looks like a potential answer (not a structural word)
+            if (trimmedWord.length >= 2 && answerWords.some(aw => 
+                aw.toLowerCase() === trimmedWord.toLowerCase() ||
+                trimmedWord.toLowerCase().includes(aw.toLowerCase()) ||
+                aw.toLowerCase().includes(trimmedWord.toLowerCase())
+            )) {
+                return `${label} __________`;
+            }
+            return match;
+        }
+    );
+
+    return result;
+}
+
+/**
  * Sanitize AI-generated choice text.
  * - Remove leading numbered markers (①, 1., 1), etc.)
  * - Strip markdown bold/italic

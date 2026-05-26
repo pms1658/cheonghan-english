@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateVariantRequestSchema } from '@/schemas/api';
 import { getVariantPrompt, getBestTypesPrompt, getPassageRewritePrompt, GRADE_LABELS } from '@/services/geminiPrompts';
-import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText } from '@/utils/textUtils';
+import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, sanitizeSummaryBlanks } from '@/utils/textUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
@@ -276,7 +276,9 @@ export async function POST(req: Request) {
                 return {
                     id: `prob_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 5)}`,
                     type,
-                    question: sanitizeAIQuestionText(problemData.question),
+                    question: type === 'summary'
+                        ? sanitizeSummaryBlanks(sanitizeAIQuestionText(problemData.question), problemData.choices)
+                        : sanitizeAIQuestionText(problemData.question),
                     choices: problemData.choices.slice(0, 5).map((c: string) => sanitizeChoiceText(c)),
                     correctAnswer: problemData.correctAnswer ?? 0,
                     explanation: (problemData.explanation || '').trim(),
