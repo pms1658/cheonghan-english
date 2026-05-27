@@ -41,6 +41,11 @@ html {
   --primary-light: #1e2548;
   --background-color: #F8FAFC;
   --surface-color: #FFFFFF;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --shadow-premium: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --shadow-premium-hover: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
 .dark {
@@ -49,6 +54,11 @@ html {
   --primary-light: #1e2548;
   --background-color: #020617;
   --surface-color: #0f172a;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: rgba(255,255,255,0.08);
+  --shadow-premium: 0 8px 30px rgba(0, 0, 0, 0.2);
+  --shadow-premium-hover: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
 /*
@@ -311,6 +321,10 @@ body {
   .animate-slide-out-right {
     animation: slideOutRight 0.3s ease-in forwards;
   }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 /* Logo bounce animation for loading states */
@@ -403,6 +417,15 @@ a[class*="rounded"]:not(:disabled):active:not(:has(:active)) {
   }
 }
 
+/* Card hover lift effect — Apple-style subtle elevation */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-premium-hover);
+}
+
 @layer base {
 
   input,
@@ -449,64 +472,6 @@ a[class*="rounded"]:not(:disabled):active:not(:has(:active)) {
     font-size: 16px !important;
   }
 
-  /* Adjust heading sizes proportionally for phones */
-  h1 {
-    font-size: 1.5rem !important;
-  }
-
-  h2 {
-    font-size: 1.25rem !important;
-  }
-
-  h3 {
-    font-size: 1.125rem !important;
-  }
-
-  h4 {
-    font-size: 1rem !important;
-  }
-
-  /* Reduce padding for compact phone UI */
-  .p-8 {
-    padding: 1rem !important;
-  }
-
-  .p-6 {
-    padding: 0.75rem !important;
-  }
-
-  .p-4 {
-    padding: 0.5rem !important;
-  }
-
-  .px-8 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .px-6 {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-
-  .py-8 {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-  }
-
-  .py-6 {
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
-  }
-
-  /* Smaller gaps on phones */
-  .gap-8 {
-    gap: 1rem !important;
-  }
-
-  .gap-6 {
-    gap: 0.75rem !important;
-  }
 
   /* Body text size */
   body {

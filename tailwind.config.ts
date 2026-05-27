@@ -39,6 +39,8 @@ export default {
                 'premium': '0 8px 30px rgba(0, 0, 0, 0.04)',
                 'premium-hover': '0 12px 40px rgba(0, 0, 0, 0.08)',
                 'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+                'card-lg': '0 20px 40px rgba(0, 0, 0, 0.04)',
+                'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
             },
             borderRadius: {
                 'xl': '1rem',
@@ -55,6 +57,7 @@ export default {
                 'fade-in-up-delay': 'fadeInUp 1s ease-out 0.3s forwards',
                 'shine': 'shine 1.5s linear infinite',
                 'fadeIn': 'fadeIn 0.2s ease-out forwards',
+                'bounce-slow': 'bounce 2s ease-in-out infinite',
             },
             keyframes: {
                 float: {
@@ -72,7 +75,14 @@ export default {
                 fadeIn: {
                     '0%': { opacity: '0' },
                     '100%': { opacity: '1' },
-                }
+                },
+                countUp: {
+                    '0%': { opacity: '0', transform: 'translateY(10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+            },
+            transitionDuration: {
+                '400': '400ms',
             }
         },
     },

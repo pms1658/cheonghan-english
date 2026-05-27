@@ -99,11 +99,11 @@ export default function DesktopDashboard({
                             onClick={() => setFilter('guide')}
                             className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left transition-all duration-200 group border
                             ${filter === 'guide'
-                                    ? 'bg-emerald-50 text-emerald-700 font-bold border-emerald-100 shadow-sm'
-                                    : 'bg-white border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                    ? 'bg-emerald-500/15 text-emerald-300 font-bold border-emerald-500/20 shadow-sm'
+                                    : 'bg-white/5 border-transparent text-slate-400 hover:bg-white/10 hover:text-white'
                                 } `}
                         >
-                            <svg className={`w-5 h-5 flex-shrink-0 ${filter === 'guide' ? 'text-emerald-500' : 'text-slate-400'} `} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            <svg className={`w-5 h-5 flex-shrink-0 ${filter === 'guide' ? 'text-emerald-400' : 'text-slate-500'} `} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                             <span className="text-sm">구조독해 가이드</span>
                         </button>
                     </div>
@@ -112,9 +112,9 @@ export default function DesktopDashboard({
                     <div className="px-4 mb-4">
                         <button
                             onClick={() => setShowPrintModal(true)}
-                            className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left transition-all duration-200 group border bg-white border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900`}
+                            className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left transition-all duration-200 group border bg-white/5 border-transparent text-slate-400 hover:bg-white/10 hover:text-white`}
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                             <span className="text-sm">구조독해 인쇄</span>
                         </button>
                     </div>
@@ -122,9 +122,9 @@ export default function DesktopDashboard({
                     {/* Filter Tabs */}
                     {filter !== 'guide' && (
                         <div className="space-y-1 mt-2">
-                            <div className="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mt-4">
+                            <div className="px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 mt-4">
                                 <span>Status</span>
-                                <div className="h-px bg-slate-100 flex-1"></div>
+                                <div className="h-px bg-white/10 flex-1"></div>
                             </div>
                             {[
                                 { id: 'my_classes', label: '내 클래스', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 2 0 011 1v5m-4 0h4' },
@@ -146,15 +146,15 @@ export default function DesktopDashboard({
                                         }}
                                         className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left transition-all duration-200 group relative
                                         ${isActive
-                                                ? 'text-slate-900 font-bold bg-white shadow-sm border border-slate-200'
-                                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                                                ? 'text-white font-bold bg-white/10 shadow-sm border border-white/10'
+                                                : 'text-slate-400 hover:bg-white/10 hover:text-white border border-transparent'
                                             } `}
                                     >
-                                        <svg className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'text-blue-600 scale-110' : 'text-slate-400 group-hover:scale-110'} `} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'text-blue-400 scale-110' : 'text-slate-500 group-hover:scale-110'} `} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
                                         </svg>
                                         <span className="text-sm relative z-10">{item.label}</span>
-                                        {isActive && <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-blue-600"></div>}
+                                        {isActive && <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-blue-400"></div>}
                                     </button>
                                 );
                             })}
@@ -164,7 +164,7 @@ export default function DesktopDashboard({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 ml-80 p-8 xl:p-12 min-h-screen relative z-10 flex flex-col">
+            <main className="flex-1 ml-64 p-8 xl:p-12 min-h-screen relative z-10 flex flex-col">
                 {/* Header Section */}
                 <header className="flex items-center justify-between mb-8 relative z-10">
                     <div>
