@@ -57,7 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             console.error('Failed to parse tenant admin data', e);
                         }
                     }
-                    // Anonymous without tenant data — sign out
+                    // Anonymous without tenant data — check for student
+                    const storedStudent = localStorage.getItem('CHEONGHAN_STUDENT');
+                    if (storedStudent) {
+                        // Student with anonymous auth — keep auth active, set user from localStorage
+                        try {
+                            const localData = JSON.parse(storedStudent);
+                            createUserObject(localData);
+                            setLoading(false);
+                            return;
+                        } catch (e) {
+                            console.error('Failed to parse student data', e);
+                        }
+                    }
+                    // Anonymous without any data — sign out
                     await signOut(auth).catch(() => { });
                     setUser(null);
                     setLoading(false);
@@ -92,18 +105,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // 3. Fallback: check localStorage for student
                 const storedStudent = localStorage.getItem('CHEONGHAN_STUDENT');
                 if (storedStudent) {
+                    // Student found but no Firebase auth — establish anonymous auth
+                    // onAuthStateChanged will fire again and the anonymous handler
+                    // will detect CHEONGHAN_STUDENT and set up the user
                     try {
-                        const localData = JSON.parse(storedStudent);
-                        const freshData = await dbService.getStudent(localData.id);
-                        const studentData = freshData || localData;
-                        if (freshData) {
-                            localStorage.setItem('CHEONGHAN_STUDENT', JSON.stringify(freshData));
-                        }
-                        createUserObject(studentData);
+                        await signInAnonymously(auth);
                     } catch (e) {
-                        console.error("Failed to parse/fetch student data", e);
-                        setUser(null);
+                        console.error('Failed to re-auth student:', e);
+                        // Fallback: set user from localStorage even without auth
+                        try {
+                            createUserObject(JSON.parse(storedStudent));
+                        } catch {
+                            setUser(null);
+                        }
+                        setLoading(false);
                     }
+                    return; // onAuthStateChanged will handle it
                 } else {
                     setUser(null);
                 }
@@ -152,7 +169,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             // 1. Fetch Fresh Data FIRST (while still Admin/Authenticated)
             // This avoids permission errors if 'students' collection is protected.
-            const freshData = await dbService.getStudent(studentData.id);
+            let freshData: any = null;
+            try {
+                freshData = await dbService.getStudent(studentData.id);
+            } catch (e) {
+                // May fail if not authenticated — use provided data
+                console.warn('Could not fetch fresh student data, using provided:', e);
+            }
             const finalData = freshData || studentData;
 
             // 2. Set Local Storage BEFORE signing out
@@ -160,25 +183,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('CHEONGHAN_STUDENT', JSON.stringify(finalData));
 
             // 3. Sign Out if currently authenticated (Clear Admin Session)
-            // This will trigger onAuthStateChanged which will read localStorage
-            await signOut(auth).catch(() => { }); // Ignore error if already signed out
+            await signOut(auth).catch(() => { });
 
-            // 4. CRITICAL: Directly set user state to avoid waiting for onAuthStateChanged
-            // When student logs in for the first time, signOut doesn't trigger onAuthStateChanged
-            // because they're already logged out, so we must manually set the state
+            // 4. Sign in anonymously for Firestore security rules (auth != null)
+            // This is silent — student doesn't see or interact with this
+            await signInAnonymously(auth).catch((e) => {
+                console.warn('Anonymous auth failed (non-critical):', e);
+            });
+
+            // 5. Set user state directly
             createUserObject(finalData);
 
-            // 5. Small delay to ensure state has propagated to all components
+            // 6. Small delay to ensure state has propagated to all components
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 6. Navigate
-            // Use Client-Side Navigation for SPA experience (PWA friendly)
+            // 7. Navigate
             router.push('/dashboard');
         } catch (e) {
             console.error("Login fetch error:", e);
             // Fallback:
             await signOut(auth).catch(() => { });
             localStorage.setItem('CHEONGHAN_STUDENT', JSON.stringify(studentData));
+            await signInAnonymously(auth).catch(() => { });
             createUserObject(studentData);
             await new Promise(resolve => setTimeout(resolve, 50));
             router.push('/dashboard');

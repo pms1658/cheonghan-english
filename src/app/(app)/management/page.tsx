@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import StudentManagement from '@/components/admin/StudentManagement';
-import { dbService } from '@/services/db';
 
 export default function ManagementPage() {
     const { user } = useAuth();
@@ -34,7 +33,22 @@ export default function ManagementPage() {
         }
 
         try {
-            await dbService.updateStudent((user as any).id, { password: newPassword });
+            const res = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: (user as any).id,
+                    newPassword,
+                }),
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                setMessage(result.error || '변경 실패. 다시 시도해주세요.');
+                return;
+            }
+
             setMessage('비밀번호가 변경되었습니다.');
             setNewPassword('');
             setConfirmPassword('');

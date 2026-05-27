@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { dbService } from '@/services/db';
 import { ADMIN_LOGIN_IDS, getAdminEmailByLoginId } from '@/lib/adminConfig';
 import { toast } from 'sonner';
 
@@ -70,72 +69,46 @@ export default function LoginForm() {
                 return;
             }
 
-            // 2. Tenant Admin Login (Firestore tenants collection)
-            // Now supports both main adminLoginId AND additional admins[] entries
-            const tenant = await dbService.getTenantByLoginId(loginId);
-            if (tenant) {
-                if (!pw && !isAuto) {
-                    toast.warning("비밀번호를 입력해주세요.");
-                    setIsLoading(false);
-                    setAutoLoggingIn(false);
-                    return;
-                }
-                // Check password against main admin AND additional admins
-                const isMainAdmin = tenant.adminLoginId === loginId;
-                const matchingExtra = !isMainAdmin && tenant.admins?.find((a: any) => a.loginId === loginId);
-                const expectedPassword = isMainAdmin ? tenant.adminPassword : (matchingExtra ? matchingExtra.password : null);
-
-                if (!expectedPassword || pw !== expectedPassword) {
-                    if (!isAuto) toast.warning("비밀번호가 올바르지 않습니다.");
-                    if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
-                    setIsLoading(false);
-                    setAutoLoggingIn(false);
-                    return;
-                }
-                if (tenant.status === 'suspended' || tenant.status === 'cancelled') {
-                    toast.error("이용이 정지된 계정입니다. 관리자에게 문의하세요.");
-                    setIsLoading(false);
-                    setAutoLoggingIn(false);
-                    return;
-                }
-                // Save auto-login
-                if (autoLogin || isAuto) {
-                    localStorage.setItem(AUTO_LOGIN_KEY, JSON.stringify({ id: loginId, pw }));
-                }
-                // Save remembered ID
-                if (rememberMe && !autoLogin && !isAuto) {
-                    localStorage.setItem(SAVED_ID_KEY, loginId);
-                }
-                await loginTenantAdmin(tenant);
+            // 2. Student & Tenant Admin Login via Server API
+            // Passwords are verified server-side with bcrypt
+            if (!pw && !isAuto) {
+                toast.warning("비밀번호를 입력해주세요.");
+                setIsLoading(false);
+                setAutoLoggingIn(false);
                 return;
             }
 
-            // 3. Student Login
-            const student = await dbService.getStudent(loginId);
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: loginId, password: pw }),
+            });
 
-            if (student) {
-                const dbPassword = student.password || '123456';
-                if (pw !== dbPassword) {
-                    if (!isAuto) toast.warning("비밀번호가 올바르지 않습니다.");
-                    if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
-                    setIsLoading(false);
-                    setAutoLoggingIn(false);
-                    return;
-                }
+            const result = await res.json();
 
-                // Save auto-login credentials
-                if (autoLogin || isAuto) {
-                    localStorage.setItem(AUTO_LOGIN_KEY, JSON.stringify({ id: loginId, pw }));
-                }
-                // Save remembered ID
-                if (rememberMe && !autoLogin && !isAuto) {
-                    localStorage.setItem(SAVED_ID_KEY, loginId);
-                }
-
-                await loginStudent(student);
-            } else {
-                if (!isAuto) toast("존재하지 않는 사용자 ID입니다.");
+            if (!res.ok) {
+                if (!isAuto) toast.warning(result.error || '로그인에 실패했습니다.');
                 if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
+                setIsLoading(false);
+                setAutoLoggingIn(false);
+                return;
+            }
+
+            // Save auto-login credentials
+            if (autoLogin || isAuto) {
+                localStorage.setItem(AUTO_LOGIN_KEY, JSON.stringify({ id: loginId, pw }));
+            }
+            // Save remembered ID
+            if (rememberMe && !autoLogin && !isAuto) {
+                localStorage.setItem(SAVED_ID_KEY, loginId);
+            }
+
+            if (result.type === 'tenant_admin') {
+                await loginTenantAdmin(result.data);
+            } else if (result.type === 'student') {
+                await loginStudent(result.data);
+            } else {
+                if (!isAuto) toast('알 수 없는 사용자 유형입니다.');
             }
         } catch (error: any) {
             console.error(error);

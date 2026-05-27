@@ -82,28 +82,24 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
         }
         setSaving(true);
         try {
-            // Fetch tenant to verify current password
-            const tenants = await dbService.getTenants();
-            const tenant = tenants.find(t => t.id === tenantId);
-            if (!tenant) {
-                toast.error('학원 정보를 찾을 수 없습니다.');
+            const res = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userType: 'tenant_admin',
+                    tenantId,
+                    currentPassword: currentPw,
+                    newPassword: newPw,
+                }),
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                toast.error(result.error || '비밀번호 변경에 실패했습니다.');
                 return;
             }
-            // Check current password matches (main admin or any admin)
-            const allPasswords = [tenant.adminPassword, ...(tenant.admins?.map(a => a.password) || [])];
-            if (!allPasswords.includes(currentPw)) {
-                toast.error('현재 비밀번호가 일치하지 않습니다.');
-                return;
-            }
-            // Update the matching password
-            if (tenant.adminPassword === currentPw) {
-                await dbService.updateTenant(tenantId, { adminPassword: newPw } as any);
-            } else if (tenant.admins) {
-                const updatedAdmins = tenant.admins.map(a => 
-                    a.password === currentPw ? { ...a, password: newPw } : a
-                );
-                await dbService.updateTenant(tenantId, { admins: updatedAdmins } as any);
-            }
+
             toast.success('비밀번호가 변경되었습니다!');
             setShowPwChange(false);
             setCurrentPw('');

@@ -252,29 +252,32 @@ export function useStudentDashboard(): StudentDashboardData {
         if (!stored) return;
         const student = JSON.parse(stored);
 
-        // Verify current password from DB
-        const students = await dbService.getStudents();
-        const serverStudent = students.find(s => s.id === student.id);
+        try {
+            const res = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userType: 'student',
+                    userId: student.id,
+                    currentPassword: passwordForm.current,
+                    newPassword: passwordForm.new,
+                }),
+            });
 
-        if (!serverStudent) {
-            toast.error('학생 정보를 찾을 수 없습니다.');
-            return;
-        }
+            const result = await res.json();
 
-        const currentDbPass = (serverStudent as any).password || '123456';
-        if (currentDbPass !== passwordForm.current) {
-            toast.error('현재 비밀번호가 틀렸습니다.');
-            return;
-        }
+            if (!res.ok) {
+                toast.error(result.error || '비밀번호 변경에 실패했습니다.');
+                return;
+            }
 
-        // Update Password
-        if (serverStudent.docId) {
-            await dbService.updateStudent(serverStudent.docId, { password: passwordForm.new });
             toast.success('비밀번호가 변경되었습니다. 다시 로그인해주세요.');
             localStorage.removeItem('CHEONGHAN_STUDENT');
+            localStorage.removeItem('CHEONGHAN_AUTO_LOGIN');
             window.location.href = '/';
-        } else {
-            toast.error('오류: 학생 DB 인덱스를 찾을 수 없습니다.');
+        } catch (e) {
+            console.error('Password change failed:', e);
+            toast.error('비밀번호 변경 중 오류가 발생했습니다.');
         }
     };
 

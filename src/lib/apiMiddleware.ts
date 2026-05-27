@@ -214,19 +214,13 @@ export interface ApiGuardOptions {
     skipOriginCheck?: boolean;
     /** Rate limit (분당 요청 수). 기본값: 60 */
     rateLimit?: number;
+    /** Firebase Auth 토큰 검증 여부. 기본값: false */
+    requireAuth?: boolean;
 }
 
 /**
- * API 라우트에서 호출하는 통합 보안 검사.
- * 
- * @example
- * ```ts
- * export async function POST(req: Request) {
- *     const blocked = apiGuard(req);
- *     if (blocked) return blocked;
- *     // ... 기존 로직
- * }
- * ```
+ * API 라우트에서 호출하는 통합 보안 검사 (sync 버전).
+ * Firebase Auth 검증이 필요 없는 라우트에서 사용합니다.
  * 
  * @returns null이면 통과, NextResponse이면 차단 응답을 반환해야 함
  */
@@ -248,47 +242,104 @@ export function apiGuard(req: Request, options?: ApiGuardOptions): NextResponse 
     return null; // 모든 검사 통과
 }
 
+/**
+ * API 라우트에서 호출하는 통합 보안 검사 (async 버전).
+ * Firebase Auth 토큰 검증을 포함합니다.
+ * 
+ * @example
+ * ```ts
+ * export async function POST(req: Request) {
+ *     const blocked = await apiGuardAsync(req, { requireAuth: true });
+ *     if (blocked) return blocked;
+ *     // ... 기존 로직
+ * }
+ * ```
+ */
+export async function apiGuardAsync(req: Request, options?: ApiGuardOptions): Promise<NextResponse | null> {
+    // 1-3. Sync checks
+    const syncBlock = apiGuard(req, options);
+    if (syncBlock) return syncBlock;
+
+    // 4. Firebase Auth Token Verification (production only)
+    if (options?.requireAuth) {
+        const authHeader = req.headers.get('authorization');
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            if (IS_PRODUCTION) {
+                console.warn('[API Auth] Missing auth token');
+                return NextResponse.json(
+                    { error: 'Authentication required' },
+                    { status: 401 }
+                );
+            }
+            // Dev: warn only
+            console.warn('[API Auth] Missing auth token (dev mode — allowing)');
+            return null;
+        }
+
+        try {
+            const { verifyAuthToken } = await import('@/lib/apiAuth');
+            const decoded = await verifyAuthToken(req);
+            if (!decoded && IS_PRODUCTION) {
+                return NextResponse.json(
+                    { error: 'Invalid authentication token' },
+                    { status: 401 }
+                );
+            }
+        } catch (e) {
+            console.warn('[API Auth] Token verification failed:', e);
+            if (IS_PRODUCTION) {
+                return NextResponse.json(
+                    { error: 'Authentication failed' },
+                    { status: 401 }
+                );
+            }
+        }
+    }
+
+    return null;
+}
+
 // ═══════════════════════════════════════
-// Warn-Only 입력 검증 (Zod)
+// Blocking 입력 검증 (Zod)
 // ═══════════════════════════════════════
 
 import type { ZodSchema, ZodError } from 'zod';
 
 /**
- * 요청 body를 Zod 스키마로 검증합니다 (warn-only).
+ * 요청 body를 Zod 스키마로 검증합니다 (blocking).
  * 
- * 검증 실패 시에도 **요청을 차단하지 않습니다.**
- * 서버 로그에 경고만 출력하여 모니터링에 활용합니다.
+ * 검증 실패 시 에러를 throw합니다.
+ * 각 API 라우트의 try-catch에서 createErrorResponse로 처리됩니다.
  * 
  * @param schema - Zod 스키마
  * @param data - 검증할 데이터 (req.json() 결과)
  * @param routeName - 로그에 표시할 API 라우트 이름
- * @returns 검증 결과 (true = 통과, false = 실패하지만 계속 진행)
+ * @throws Error if validation fails
  * 
  * @example
  * ```ts
  * const body = await req.json();
  * validateRequest(gradeRequestSchema, body, 'grade');
- * const { assignments } = body; // 기존 로직 그대로
+ * // 여기에 도달하면 body는 스키마에 맞음이 보장됨
  * ```
  */
 export function validateRequest<T>(
     schema: ZodSchema<T>,
     data: unknown,
     routeName: string
-): boolean {
+): void {
     try {
         schema.parse(data);
-        return true;
     } catch (err) {
         const zodError = err as ZodError;
         const issues = zodError.issues?.map(
-            (issue) => `  - ${issue.path.join('.')}: ${issue.message}`
-        ).join('\n') || 'Unknown validation error';
+            (issue) => `${issue.path.join('.')}: ${issue.message}`
+        ).join(', ') || 'Unknown validation error';
 
-        console.warn(
-            `[Schema Warn] /${routeName} — request body validation failed (non-blocking):\n${issues}`
-        );
-        return false;
+        const errorMsg = `[${routeName}] Invalid request: ${issues}`;
+        console.warn(`[Schema Block] ${errorMsg}`);
+        throw new Error(errorMsg);
     }
 }
+
