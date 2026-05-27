@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentAssignment } from '@/hooks/useStudentAssignment';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import DesktopAssignment from '@/components/student/DesktopAssignment';
 import MobileAssignment from '@/components/student/MobileAssignment';
 import { SkeletonFullPage } from '@/components/common/Skeleton';
@@ -15,18 +16,7 @@ export default function StudentAssignmentPage() {
     const { user, loading } = useAuth();
     const assignmentId = params.id as string;
 
-    const [isMobile, setIsMobile] = useState(false);
-
-    // Check if mobile on mount
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 1024);
-        };
-
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+    const isMobile = useMediaQuery('(max-width: 1023px)');
 
     // Redirect if not student (unless preview mode)
     useEffect(() => {
@@ -52,6 +42,11 @@ export default function StudentAssignmentPage() {
     }
 
     if (data.loading && !data.assignment) {
+        return <SkeletonFullPage message="과제를 불러오는 중..." />;
+    }
+
+    // Wait for client-side hydration to determine screen size
+    if (isMobile === undefined) {
         return <SkeletonFullPage message="과제를 불러오는 중..." />;
     }
 

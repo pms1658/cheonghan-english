@@ -128,7 +128,7 @@ const DDayWidget = () => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
                         <p className="text-blue-200 font-black tracking-widest uppercase text-base md:text-lg mb-2">{dday.title}</p>
-                        <div className="text-6xl md:text-7xl font-black text-white tracking-tighter flex items-center justify-center">
+                        <div className="text-6xl md:text-7xl font-black text-white tracking-tighter flex items-center justify-center tabular-nums">
                             <span className="text-blue-300">D</span>
                             {calculateDday(dday.date)}
                         </div>
@@ -213,11 +213,11 @@ export default function NewDashboardPage() {
             {/* 1. Guide */}
             <Link
                 href="/guide"
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28"
+                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-blue-600 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">GUIDE</h3>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">GUIDE</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">구조독해 학습 가이드</p>
                 </div>
             </Link>
@@ -225,11 +225,11 @@ export default function NewDashboardPage() {
             {/* 2. History */}
             <Link
                 href="/history"
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-indigo-200 dark:hover:border-indigo-500/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28"
+                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-indigo-200 dark:hover:border-indigo-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">HISTORY</h3>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">HISTORY</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">지난 학습 기록</p>
                 </div>
             </Link>
@@ -237,11 +237,11 @@ export default function NewDashboardPage() {
             {/* 3. Notice Board */}
             <Link
                 href="/board"
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-rose-200 dark:hover:border-rose-500/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28"
+                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-rose-200 dark:hover:border-rose-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-rose-500 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">NOTICE</h3>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">NOTICE</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">공지사항 확인</p>
                 </div>
             </Link>
@@ -249,11 +249,11 @@ export default function NewDashboardPage() {
             {/* 4. Feedback */}
             <Link
                 href={isAdmin ? "/admin/feedback" : "/feedback"}
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-emerald-200 dark:hover:border-emerald-500/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28"
+                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-emerald-200 dark:hover:border-emerald-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-emerald-600 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">FEEDBACK</h3>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">FEEDBACK</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">건의사항 보내기</p>
                 </div>
             </Link>
