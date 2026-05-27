@@ -176,7 +176,7 @@ export const AssignmentItem = ({
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
                             </div>
                         )}
-                        <span className="text-sm sm:text-[15px] tracking-tight font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" style={{ fontWeight: 700 }}>
+                        <span className="text-sm sm:text-[15px] tracking-tight font-black text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" style={{ fontWeight: 900 }}>
                             {assignment.title}
                         </span>
 

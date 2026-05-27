@@ -217,7 +217,7 @@ export default function NewDashboardPage() {
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-blue-600 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">GUIDE</h3>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">GUIDE</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">구조독해 학습 가이드</p>
                 </div>
             </Link>
@@ -229,7 +229,7 @@ export default function NewDashboardPage() {
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">HISTORY</h3>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">HISTORY</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">지난 학습 기록</p>
                 </div>
             </Link>
@@ -241,7 +241,7 @@ export default function NewDashboardPage() {
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-rose-500 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">NOTICE</h3>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">NOTICE</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">공지사항 확인</p>
                 </div>
             </Link>
@@ -253,7 +253,7 @@ export default function NewDashboardPage() {
             >
                 <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-emerald-600 transition-all duration-300 group-hover:w-full"></div>
                 <div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tighter group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">FEEDBACK</h3>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">FEEDBACK</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">건의사항 보내기</p>
                 </div>
             </Link>
