@@ -4,6 +4,7 @@ import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@
 import { generateVariantRequestSchema } from '@/schemas/api';
 import { getVariantPrompt, getBestTypesPrompt, getPassageRewritePrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, sanitizeSummaryBlanks } from '@/utils/textUtils';
+import { extractJSONWithBlockFallback as extractJSON } from '@/lib/aiUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
@@ -28,142 +29,7 @@ const safetySettings = [
     },
 ];
 
-// Robust parser: handles Gemini's common output quirks
-function extractJSON(text: string) {
-    if (!text || text.trim().length === 0) {
-        throw new Error('Empty AI response');
-    }
 
-    // 1. Strip markdown code fences if present
-    let sanitized = text.trim();
-    const markdownMatch = sanitized.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (markdownMatch) {
-        sanitized = markdownMatch[1].trim();
-    }
-
-    // 2. Try direct JSON parse first
-    try {
-        return JSON.parse(sanitized);
-    } catch (e) {
-        // continue - likely has unescaped newlines in string values
-    }
-
-    // 3. Extract JSON object and fix unescaped newlines ONLY inside string values
-    //    Gemini returns prettyprinted JSON where structural newlines are fine,
-    //    but string values contain literal newlines that violate JSON spec.
-    const firstBrace = sanitized.indexOf('{');
-    const lastBrace = sanitized.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        const jsonSubstring = sanitized.substring(firstBrace, lastBrace + 1);
-        
-        // Character-by-character walker: only escape newlines inside JSON strings
-        const ESC_N = '\\' + 'n';  // produces literal backslash + n (two chars)
-        const ESC_T = '\\' + 't';  // produces literal backslash + t (two chars)
-        let fixed = '';
-        let inString = false;
-        let i = 0;
-        while (i < jsonSubstring.length) {
-            const ch = jsonSubstring[i];
-            
-            // Handle already-escaped sequences inside strings (e.g. \n, \", \\)
-            if (inString && ch === '\\') {
-                fixed += ch;
-                if (i + 1 < jsonSubstring.length) {
-                    fixed += jsonSubstring[i + 1];
-                    i += 2;
-                } else {
-                    i++;
-                }
-                continue;
-            }
-            
-            // Toggle string state on unescaped double quotes
-            if (ch === '"') {
-                inString = !inString;
-                fixed += ch;
-                i++;
-                continue;
-            }
-            
-            // Inside a string: escape problematic control characters
-            if (inString) {
-                const code = ch.charCodeAt(0);
-                if (code === 0x0A) {         // \n (newline)
-                    fixed += ESC_N;
-                    i++;
-                    continue;
-                }
-                if (code === 0x0D) {         // \r (carriage return)
-                    i++;
-                    continue;
-                }
-                if (code === 0x09) {         // \t (tab)
-                    fixed += ESC_T;
-                    i++;
-                    continue;
-                }
-            }
-            
-            fixed += ch;
-            i++;
-        }
-        
-        try {
-            return JSON.parse(fixed);
-        } catch (e) {
-            // Try eval-style as absolute last resort for JSON objects
-            try {
-                const fn = new Function('return ' + jsonSubstring);
-                return fn();
-            } catch (e2) {
-                console.error('[extractJSON] Parse failed after fix:', (e as any).message);
-            }
-        }
-    }
-
-    // 4. Try Block Format parsing ([[QUESTION]] ... [[CHOICES]] ... [[ANSWER]] ... [[EXPLANATION]])
-    const upperText = text.toUpperCase();
-    if (upperText.includes('QUESTION') && (upperText.includes('CHOICES') || upperText.includes('ANSWER'))) {
-        const qTag = /\[?\[?QUESTION\]?\]?/i;
-        const cTag = /\[?\[?CHOICES\]?\]?/i;
-        const aTag = /\[?\[?ANSWER\]?\]?/i;
-        const eTag = /\[?\[?EXPLANATION\]?\]?/i;
-
-        const parts = text.split(qTag);
-        if (parts.length > 1) {
-            const contentAfterQ = parts[1];
-            const qAndCText = contentAfterQ.split(cTag);
-            const question = qAndCText[0].trim();
-
-            if (qAndCText.length > 1) {
-                const cAndAText = qAndCText[1].split(aTag);
-                const choicesRaw = cAndAText[0].trim().split('\n');
-
-                const choices = choicesRaw
-                    .map(c => c.replace(/^\d+[\.)\s]*/, '').trim())
-                    .filter(c => c.length > 0)
-                    .slice(0, 5);
-
-                if (cAndAText.length > 1) {
-                    const aAndEText = cAndAText[1].split(eTag);
-                    let answerVal = parseInt(aAndEText[0].trim().replace(/[^\d]/g, ''));
-                    if (isNaN(answerVal)) answerVal = 1;
-                    const correctAnswer = Math.max(0, answerVal - 1);
-                    const explanation = aAndEText.length > 1 ? aAndEText[1].trim() : "";
-
-                    return {
-                        question,
-                        choices: choices.length >= 5 ? choices.slice(0, 5) : [...choices, ...Array(5 - choices.length).fill('-')],
-                        correctAnswer,
-                        explanation
-                    };
-                }
-            }
-        }
-    }
-
-    throw new Error('Could not parse AI response: ' + text.substring(0, 200));
-}
 
 export async function POST(req: Request) {
     const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });

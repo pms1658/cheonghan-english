@@ -4,6 +4,7 @@ import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@
 import { generateFullSetRequestSchema } from '@/schemas/api';
 import { getWorkbookPrompt, getVariantPrompt, getAnalysisPrompt, getBestTypesPrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText } from '@/utils/textUtils';
+import { extractJSON } from '@/lib/aiUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -14,25 +15,6 @@ const safetySettings = [
     { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
-
-function extractJSON(text: string) {
-    let sanitized = text.trim();
-    const markdownMatch = sanitized.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (markdownMatch) sanitized = markdownMatch[1].trim();
-    try {
-        return JSON.parse(sanitized);
-    } catch {
-        // Simple fallback layer
-        try {
-            const firstBrace = sanitized.indexOf('{');
-            const lastBrace = sanitized.lastIndexOf('}');
-            if (firstBrace !== -1 && lastBrace !== -1) {
-                return JSON.parse(sanitized.substring(firstBrace, lastBrace + 1));
-            }
-        } catch { }
-        return null;
-    }
-}
 
 export async function POST(req: Request) {
     const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });

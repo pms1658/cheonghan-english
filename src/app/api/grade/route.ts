@@ -2,50 +2,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddleware';
 import { gradeRequestSchema } from '@/schemas/api';
+import { extractJSON, withRetry } from '@/lib/aiUtils';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
-// Robust JSON parser (handles AI response quirks)
-function extractJSON(text: string) {
-    if (!text || text.trim().length === 0) throw new Error('Empty AI response');
-
-    let sanitized = text.trim();
-    const markdownMatch = sanitized.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (markdownMatch) sanitized = markdownMatch[1].trim();
-
-    try { return JSON.parse(sanitized); } catch (e) { /* continue */ }
-
-    // Try extracting JSON from surrounding text
-    const firstBrace = sanitized.indexOf('{');
-    const lastBrace = sanitized.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        const jsonSubstring = sanitized.substring(firstBrace, lastBrace + 1);
-        // Fix unescaped newlines/tabs inside JSON strings
-        let fixed = '';
-        let inString = false;
-        let i = 0;
-        while (i < jsonSubstring.length) {
-            const ch = jsonSubstring[i];
-            if (inString && ch === '\\') {
-                fixed += ch;
-                if (i + 1 < jsonSubstring.length) { fixed += jsonSubstring[i + 1]; i += 2; } else { i++; }
-                continue;
-            }
-            if (ch === '"') { inString = !inString; fixed += ch; i++; continue; }
-            if (inString) {
-                const code = ch.charCodeAt(0);
-                if (code === 0x0A) { fixed += '\\n'; i++; continue; }
-                if (code === 0x0D) { i++; continue; }
-                if (code === 0x09) { fixed += '\\t'; i++; continue; }
-            }
-            fixed += ch;
-            i++;
-        }
-        try { return JSON.parse(fixed); } catch (e) { /* fall through */ }
-    }
-
-    throw new Error('Could not parse AI response: ' + text.substring(0, 200));
-}
 
 const GRADE_PROMPT = `
 You are an expert English Syntax Analyst.
@@ -220,21 +179,14 @@ export async function POST(req: Request) {
       try {
         console.log(`[Grading] Item ${index} - Generating content...`);
         
-        // 최대 2회 시도 (1회 실패 시 재시도)
-        let text = '';
-        for (let attempt = 0; attempt < 2; attempt++) {
-          try {
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            text = response.text();
-            if (text && text.trim().length > 0) break;
-            console.warn(`[Grading] Item ${index} - Empty response, retry ${attempt + 1}`);
-          } catch (apiErr: any) {
-            console.warn(`[Grading] Item ${index} - API error (attempt ${attempt + 1}):`, apiErr.message);
-            if (attempt === 1) throw apiErr;
-            await new Promise(r => setTimeout(r, 1000)); // 1초 대기 후 재시도
-          }
-        }
+        // 최대 2회 재시도 (총 3회 시도)
+        const text = await withRetry(async () => {
+          const result = await model.generateContent(prompt);
+          const response = await result.response;
+          const t = response.text();
+          if (!t || t.trim().length === 0) throw new Error('Empty response');
+          return t;
+        }, { maxRetries: 2, label: `Grading Item ${index}` });
         
         console.log(`[Grading] Item ${index} - Response received (Length: ${text.length})`);
 

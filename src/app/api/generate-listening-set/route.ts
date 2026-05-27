@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateListeningSetRequestSchema } from '@/schemas/api';
+import { extractJSON } from '@/lib/aiUtils';
 
 // Allow up to 120 seconds for 7+ batch Gemini calls
 export const maxDuration = 120;
@@ -24,46 +25,6 @@ const safetySettings = [
     { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
-
-// ── Robust JSON Parser ──
-function extractJSON(text: string): any {
-    if (!text || text.trim().length === 0) throw new Error('Empty AI response');
-
-    let sanitized = text.trim();
-    const mdMatch = sanitized.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (mdMatch) sanitized = mdMatch[1].trim();
-
-    try { return JSON.parse(sanitized); } catch { /* continue */ }
-
-    // Fix unescaped newlines inside JSON strings
-    const firstBrace = sanitized.indexOf('[') !== -1 && (sanitized.indexOf('{') === -1 || sanitized.indexOf('[') < sanitized.indexOf('{'))
-        ? sanitized.indexOf('[') : sanitized.indexOf('{');
-    const lastBrace = sanitized.lastIndexOf(']') !== -1 && (sanitized.lastIndexOf('}') === -1 || sanitized.lastIndexOf(']') > sanitized.lastIndexOf('}'))
-        ? sanitized.lastIndexOf(']') : sanitized.lastIndexOf('}');
-
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        const jsonSub = sanitized.substring(firstBrace, lastBrace + 1);
-        let fixed = '';
-        let inStr = false;
-        let i = 0;
-        while (i < jsonSub.length) {
-            const ch = jsonSub[i];
-            if (inStr && ch === '\\') { fixed += ch + (jsonSub[i + 1] || ''); i += 2; continue; }
-            if (ch === '"') { inStr = !inStr; fixed += ch; i++; continue; }
-            if (inStr) {
-                const code = ch.charCodeAt(0);
-                if (code === 0x0A) { fixed += '\\n'; i++; continue; }
-                if (code === 0x0D) { i++; continue; }
-                if (code === 0x09) { fixed += '\\t'; i++; continue; }
-            }
-            fixed += ch;
-            i++;
-        }
-        try { return JSON.parse(fixed); } catch { /* last resort */ }
-        try { return new Function('return ' + jsonSub)(); } catch { /* fail */ }
-    }
-    throw new Error('Could not parse AI response: ' + text.substring(0, 300));
-}
 
 // ── Single batch generator with retry ──
 async function generateBatch(
