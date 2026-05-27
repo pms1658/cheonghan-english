@@ -62,21 +62,20 @@ html {
 }
 
 /*
- * Global Dark Mode Overrides — SAFE VERSION
- * Flips common light backgrounds to dark equivalents.
- * Text colors: only inverted INSIDE containers that got flipped.
- * Component-specific colors handled with dark: Tailwind variants.
+ * Global Dark Mode Overrides — Clean Version (no !important)
+ * Specificity: .dark .utility-class (0,2,0) naturally beats .utility-class (0,1,0).
+ * Component-level dark: Tailwind variants can override these when needed.
  */
 
 /* === BACKGROUND OVERRIDES === */
 .dark .bg-white {
-  background-color: #0f172a !important;
+  background-color: #0f172a;
 }
 .dark .bg-slate-50 {
-  background-color: #0c1222 !important;
+  background-color: #0c1222;
 }
 .dark .bg-slate-100 {
-  background-color: #0f172a !important;
+  background-color: #0f172a;
 }
 
 /* === SCOPED TEXT INVERSION === */
@@ -84,153 +83,133 @@ html {
 .dark .bg-white .text-slate-900,
 .dark .bg-slate-50 .text-slate-900,
 .dark .bg-slate-100 .text-slate-900 {
-  color: #f1f5f9 !important;
+  color: #f1f5f9;
 }
 .dark .bg-white .text-slate-800,
 .dark .bg-slate-50 .text-slate-800,
 .dark .bg-slate-100 .text-slate-800 {
-  color: #e2e8f0 !important;
+  color: #e2e8f0;
 }
 .dark .bg-white .text-slate-700,
 .dark .bg-slate-50 .text-slate-700,
 .dark .bg-slate-100 .text-slate-700 {
-  color: #cbd5e1 !important;
+  color: #cbd5e1;
 }
 .dark .bg-white .text-slate-600,
 .dark .bg-slate-50 .text-slate-600,
 .dark .bg-slate-100 .text-slate-600 {
-  color: #94a3b8 !important;
+  color: #94a3b8;
 }
 .dark .bg-white .text-slate-500,
 .dark .bg-slate-50 .text-slate-500,
 .dark .bg-slate-100 .text-slate-500 {
-  color: #94a3b8 !important;
+  color: #94a3b8;
 }
 /* text-black is always wrong in dark mode */
 .dark .text-black {
-  color: #f1f5f9 !important;
+  color: #f1f5f9;
 }
 
 /* === BORDER OVERRIDES === */
 .dark .border-slate-200 {
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.08);
 }
 .dark .border-slate-100 {
-  border-color: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.05);
 }
 .dark .border-slate-300 {
-  border-color: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.12);
 }
 
 /* === HOVER STATE OVERRIDES === */
 .dark .hover\:bg-slate-50:hover {
-  background-color: rgba(255,255,255,0.05) !important;
+  background-color: rgba(255,255,255,0.05);
 }
 .dark .hover\:bg-slate-100:hover {
-  background-color: rgba(255,255,255,0.08) !important;
+  background-color: rgba(255,255,255,0.08);
 }
 .dark .hover\:bg-white:hover {
-  background-color: #1e293b !important;
+  background-color: #1e293b;
 }
 
 /* === SELECTION (DRAG) OVERRIDES === */
 /* Fix: 다크모드에서 텍스트 드래그 시 글씨 안보이는 문제 */
 .dark ::selection {
-  background-color: rgba(59, 130, 246, 0.4) !important;
-  color: #f1f5f9 !important;
+  background-color: rgba(59, 130, 246, 0.4);
+  color: #f1f5f9;
 }
 .dark ::-moz-selection {
-  background-color: rgba(59, 130, 246, 0.4) !important;
-  color: #f1f5f9 !important;
+  background-color: rgba(59, 130, 246, 0.4);
+  color: #f1f5f9;
 }
 
 /* === INPUT OVERRIDES (global — inputs are always on surfaces) === */
 .dark input,
 .dark textarea,
 .dark select {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-color: rgba(255,255,255,0.1);
 }
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #64748b !important;
+  color: #64748b;
 }
 
 /* === MISC === */
 .dark .border-dashed {
-  border-color: rgba(255,255,255,0.15) !important;
+  border-color: rgba(255,255,255,0.15);
 }
 .dark .shadow-sm,
 .dark .shadow-md,
 .dark .shadow-lg,
 .dark .shadow-xl {
-  --tw-shadow-color: rgba(0,0,0,0.3) !important;
+  --tw-shadow-color: rgba(0,0,0,0.3);
 }
 .dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.08);
 }
 
 /* === SEMANTIC BG OVERRIDES (result cards, status badges) === */
-.dark .bg-teal-50 {
-  background-color: rgba(20, 184, 166, 0.1) !important;
-}
-.dark .bg-cyan-50 {
-  background-color: rgba(6, 182, 212, 0.1) !important;
-}
-.dark .bg-emerald-50 {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-}
-.dark .bg-red-50 {
-  background-color: rgba(239, 68, 68, 0.1) !important;
-}
-.dark .bg-blue-50 {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-.dark .bg-indigo-50 {
-  background-color: rgba(99, 102, 241, 0.1) !important;
-}
-.dark .bg-amber-50 {
-  background-color: rgba(245, 158, 11, 0.1) !important;
-}
-.dark .bg-green-50 {
-  background-color: rgba(34, 197, 94, 0.1) !important;
-}
-.dark .bg-purple-50 {
-  background-color: rgba(168, 85, 247, 0.1) !important;
-}
-.dark .bg-sky-50 {
-  background-color: rgba(14, 165, 233, 0.1) !important;
-}
+.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.1); }
+.dark .bg-cyan-50 { background-color: rgba(6, 182, 212, 0.1); }
+.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1); }
+.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1); }
+.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.1); }
+.dark .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.1); }
+.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.1); }
+.dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1); }
+.dark .bg-purple-50 { background-color: rgba(168, 85, 247, 0.1); }
+.dark .bg-sky-50 { background-color: rgba(14, 165, 233, 0.1); }
 
 /* Semantic text colors inside dark semantic backgrounds */
-.dark .text-teal-700 { color: #5eead4 !important; }
-.dark .text-teal-600 { color: #2dd4bf !important; }
-.dark .text-cyan-700 { color: #67e8f9 !important; }
-.dark .text-cyan-600 { color: #22d3ee !important; }
-.dark .text-emerald-800 { color: #6ee7b7 !important; }
-.dark .text-emerald-600 { color: #34d399 !important; }
-.dark .text-red-800 { color: #fca5a5 !important; }
-.dark .text-red-600 { color: #f87171 !important; }
+.dark .text-teal-700 { color: #5eead4; }
+.dark .text-teal-600 { color: #2dd4bf; }
+.dark .text-cyan-700 { color: #67e8f9; }
+.dark .text-cyan-600 { color: #22d3ee; }
+.dark .text-emerald-800 { color: #6ee7b7; }
+.dark .text-emerald-600 { color: #34d399; }
+.dark .text-red-800 { color: #fca5a5; }
+.dark .text-red-600 { color: #f87171; }
 
 /* Semantic border colors */
-.dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.2) !important; }
-.dark .border-red-200 { border-color: rgba(239, 68, 68, 0.2) !important; }
+.dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.2); }
+.dark .border-red-200 { border-color: rgba(239, 68, 68, 0.2); }
 
 /* === DETAILS/SUMMARY (result 대본보기 등) === */
 .dark details summary {
-  color: #94a3b8 !important;
+  color: #94a3b8;
 }
 .dark details summary:hover {
-  color: #e2e8f0 !important;
+  color: #e2e8f0;
 }
 
 /* === RING/OUTLINE OVERRIDES === */
 .dark .ring-slate-200 {
-  --tw-ring-color: rgba(255,255,255,0.1) !important;
+  --tw-ring-color: rgba(255,255,255,0.1);
 }
 .dark .outline-slate-200 {
-  outline-color: rgba(255,255,255,0.1) !important;
+  outline-color: rgba(255,255,255,0.1);
 }
 
 /* Hide scrollbar visually (sidebar etc.) while keeping scroll */
