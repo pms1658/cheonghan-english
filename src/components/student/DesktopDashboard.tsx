@@ -197,7 +197,7 @@ export default function DesktopDashboard({
                             const incompleteCount = targetAssignments.filter(a => a.status !== 'completed').length;
                             if (incompleteCount > 0) {
                                 return (
-                                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow">
+                                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex items-start gap-4 hover-lift">
                                         <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
                                             🔥
                                         </div>
@@ -219,7 +219,7 @@ export default function DesktopDashboard({
                                 );
                             } else {
                                 return (
-                                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-start gap-4">
+                                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex items-start gap-4 hover-lift">
                                         <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
                                             🎉
                                         </div>
@@ -252,7 +252,7 @@ export default function DesktopDashboard({
                                                     setViewMode('dashboard');
                                                     setFilter('all');
                                                 }}
-                                                className="p-5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors group"
+                                                className="p-5 flex items-center justify-between hover:bg-slate-50/50 cursor-pointer transition-all group hover-lift"
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
@@ -298,7 +298,7 @@ export default function DesktopDashboard({
                                     {/* Header */}
                                     <div className="flex items-center gap-3 mb-6">
                                         <span className="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full shadow-lg shadow-blue-500/40"></span>
-                                        <h3 className="font-extrabold text-slate-800 text-xl tracking-tight">
+                                        <h3 className="font-bold text-slate-800 text-xl tracking-tight">
                                             {selectedClassId ? `${myClasses.find(c => c.id === selectedClassId)?.name || '학급'} 과제` : '전체 과제 목록'}
                                             <span className="text-sm font-normal text-slate-400 ml-2">
                                                 ({filteredAssignments.filter(a => !selectedClassId || (a.classIds || []).includes(selectedClassId) || a.classId === selectedClassId).length})
@@ -317,7 +317,7 @@ export default function DesktopDashboard({
                                                     <React.Fragment key={assignment.id}>
                                                     <div
                                                         style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
-                                                        className={`relative rounded-xl border transition-all duration-300 overflow-hidden group hover:shadow-premium animate-premium-fade-in-up opacity-0 backdrop-blur-md
+                                                        className={`relative rounded-xl border transition-all duration-300 overflow-hidden group hover-lift animate-premium-fade-in-up opacity-0 backdrop-blur-md
                                         ${assignment.status === 'completed'
                                                                 ? 'bg-white/60 border-slate-200/60'
                                                                 : 'bg-white/80 border-slate-200/60 hover:border-blue-300 hover:bg-white'
@@ -520,12 +520,12 @@ export default function DesktopDashboard({
                                         {/* Empty State */}
                                         {
                                             filteredAssignments.length === 0 && (
-                                                <div className="text-center py-20 bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-slate-300/50">
-                                                    <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-white rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 shadow-sm">
-                                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                <div className="text-center py-24 rounded-2xl">
+                                                    <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-slate-300">
+                                                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                                     </div>
-                                                    <h3 className="text-lg font-bold text-slate-600">해당하는 과제가 없습니다</h3>
-                                                    <p className="text-slate-400 text-sm mt-1">다른 필터를 선택해보세요.</p>
+                                                    <h3 className="text-lg font-bold text-slate-500 mb-2">해당하는 과제가 없습니다</h3>
+                                                    <p className="text-slate-400 text-sm">다른 필터를 선택해보세요.</p>
                                                 </div>
                                             )
                                         }
@@ -575,11 +575,11 @@ export default function DesktopDashboard({
                                         </h3>
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             <div className="p-4 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl border border-blue-100/50 text-center">
-                                                <div className="text-2xl font-bold text-blue-600 mb-1 drop-shadow-sm">{assignments.filter(a => a.status === 'completed').length}</div>
+                                                <div className="text-2xl font-bold text-blue-600 mb-1 drop-shadow-sm tabular-nums">{assignments.filter(a => a.status === 'completed').length}</div>
                                                 <div className="text-xs font-bold text-blue-400 uppercase tracking-wide">Completed</div>
                                             </div>
                                             <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 text-center">
-                                                <div className="text-2xl font-bold text-slate-600 mb-1">{assignments.length}</div>
+                                                <div className="text-2xl font-bold text-slate-600 mb-1 tabular-nums">{assignments.length}</div>
                                                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">Total</div>
                                             </div>
                                         </div>
@@ -587,7 +587,7 @@ export default function DesktopDashboard({
                                         <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100">
                                             <div className="flex justify-between items-end mb-2">
                                                 <span className="text-xs font-bold text-slate-500 uppercase">Progress</span>
-                                                <span className="text-xl font-bold text-slate-700">
+                                                <span className="text-xl font-bold text-slate-700 tabular-nums">
                                                     {assignments.length ? Math.round((assignments.filter(a => a.status === 'completed').length / assignments.length) * 100) : 0}%
                                                 </span>
                                             </div>
