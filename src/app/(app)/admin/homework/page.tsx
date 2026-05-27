@@ -310,12 +310,12 @@ function AdminHomeworkInner() {
 
     // ─── RENDER ───
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto pb-24 lg:pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-full pb-24 lg:pb-12">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
+                className="mb-12"
             >
                 <div className="flex items-center gap-3 mb-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -326,7 +326,7 @@ function AdminHomeworkInner() {
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0A0E27] dark:text-white tracking-tight leading-none">
                             과제 관리
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium">
+                        <p className="text-lg text-slate-500 dark:text-slate-400 mt-3 font-medium">
                             학생별 과제 현황을 확인하고 새로운 과제를 부과하세요.
                         </p>
                     </div>
