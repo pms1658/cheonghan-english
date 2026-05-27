@@ -23,7 +23,10 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
     // For Phase 1 scaffold, we use static/placeholder data.
 
     return (
-        <aside className={`
+        <aside
+            role="navigation"
+            aria-label="사이드바 메뉴"
+            className={`
             fixed lg:sticky top-0 inset-y-0 left-0 z-[9999] lg:z-50
             w-[280px] lg:w-[220px] xl:w-[280px] h-[100dvh] bg-[#0A0E27] text-slate-300 flex flex-col
             transform transition-transform duration-300 ease-in-out

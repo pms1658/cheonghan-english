@@ -51,7 +51,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 )}
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0">
+                <main role="main" aria-label="페이지 콘텐츠" className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0">
                     {children}
                 </main>
 

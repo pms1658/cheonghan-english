@@ -20,7 +20,8 @@ export default function MobileBottomNav() {
             {/* 1. Home (Dashboard) */}
             <Link
                 href="/dashboard"
-                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-95 ${isActive('/dashboard') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
+                aria-label="홈 대시보드"
+                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none ${isActive('/dashboard') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
                     }`}
             >
                 <svg className="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
@@ -30,7 +31,8 @@ export default function MobileBottomNav() {
             {/* 2. Record */}
             <Link
                 href="/history"
-                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-95 ${isActive('/history') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
+                aria-label="학습 기록"
+                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none ${isActive('/history') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
                     }`}
             >
                 <svg className="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -40,7 +42,8 @@ export default function MobileBottomNav() {
             {/* 2.5 Homework */}
             <Link
                 href={isAdmin ? "/admin/homework" : "/homework"}
-                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-95 ${(isActive('/homework') || isActive('/admin/homework')) ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
+                aria-label={isAdmin ? '과제 관리' : '내 과제'}
+                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none ${(isActive('/homework') || isActive('/admin/homework')) ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
                     }`}
             >
                 <svg className="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
@@ -51,7 +54,8 @@ export default function MobileBottomNav() {
             {/* 3. My Info */}
             <Link
                 href="/management"
-                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-95 ${isActive('/management') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
+                aria-label="내 정보 관리"
+                className={`flex flex-col items-center gap-1 md:gap-1.5 px-4 md:px-8 py-2 rounded-2xl transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none ${isActive('/management') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15' : 'text-slate-400 dark:text-slate-500'
                     }`}
             >
                 <svg className="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>

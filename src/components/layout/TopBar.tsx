@@ -128,7 +128,8 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
             <div className="flex items-center gap-4">
                 <button
                     onClick={onMenuClick}
-                    className="lg:hidden p-2 -ml-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    aria-label="메뉴 열기"
+                    className="lg:hidden p-2 -ml-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
@@ -296,7 +297,8 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
                     <button
                         onClick={handleLogout}
-                        className="p-2 rounded-full hover:bg-white/10 text-slate-300 hover:text-red-400 transition-colors"
+                        aria-label="로그아웃"
+                        className="p-2 rounded-full hover:bg-white/10 text-slate-300 hover:text-red-400 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none"
                         title="로그아웃"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
