@@ -249,11 +249,12 @@ export function useClassRoom() {
     const loadData = async () => {
         try {
             // 1. Fetch Class Info and Helpers
+            // Optimization: fetch submissions filtered by classId (Firestore server-side filter)
             const [classes, students, allAssignments, submissionsData] = await Promise.all([
                 dbService.getClasses(),
                 dbService.getStudents(),
                 dbService.getAssignments(),
-                dbService.getSubmissions()
+                dbService.getSubmissions(classId)  // ← classId filter: only fetch this class's submissions
             ]);
 
             setAllClasses(classes);
@@ -270,24 +271,31 @@ export function useClassRoom() {
             }
 
             // 2. Filter Assignments logic
-            const classStudentIds = students
-                .filter(s => (s.classIds || []).includes(classId))
-                .map(s => s.id);
-            const classStudentCount = classStudentIds.length;
+            const classStudentIds = new Set(
+                students
+                    .filter(s => (s.classIds || []).includes(classId))
+                    .map(s => s.id)
+            );
+            const classStudentCount = classStudentIds.size;
+
+            // Pre-index submissions by assignmentId for O(1) lookup
+            const submissionsByAssignment = new Map<string, any[]>();
+            for (const sub of submissionsData) {
+                const key = sub.assignmentId;
+                if (!submissionsByAssignment.has(key)) {
+                    submissionsByAssignment.set(key, []);
+                }
+                submissionsByAssignment.get(key)!.push(sub);
+            }
 
             const classAssignments = allAssignments
-                .filter(a => {
-                    // Strict Mode: Assignment MUST explicitly belong to this class.
-                    // Individual Assignment should have been saved with this class context.
-                    if ((a.classIds || []).includes(classId)) return true;
-                    // Legacy Support (Optional): If assignment has NO classIds, maybe we show it?
-                    // But for now, enforce strict context to solve "Bleed Over".
-                    return false;
-                })
+                .filter(a => (a.classIds || []).includes(classId))
                 .map(assignment => {
+                    // O(1) lookup instead of filtering entire submissions array
+                    const assignmentSubs = submissionsByAssignment.get(assignment.id) || [];
                     const submittedUniqueStudents = new Set(
-                        submissionsData
-                            .filter(s => s.assignmentId === assignment.id && classStudentIds.includes(s.studentId))
+                        assignmentSubs
+                            .filter(s => classStudentIds.has(s.studentId))
                             .map(s => s.studentId)
                     );
                     const submissionCount = submittedUniqueStudents.size;
@@ -302,22 +310,17 @@ export function useClassRoom() {
             // Initial Sort Application based on saved orders or default
             let sorted = [...classAssignments];
 
-            // Check if any have order field (indicating a custom sort was saved)
-            // We ignore if all are 0 or undefined, but handleSaveOrder assigns indices 0..N
             const hasCustomOrder = sorted.some(a => typeof a.order === 'number');
 
             if (hasCustomOrder) {
-                // sort by order, with createdAt as tiebreaker for unordered items
                 sorted.sort((a, b) => {
                     const oa = a.order ?? 9999;
                     const ob = b.order ?? 9999;
                     if (oa !== ob) return oa - ob;
-                    // Same order (both unordered) → sort by createdAt asc
                     return getTime(a.createdAt) - getTime(b.createdAt);
                 });
                 setSortMode('custom');
             } else {
-                // default to date asc (oldest at top, newest at bottom)
                 sorted.sort((a, b) => {
                     const ta = getTime(a.createdAt);
                     const tb = getTime(b.createdAt);
@@ -329,23 +332,30 @@ export function useClassRoom() {
 
             setAssignments(sorted);
 
-            // 3. Calculate Dashboard Statistics
+            // 3. Calculate Dashboard Statistics (optimized with pre-indexed Map)
             let approvalCount = 0;
             let guidanceCount = 0;
 
+            // Pre-index submissions by (assignmentId + studentId) for O(1) lookup
+            const subsByAssignmentStudent = new Map<string, any[]>();
+            for (const sub of submissionsData) {
+                const key = `${sub.assignmentId}__${sub.studentId}`;
+                if (!subsByAssignmentStudent.has(key)) {
+                    subsByAssignmentStudent.set(key, []);
+                }
+                subsByAssignmentStudent.get(key)!.push(sub);
+            }
+
+            const classStudentArray = students.filter(s => (s.classIds || []).includes(classId));
+
             classAssignments.forEach(ass => {
-                // Iterate all students in this class
-                const relevantStudents = students.filter(s => (s.classIds || []).includes(classId));
-
-                relevantStudents.forEach(std => {
-                    // Get submisisons for this student & assignment
-                    const stdSubs = submissionsData
-                        .filter(sub => sub.assignmentId === ass.id && sub.studentId === std.id);
-
-                    const latest = stdSubs.sort((a, b) => (a.attemptNumber || 0) - (b.attemptNumber || 0)).at(-1);
+                classStudentArray.forEach(std => {
+                    // O(1) lookup instead of filtering entire submissions array
+                    const stdSubs = subsByAssignmentStudent.get(`${ass.id}__${std.id}`) || [];
 
                     // Approval Needed: Selection Type AND status is 'pending_review'
                     if (ass.type === 'selection') {
+                        const latest = stdSubs.sort((a, b) => (a.attemptNumber || 0) - (b.attemptNumber || 0)).at(-1);
                         if (latest && latest.status === 'pending_review') {
                             approvalCount++;
                         }
