@@ -268,9 +268,9 @@ export default function NewDashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-8 px-2"
             >
-                <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2 transition-colors leading-tight overflow-visible">
+                <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2 transition-colors leading-tight overflow-visible font-bold-ios-fix">
                     {greeting}, <br className="md:hidden" />
-                    <span className="text-blue-700 dark:text-blue-400 font-black inline-block mt-1 md:mt-0 md:text-5xl md:align-baseline transition-colors">
+                    <span className="text-blue-700 dark:text-blue-400 font-black inline-block mt-1 md:mt-0 md:text-5xl md:align-baseline transition-colors font-bold-ios-fix">
                         {(user as any)?.role === 'admin'
                             ? getAdminDisplayName((user as any)?.email).replace('!', '')
                             : `${(user as any)?.name} 학생`

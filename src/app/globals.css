@@ -1,6 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* iOS에서 굵은 글씨가 가늘어 보이는 문제 수정 */
+/* antialiased가 -webkit-font-smoothing을 바꿔서 bold가 thin으로 보임 */
+@layer utilities {
+  .font-bold-ios-fix {
+    -webkit-font-smoothing: auto;
+    -moz-osx-font-smoothing: auto;
+  }
+}
 /* iOS 바운스 스크롤 차단 (App Router: #__next 없으므로 body에서 스크롤 처리) */
 html {
   height: 100%;
