@@ -36,6 +36,10 @@ export default function ResultHistoryModal({
     const [vocabDetailSub, setVocabDetailSub] = useState<Submission | null>(null);
     const [vocabWords, setVocabWords] = useState<any[]>([]);
     const [vocabConfig, setVocabConfig] = useState<any>(null);
+    const [transformDetailSub, setTransformDetailSub] = useState<Submission | null>(null);
+    const [transformProblems, setTransformProblems] = useState<any[]>([]);
+    const [subjectiveDetailSub, setSubjectiveDetailSub] = useState<Submission | null>(null);
+    const [subjectiveProblems, setSubjectiveProblems] = useState<any[]>([]);
 
     const loadData = async () => {
         const data = await dbService.getSubmissionHistory(studentId, assignmentId);
@@ -416,6 +420,190 @@ export default function ResultHistoryModal({
         );
     }
 
+    // Transform (Variant MCQ) Detail View Overlay
+    if (transformDetailSub && transformProblems.length > 0) {
+        const subDetails = (transformDetailSub as any).details || {};
+        const studentAnswers: number[] = subDetails.answers || transformDetailSub.answers || [];
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 dark:border-white/10 max-h-[90vh] flex flex-col">
+                    <div className="bg-amber-700 p-6 text-white flex justify-between items-center">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-lg font-bold">📋 변형문제 결과</h3>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${transformDetailSub.score === 100 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                                    {transformDetailSub.attempt}차 · {transformDetailSub.score}점
+                                </span>
+                            </div>
+                            <p className="text-xs text-amber-200">{assignmentTitle}</p>
+                        </div>
+                        <button onClick={() => { setTransformDetailSub(null); setTransformProblems([]); }} className="text-amber-300 hover:text-white transition-colors">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-white/10 flex items-center gap-4">
+                        <span className="text-xs font-bold text-emerald-600">✅ 정답 {transformProblems.filter((p, i) => studentAnswers[i] === p.correctAnswer).length}개</span>
+                        <span className="text-xs font-bold text-red-500">❌ 오답 {transformProblems.filter((p, i) => studentAnswers[i] !== p.correctAnswer).length}개</span>
+                        <span className="text-xs text-slate-400 ml-auto">총 {transformProblems.length}문제</span>
+                    </div>
+
+                    <div className="p-4 overflow-y-auto flex-1 space-y-3">
+                        {transformProblems.map((prob: any, idx: number) => {
+                            const isCorrect = studentAnswers[idx] === prob.correctAnswer;
+                            const studentPick = studentAnswers[idx];
+                            return (
+                                <div key={idx} className={`p-4 rounded-xl border-l-4 bg-slate-50 dark:bg-slate-800 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>{idx + 1}</span>
+                                            <span className="text-[10px] font-semibold text-slate-400 uppercase">{prob.type}</span>
+                                        </div>
+                                        <span className={`text-xs font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>{isCorrect ? '정답' : '오답'}</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-1.5 mb-2">
+                                        {(prob.choices || []).map((choice: string, cIdx: number) => {
+                                            const isAnswer = cIdx === prob.correctAnswer;
+                                            const isStudentPick = cIdx === studentPick;
+                                            return (
+                                                <div key={cIdx} className={`px-3 py-2 rounded-lg text-[12px] font-medium border ${
+                                                    isAnswer ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-300' :
+                                                    isStudentPick ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-300' :
+                                                    'bg-transparent text-slate-400 border-transparent'
+                                                }`}>
+                                                    <span className="opacity-60 mr-2">{cIdx + 1}.</span>
+                                                    {choice}
+                                                    {isAnswer && <span className="ml-1 text-emerald-500">✓</span>}
+                                                    {isStudentPick && !isAnswer && <span className="ml-1 text-red-400">← 내 선택</span>}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {prob.explanation && (
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                                            <div className="text-[10px] font-bold text-blue-500 uppercase mb-1">해설</div>
+                                            <p className="text-[12px] text-blue-900 dark:text-blue-200 leading-relaxed">{prob.explanation}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Subjective Detail View Overlay
+    if (subjectiveDetailSub && subjectiveProblems.length > 0) {
+        const subDetails = (subjectiveDetailSub as any).details || {};
+        const gradeResults: any[] = subDetails.results || [];
+        const studentAnswers: any[] = subjectiveDetailSub.answers || [];
+
+        const TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
+            eng_composition: { label: '영작', emoji: '✍️' },
+            sentence_interpretation: { label: '해석 서술', emoji: '📖' },
+            grammar_correction: { label: '어법 교정', emoji: '🔍' },
+            blank_fill: { label: '빈칸 서술', emoji: '📝' },
+            pronoun_reference: { label: '지칭 추론', emoji: '👆' },
+            summary_completion: { label: '요약문 완성', emoji: '📋' },
+            sentence_transform: { label: '문장 전환', emoji: '🔄' },
+            korean_summary: { label: '한국어 요약', emoji: '🇰🇷' },
+            english_answer: { label: '영어로 답하기', emoji: '🇬🇧' },
+        };
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 dark:border-white/10 max-h-[90vh] flex flex-col">
+                    <div className="bg-[#1e3a5f] p-6 text-white flex justify-between items-center">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-lg font-bold">📝 서술형 채점 결과</h3>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${subjectiveDetailSub.score === 100 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                                    {subjectiveDetailSub.attempt}차 · {subjectiveDetailSub.score}점
+                                </span>
+                            </div>
+                            <p className="text-xs text-blue-200">{assignmentTitle}</p>
+                        </div>
+                        <button onClick={() => { setSubjectiveDetailSub(null); setSubjectiveProblems([]); }} className="text-blue-300 hover:text-white transition-colors">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-white/10 flex items-center gap-4">
+                        <span className="text-xs font-bold text-emerald-600">✅ 우수 {gradeResults.filter(r => (r?.score || 0) >= 80).length}개</span>
+                        <span className="text-xs font-bold text-red-500">❌ 미흡 {gradeResults.filter(r => (r?.score || 0) < 80).length}개</span>
+                        <span className="text-xs text-slate-400 ml-auto">총 {subjectiveProblems.length}문제</span>
+                    </div>
+
+                    <div className="p-4 overflow-y-auto flex-1 space-y-3">
+                        {subjectiveProblems.map((prob: any, idx: number) => {
+                            const result = gradeResults[idx];
+                            const answer = studentAnswers[idx];
+                            const typeInfo = TYPE_LABELS[prob.type] || { label: prob.type, emoji: '📌' };
+                            const score = result?.score || 0;
+                            const isGood = score >= 80;
+
+                            return (
+                                <div key={idx} className={`p-4 rounded-xl border-l-4 bg-slate-50 dark:bg-slate-800 ${isGood ? 'border-green-500' : 'border-red-500'}`}>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${isGood ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>{idx + 1}</span>
+                                            <span className="text-[12px] font-semibold">{typeInfo.emoji} {typeInfo.label}</span>
+                                        </div>
+                                        <span className={`text-xs font-bold ${isGood ? 'text-emerald-600' : score >= 50 ? 'text-amber-600' : 'text-red-500'}`}>{score}점</span>
+                                    </div>
+                                    <p className="text-[12px] font-bold text-slate-600 dark:text-slate-400 mb-2">{prob.instruction}</p>
+
+                                    {/* Student Answer */}
+                                    <div className="bg-white dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 mb-2">
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">내 답안</div>
+                                        {prob.type === 'grammar_correction' ? (
+                                            <div className="space-y-1">
+                                                {(answer?.selectedWrong || []).map((sel: string, si: number) => (
+                                                    <div key={si} className="text-[11px]">
+                                                        <span className="font-bold text-slate-700 dark:text-slate-300">{sel || '미선택'}</span>
+                                                        <span className="text-slate-400 mx-1">→</span>
+                                                        <span className="text-slate-500">{answer?.reasons?.[sel] || '이유 미입력'}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : prob.type === 'summary_completion' ? (
+                                            <div className="text-[11px] text-slate-700 dark:text-slate-300">
+                                                {Object.entries(answer?.blankAnswers || {}).map(([k, v]) => (
+                                                    <span key={k} className="mr-3">({k}): <strong>{(v as string) || '미입력'}</strong></span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-[11px] text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{answer?.textAnswer || '(미입력)'}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Model Answer */}
+                                    {result?.modelAnswer && (
+                                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800 mb-2">
+                                            <div className="text-[10px] font-bold text-green-600 uppercase mb-1">모범답안</div>
+                                            <p className="text-[11px] text-green-900 dark:text-green-200 whitespace-pre-wrap">{result.modelAnswer}</p>
+                                        </div>
+                                    )}
+
+                                    {/* AI Feedback */}
+                                    {result?.feedback && (
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                                            <div className="text-[10px] font-bold text-blue-500 uppercase mb-1">AI 총평</div>
+                                            <p className="text-[11px] text-blue-900 dark:text-blue-200 whitespace-pre-wrap leading-relaxed">{result.feedback}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Writing Detail View Overlay
     if (writingDetailSub) {
         const details = (writingDetailSub as any).details || [];
@@ -650,6 +838,28 @@ export default function ResultHistoryModal({
                                                 }
                                             } catch (e) {
                                                 console.error('Failed to load vocab assignment:', e);
+                                            }
+                                        } else if (assignmentType === 'transform') {
+                                            // Show transform detail inline
+                                            try {
+                                                const assignment = await dbService.getAssignmentById(assignmentId);
+                                                if (assignment) {
+                                                    setTransformProblems(assignment.variantProblems || []);
+                                                    setTransformDetailSub(sub);
+                                                }
+                                            } catch (e) {
+                                                console.error('Failed to load transform assignment:', e);
+                                            }
+                                        } else if (assignmentType === 'transform_subjective' || assignmentType === 'external_subjective') {
+                                            // Show subjective detail inline
+                                            try {
+                                                const assignment = await dbService.getAssignmentById(assignmentId);
+                                                if (assignment) {
+                                                    setSubjectiveProblems(assignment.subjectiveProblems || []);
+                                                    setSubjectiveDetailSub(sub);
+                                                }
+                                            } catch (e) {
+                                                console.error('Failed to load subjective assignment:', e);
                                             }
                                         } else {
                                             // Navigate to full result page
