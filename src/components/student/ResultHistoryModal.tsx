@@ -33,6 +33,9 @@ export default function ResultHistoryModal({
     const [splitWordsPerChunk, setSplitWordsPerChunk] = useState<number | string>('');
     const [splitProcessing, setSplitProcessing] = useState(false);
     const [writingDetailSub, setWritingDetailSub] = useState<Submission | null>(null);
+    const [vocabDetailSub, setVocabDetailSub] = useState<Submission | null>(null);
+    const [vocabWords, setVocabWords] = useState<any[]>([]);
+    const [vocabConfig, setVocabConfig] = useState<any>(null);
 
     const loadData = async () => {
         const data = await dbService.getSubmissionHistory(studentId, assignmentId);
@@ -307,6 +310,112 @@ export default function ResultHistoryModal({
         );
     }
 
+    // Vocabulary Detail View Overlay
+    if (vocabDetailSub && vocabWords.length > 0) {
+        const answers = vocabDetailSub.answers || [];
+        const answersMap: Record<number, string> = {};
+        if (Array.isArray(answers)) {
+            answers.forEach((a: any) => {
+                if (a && typeof a.index === 'number') {
+                    answersMap[a.index] = a.value || '';
+                }
+            });
+        }
+        const testMode = vocabConfig?.testMode || 'default';
+        const isReverse = testMode === 'reverse' || testMode === 'typing';
+
+        const checkCorrect = (word: any, idx: number): boolean => {
+            const userAnswer = answersMap[idx];
+            if (!userAnswer) return false;
+            if (testMode === 'typing-ko') {
+                // For AI graded, we check if details contains grading info
+                const details = (vocabDetailSub as any).details || [];
+                if (details[0]?.type === 'typing-ko-ai-graded') {
+                    // AI grading results not stored per-word in submission, compare loosely
+                    return userAnswer.trim() === word.meaning?.trim();
+                }
+                return userAnswer.trim() === word.meaning?.trim();
+            }
+            if (isReverse || testMode === 'typing') {
+                return userAnswer.trim().toLowerCase() === word.term?.trim().toLowerCase();
+            }
+            return userAnswer === word.meaning;
+        };
+
+        const wrongCount = vocabWords.filter((w, i) => !checkCorrect(w, i)).length;
+        const correctCount = vocabWords.length - wrongCount;
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 dark:border-white/10 max-h-[90vh] flex flex-col">
+                    <div className="bg-emerald-800 p-6 text-white flex justify-between items-center">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-lg font-bold">📝 단어 테스트 결과</h3>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${vocabDetailSub.score === 100 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                                    {vocabDetailSub.attempt}차 · {vocabDetailSub.score}점
+                                </span>
+                            </div>
+                            <p className="text-xs text-emerald-200">{assignmentTitle}</p>
+                        </div>
+                        <button onClick={() => { setVocabDetailSub(null); setVocabWords([]); setVocabConfig(null); }} className="text-emerald-300 hover:text-white transition-colors">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    {/* Summary Bar */}
+                    <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-white/10 flex items-center gap-4">
+                        <span className="text-xs font-bold text-emerald-600">✅ 정답 {correctCount}개</span>
+                        <span className="text-xs font-bold text-red-500">❌ 오답 {wrongCount}개</span>
+                        <span className="text-xs text-slate-400 ml-auto">총 {vocabWords.length}문제</span>
+                    </div>
+
+                    {/* Word List */}
+                    <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                        {vocabWords.map((word, idx) => {
+                            const userAnswer = answersMap[idx];
+                            const isCorrect = checkCorrect(word, idx);
+                            const correctAnswer = (testMode === 'typing-ko') ? word.meaning : (isReverse ? word.term : word.meaning);
+                            const questionText = (testMode === 'typing-ko') ? word.term : (isReverse ? word.meaning : word.term);
+
+                            return (
+                                <div key={idx} className={`p-3 rounded-xl border-l-4 bg-slate-50 dark:bg-slate-800 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <div className="text-[10px] font-bold text-slate-400 mb-0.5">Q{idx + 1}</div>
+                                            <div className="font-bold text-slate-800 dark:text-white text-base mb-0.5">{questionText}</div>
+                                            <div className="text-[13px] text-slate-500">
+                                                <span className="font-semibold text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 mr-2">정답</span>
+                                                {correctAnswer}
+                                            </div>
+                                            {!isCorrect && (
+                                                <div className="text-[13px] text-red-500 mt-0.5">
+                                                    <span className="font-semibold text-[10px] bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded text-red-500 mr-2">나의 답</span>
+                                                    {userAnswer || '(미입력)'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="ml-3 flex items-center">
+                                            {isCorrect ? (
+                                                <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center justify-center">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                                </div>
+                                            ) : (
+                                                <div className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Writing Detail View Overlay
     if (writingDetailSub) {
         const details = (writingDetailSub as any).details || [];
@@ -505,14 +614,37 @@ export default function ResultHistoryModal({
                             {history.map((sub, idx) => (
                                 <div
                                     key={sub.id}
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (sub.status === 'pending_review' || sub.attempt === 0) {
                                             setSelectedSubmission(sub);
                                         } else if (assignmentType === 'writing' || assignmentType === 'writing_session') {
                                             // Show writing detail inline
                                             setWritingDetailSub(sub);
+                                        } else if (assignmentType === 'vocabulary' || assignmentType === 'selection') {
+                                            // Show vocabulary detail inline
+                                            try {
+                                                const assignment = await dbService.getAssignmentById(assignmentId);
+                                                if (assignment) {
+                                                    // For selection type, check if there's a selection submission with filtered words
+                                                    if (assignment.type === 'selection') {
+                                                        const selectionSub = history.find(h => h.status === 'approved' && h.attempt === 0);
+                                                        if (selectionSub?.details?.[0]?.selectedIndices) {
+                                                            const indices = selectionSub.details[0].selectedIndices;
+                                                            setVocabWords((assignment.words || []).filter((_: any, i: number) => indices.includes(i)));
+                                                        } else {
+                                                            setVocabWords(assignment.words || []);
+                                                        }
+                                                    } else {
+                                                        setVocabWords(assignment.words || []);
+                                                    }
+                                                    setVocabConfig(assignment.vocabConfig || {});
+                                                    setVocabDetailSub(sub);
+                                                }
+                                            } catch (e) {
+                                                console.error('Failed to load vocab assignment:', e);
+                                            }
                                         } else {
-                                            // [New] Navigate to full result page instead of showing internal detail
+                                            // Navigate to full result page
                                             window.open(`/student/assignment/${assignmentId}?viewAttempt=${sub.attempt}&studentId=${studentId}`, '_blank');
                                         }
                                     }}
