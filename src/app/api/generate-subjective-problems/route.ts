@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         validateRequest(generateSubjectiveRequestSchema, body, 'generate-subjective-problems');
-        const { passage: rawPassage, targetGrade = '3', mode = 'auto', problemTypes } = body;
+        const { passage: rawPassage, targetGrade = '3', mode = 'auto', problemTypes, source } = body;
         const passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
         // Generate subjective problems
         const typesToGenerate = mode === 'manual' && problemTypes?.length > 0 ? problemTypes : undefined;
-        const prompt = getSubjectiveProblemsPrompt(passage, targetGrade, typesToGenerate);
+        const prompt = getSubjectiveProblemsPrompt(passage, targetGrade, typesToGenerate, source);
 
         console.log(`[Subjective Gen] Generating problems, mode=${mode}, types=${typesToGenerate?.join(',') || 'all'}`);
 

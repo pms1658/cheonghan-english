@@ -129,7 +129,8 @@ export default function SubjectiveAssignmentForm({
                     passage: passage.trim(),
                     targetGrade,
                     mode: generationMode,
-                    problemTypes: generationMode === 'manual' ? selectedTypes : []
+                    problemTypes: generationMode === 'manual' ? selectedTypes : [],
+                    source: 'transform'
                 })
             });
 
