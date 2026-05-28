@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { ADMIN_LOGIN_IDS, getAdminEmailByLoginId } from '@/lib/adminConfig';
+import { dbService } from '@/services/db';
 import { toast } from 'sonner';
 
 const AUTO_LOGIN_KEY = 'CHEONGHAN_AUTO_LOGIN';
@@ -44,6 +45,43 @@ export default function LoginForm() {
         setAutoLoggingIn(false);
     }, []);
 
+    /**
+     * Check if password is bcrypt hashed
+     */
+    const isHashed = (pw: string) => pw?.startsWith('$2a$') || pw?.startsWith('$2b$');
+
+    /**
+     * Verify password - handles both plaintext and hashed
+     */
+    const verifyPassword = async (input: string, stored: string): Promise<boolean> => {
+        if (!stored) return input === '123456'; // default password
+        if (!isHashed(stored)) return input === stored; // plaintext legacy
+
+        // Hashed password — need server-side bcrypt compare
+        try {
+            const res = await fetch('/api/auth/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input, hash: stored }),
+            });
+            const result = await res.json();
+            return result.valid === true;
+        } catch {
+            return false;
+        }
+    };
+
+    /**
+     * Try to migrate plaintext password to hash (non-blocking)
+     */
+    const tryMigratePassword = (studentId: string, pw: string) => {
+        fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId, newPassword: pw }),
+        }).catch(() => {}); // Silent — don't break login
+    };
+
     const performLogin = async (loginId: string, pw: string, isAuto = false) => {
         setIsLoading(true);
         try {
@@ -57,11 +95,9 @@ export default function LoginForm() {
                 }
                 const email = getAdminEmailByLoginId(loginId);
                 if (!email) return;
-                // Save auto-login credentials for admin too
                 if (autoLogin || isAuto) {
                     localStorage.setItem(AUTO_LOGIN_KEY, JSON.stringify({ id: loginId, pw }));
                 }
-                // Save remembered ID
                 if (rememberMe && !autoLogin && !isAuto) {
                     localStorage.setItem(SAVED_ID_KEY, loginId);
                 }
@@ -69,8 +105,7 @@ export default function LoginForm() {
                 return;
             }
 
-            // 2. Student & Tenant Admin Login via Server API
-            // Passwords are verified server-side with bcrypt
+            // 2. Tenant Admin Login (client-side — dbService)
             if (!pw && !isAuto) {
                 toast.warning("비밀번호를 입력해주세요.");
                 setIsLoading(false);
@@ -78,38 +113,69 @@ export default function LoginForm() {
                 return;
             }
 
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: loginId, password: pw }),
-            });
+            const tenant = await dbService.getTenantByLoginId(loginId);
+            if (tenant) {
+                const storedPw = tenant.adminPassword;
+                const pwValid = await verifyPassword(pw, storedPw);
 
-            const result = await res.json();
+                if (!pwValid) {
+                    if (!isAuto) toast.warning('비밀번호가 올바르지 않습니다.');
+                    if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
+                    setIsLoading(false);
+                    setAutoLoggingIn(false);
+                    return;
+                }
 
-            if (!res.ok) {
-                if (!isAuto) toast.warning(result.error || '로그인에 실패했습니다.');
+                if (tenant.status === 'suspended' || tenant.status === 'cancelled') {
+                    if (!isAuto) toast.warning('이용이 정지된 계정입니다.');
+                    setIsLoading(false);
+                    setAutoLoggingIn(false);
+                    return;
+                }
+
+                if (autoLogin || isAuto) {
+                    localStorage.setItem(AUTO_LOGIN_KEY, JSON.stringify({ id: loginId, pw }));
+                }
+                if (rememberMe && !autoLogin && !isAuto) {
+                    localStorage.setItem(SAVED_ID_KEY, loginId);
+                }
+                await loginTenantAdmin(tenant);
+                return;
+            }
+
+            // 3. Student Login (client-side — dbService)
+            const student = await dbService.getStudent(loginId);
+            if (!student) {
+                if (!isAuto) toast.warning('존재하지 않는 사용자 ID입니다.');
                 if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
                 setIsLoading(false);
                 setAutoLoggingIn(false);
                 return;
             }
 
-            // Save auto-login credentials
+            const storedPw = student.password || '123456';
+            const pwValid = await verifyPassword(pw, storedPw);
+
+            if (!pwValid) {
+                if (!isAuto) toast.warning('비밀번호가 올바르지 않습니다.');
+                if (isAuto) localStorage.removeItem(AUTO_LOGIN_KEY);
+                setIsLoading(false);
+                setAutoLoggingIn(false);
+                return;
+            }
+
+            // Auto-migrate plaintext → hash (non-blocking)
+            if (!isHashed(storedPw)) {
+                tryMigratePassword(student.id, pw);
+            }
+
             if (autoLogin || isAuto) {
                 localStorage.setItem(AUTO_LOGIN_KEY, JSON.stringify({ id: loginId, pw }));
             }
-            // Save remembered ID
             if (rememberMe && !autoLogin && !isAuto) {
                 localStorage.setItem(SAVED_ID_KEY, loginId);
             }
-
-            if (result.type === 'tenant_admin') {
-                await loginTenantAdmin(result.data);
-            } else if (result.type === 'student') {
-                await loginStudent(result.data);
-            } else {
-                if (!isAuto) toast('알 수 없는 사용자 유형입니다.');
-            }
+            await loginStudent(student);
         } catch (error: any) {
             console.error(error);
             if (!isAuto) toast.error('로그인 실패: ' + (error.message || '알 수 없는 오류'));
