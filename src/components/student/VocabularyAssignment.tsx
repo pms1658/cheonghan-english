@@ -261,7 +261,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
                 setAttemptCount(nextAttempt);
                 setIsStudied(true);
 
-                // Save to DB
+                // Save to DB — include testedWords so report can reconstruct which words were tested
                 await dbService.addSubmission({
                     studentId: student.id,
                     studentName: student.name,
@@ -270,7 +270,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
                     assignmentTitle: assignment.title,
                     attempt: nextAttempt,
                     score: score,
-                    details: [{ type: 'typing-ko-ai-graded' }],
+                    details: [{ type: 'typing-ko-ai-graded', testedWords: words }],
                     answers: Object.entries(finalAnswers).map(([k, v]) => ({ index: Number(k), value: v }))
                 } as any);
 
@@ -306,7 +306,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
         setAttemptCount(nextAttempt);
         setIsStudied(true);
 
-        // Save to DB
+        // Save to DB — include testedWords so report can reconstruct which words were tested
         await dbService.addSubmission({
             studentId: student.id,
             studentName: student.name,
@@ -315,7 +315,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
             assignmentTitle: assignment.title,
             attempt: nextAttempt,
             score: score,
-            details: [],
+            details: [{ type: 'vocab-test', testedWords: words }],
             answers: Object.entries(finalAnswers).map(([k, v]) => ({ index: Number(k), value: v }))
         } as any);
 

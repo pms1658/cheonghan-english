@@ -625,8 +625,15 @@ export default function ResultHistoryModal({
                                             try {
                                                 const assignment = await dbService.getAssignmentById(assignmentId);
                                                 if (assignment) {
-                                                    // For selection type, check if there's a selection submission with filtered words
-                                                    if (assignment.type === 'selection') {
+                                                    // Priority: use testedWords from submission details (supports retry-with-wrong-only)
+                                                    const subDetails = (sub as any).details || [];
+                                                    const testedWords = subDetails[0]?.testedWords;
+
+                                                    if (testedWords && Array.isArray(testedWords) && testedWords.length > 0) {
+                                                        // Use the exact words that were tested in this attempt
+                                                        setVocabWords(testedWords);
+                                                    } else if (assignment.type === 'selection') {
+                                                        // Fallback for old submissions: filter by selection
                                                         const selectionSub = history.find(h => h.status === 'approved' && h.attempt === 0);
                                                         if (selectionSub?.details?.[0]?.selectedIndices) {
                                                             const indices = selectionSub.details[0].selectedIndices;
@@ -635,6 +642,7 @@ export default function ResultHistoryModal({
                                                             setVocabWords(assignment.words || []);
                                                         }
                                                     } else {
+                                                        // Fallback for old submissions: use full word list
                                                         setVocabWords(assignment.words || []);
                                                     }
                                                     setVocabConfig(assignment.vocabConfig || {});
