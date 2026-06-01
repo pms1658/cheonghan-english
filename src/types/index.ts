@@ -33,7 +33,7 @@ export interface Word {
 
 // Assignment types
 export type AssignmentCategory = 'sat' | 'midterm';
-export type AssignmentType = 'vocabulary' | 'structure' | 'writing' | 'selection' | 'transform' | 'workbook' | 'analysis' | 'transform_subjective' | 'listening_set' | 'sentence_order' | 'external_subjective';
+export type AssignmentType = 'vocabulary' | 'structure' | 'writing' | 'selection' | 'transform' | 'workbook' | 'analysis' | 'transform_subjective' | 'listening_set' | 'sentence_order' | 'external_subjective' | 'mock_exam';
 export type VocabularySource = 'custom' | 'workbook';
 export type StructureSource = 'general' | 'textbook';
 
@@ -116,6 +116,18 @@ export interface Assignment {
     // Sentence Order fields (only for type='sentence_order')
     sentenceOrderConfig?: {
         originalSentences: string[]; // Correct order of sentences
+    };
+
+    // Mock Exam fields (only for type='mock_exam')
+    mockExamConfig?: {
+        patternId: string;       // School pattern ID
+        schoolName: string;      // "동여고"
+        grade: number;           // 1
+        examType: string;        // "midterm_1"
+    };
+    mockExamProblems?: {
+        mcq: any[];              // MockExamMCQ[]
+        essay: any[];            // MockExamEssay[]
     };
 }
 

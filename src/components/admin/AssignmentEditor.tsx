@@ -12,6 +12,7 @@ import WritingAssignmentForm from './WritingAssignmentForm';
 import ListeningSetForm from './ListeningSetForm';
 import StructureVocabForm from './StructureVocabForm';
 import SentenceOrderForm from './SentenceOrderForm';
+import MockExamForm from './MockExamForm';
 import { toast } from 'sonner';
 
 interface AssignmentEditorProps {
@@ -23,7 +24,7 @@ interface AssignmentEditorProps {
     initialData?: Assignment | null;
 }
 
-type AssignmentType = 'structure' | 'vocabulary' | 'selection' | 'transform' | 'transform_subjective' | 'external_subjective' | 'writing' | 'workbook' | 'analysis' | 'listening_set' | 'sentence_order';
+type AssignmentType = 'structure' | 'vocabulary' | 'selection' | 'transform' | 'transform_subjective' | 'external_subjective' | 'writing' | 'workbook' | 'analysis' | 'listening_set' | 'sentence_order' | 'mock_exam';
 
 export default function AssignmentEditor({ initialClassId, classes, allStudents, onClose, onSave, initialData }: AssignmentEditorProps) {
     const [creationStep, setCreationStep] = useState<'type_select' | 'form'>('type_select');
@@ -177,6 +178,10 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
                         title="외부지문 서술형" desc="외부 지문으로 내신 서술형 대비 문제를 AI가 출제하고 채점합니다."
                         icon={<span className="text-3xl">📝</span>}
                         newBadge={true} />
+                    <TypeCard type="mock_exam" color="rose"
+                        title="내신모의고사" desc="학교별 출제 패턴을 분석하여 실전과 동일한 형태의 모의고사를 AI가 생성합니다."
+                        icon={<span className="text-3xl">🏫</span>}
+                        newBadge={true} />
                 </div>
 
                 {isImportModalOpen && (
@@ -276,6 +281,20 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
                     initialData={initialData}
                     onBack={handleBack}
                     onSave={makeSaveHandler('세부순서')}
+                />
+            </div>
+        );
+    }
+
+    // Mock Exam
+    if (assignmentType === 'mock_exam') {
+        return (
+            <div className="h-full overflow-y-auto">
+                <MockExamForm
+                    selectedClass={selectedClass}
+                    initialData={initialData}
+                    onBack={handleBack}
+                    onSave={makeSaveHandler('내신모의고사')}
                 />
             </div>
         );

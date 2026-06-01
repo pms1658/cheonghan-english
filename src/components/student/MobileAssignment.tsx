@@ -13,6 +13,7 @@ import WorkbookAssignmentView from './WorkbookAssignmentView';
 import WritingAssignment from './WritingAssignment';
 import ListeningSetAssignment from './ListeningSetAssignment';
 import SentenceOrderAssignment from './SentenceOrderAssignment';
+import MockExamAssignment from './MockExamAssignment';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import FinalPassageView from './FinalPassageView';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -220,6 +221,29 @@ export default function MobileAssignment({
             <div className="min-h-screen bg-slate-50">
                 <ErrorBoundary>
                     <SubjectiveAssignment
+                        assignment={assignment as any}
+                        studentId={studentData.id}
+                        studentName={studentData.name || 'Anonymous'}
+                        classId={queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || ''}
+                        onComplete={() => {
+                            const finalClassId = queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || '';
+                            router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
+                        }}
+                    />
+                </ErrorBoundary>
+            </div>
+        );
+    }
+
+    // Mock Exam Assignment Routing
+    if (assignment && assignment.type === 'mock_exam') {
+        const studentData = getStudentData(student);
+        if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
+
+        return (
+            <div className="min-h-screen bg-slate-50">
+                <ErrorBoundary>
+                    <MockExamAssignment
                         assignment={assignment as any}
                         studentId={studentData.id}
                         studentName={studentData.name || 'Anonymous'}

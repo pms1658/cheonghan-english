@@ -1,11 +1,10 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateListeningSetRequestSchema } from '@/schemas/api';
 import { extractJSON } from '@/lib/aiUtils';
 
-// Allow up to 120 seconds for 7+ batch Gemini calls
-export const maxDuration = 120;
+// Allow up to 180 seconds for 7 sequential Claude calls
+export const maxDuration = 180;
 import {
     getListeningBatch1Prompt,
     getListeningBatch2Prompt,
@@ -16,50 +15,47 @@ import {
     getReadingBatch7Prompt,
 } from '@/services/listeningPrompts';
 
-const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
-const safetySettings = [
-    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-];
-
-// ── Single batch generator with retry ──
-async function generateBatch(
-    model: any,
+// ── Single batch generator with Claude API ──
+async function generateBatchClaude(
     prompt: string,
     batchLabel: string,
     retries = 2
 ): Promise<{ label: string; data: any; error?: string }> {
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-            console.log(`[ListeningSet] Generating ${batchLabel}... (attempt ${attempt + 1})`);
-            const result = await model.generateContent({
-                contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.7, maxOutputTokens: 16384 },
-                safetySettings,
-            });
-            const response = result.response;
-            if (!response.candidates || response.candidates.length === 0) {
-                throw new Error('Safety blocked or no candidates');
-            }
-            const text = response.text();
-            const finishReason = response.candidates?.[0]?.finishReason;
-            console.log(`[ListeningSet] ${batchLabel}: ${text.length} chars, finish: ${finishReason}`);
+            console.log(`[ListeningSet] Generating ${batchLabel} via Claude... (attempt ${attempt + 1})`);
 
-            // If truncated, retry with higher token limit
-            if (finishReason === 'MAX_TOKENS') {
-                console.warn(`[ListeningSet] ${batchLabel}: Truncated! Retrying with 32k...`);
-                const retry = await model.generateContent({
-                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 32768 },
-                    safetySettings,
-                });
-                const retryText = retry.response.text();
-                return { label: batchLabel, data: extractJSON(retryText) };
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': ANTHROPIC_API_KEY,
+                    'anthropic-version': '2023-06-01',
+                },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 16000,
+                    messages: [{ role: 'user', content: prompt }],
+                }),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`Claude API ${response.status}: ${errorBody.substring(0, 200)}`);
             }
+
+            const claudeResponse = await response.json();
+            const textContent = claudeResponse.content?.find((block: any) => block.type === 'text');
+
+            if (!textContent?.text) {
+                throw new Error('No text content in Claude response');
+            }
+
+            const text = textContent.text;
+            console.log(`[ListeningSet] ${batchLabel}: ${text.length} chars`);
 
             return { label: batchLabel, data: extractJSON(text) };
         } catch (error: any) {
@@ -74,7 +70,7 @@ async function generateBatch(
     return { label: batchLabel, data: null, error: 'All retries failed' };
 }
 
-// ── Delay helper to avoid rate limits ──
+// ── Delay helper ──
 function delay(ms: number) {
     return new Promise(r => setTimeout(r, ms));
 }
@@ -85,33 +81,35 @@ export async function POST(req: Request) {
     if (blocked) return blocked;
 
     try {
-        if (!apiKey) {
-            return NextResponse.json({ error: 'Gemini API Key missing' }, { status: 500 });
+        if (!ANTHROPIC_API_KEY) {
+            return NextResponse.json(
+                { error: 'ANTHROPIC_API_KEY가 설정되지 않았습니다. .env.local에 추가해주세요.' },
+                { status: 500 }
+            );
         }
 
         const body = await req.json();
         validateRequest(generateListeningSetRequestSchema, body, 'generate-listening-set');
         const { targetGrade = '3' } = body;
-        const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
-        console.log('[ListeningSet] Starting generation for grade:', targetGrade);
+        console.log('[ListeningSet] Starting generation via Claude Sonnet for grade:', targetGrade);
 
-        // ── Run batches in groups of 3 to avoid rate limits ──
+        // ── Run batches in groups to respect rate limits ──
         // Group 1: Listening 1-5, 6-10, 11-15
         const group1 = await Promise.allSettled([
-            generateBatch(model, getListeningBatch1Prompt(targetGrade), 'listening_1_5'),
-            generateBatch(model, getListeningBatch2Prompt(targetGrade), 'listening_6_10'),
-            generateBatch(model, getListeningBatch3Prompt(targetGrade), 'listening_11_15'),
+            generateBatchClaude(getListeningBatch1Prompt(targetGrade), 'listening_1_5'),
+            generateBatchClaude(getListeningBatch2Prompt(targetGrade), 'listening_6_10'),
+            generateBatchClaude(getListeningBatch3Prompt(targetGrade), 'listening_11_15'),
         ]);
         console.log('[ListeningSet] Group 1 done');
 
-        await delay(1000); // Small delay between groups
+        await delay(1000);
 
         // Group 2: Listening 16-17, Reading 18-20, 25-28
         const group2 = await Promise.allSettled([
-            generateBatch(model, getListeningBatch4Prompt(targetGrade), 'listening_16_17'),
-            generateBatch(model, getReadingBatch5Prompt(targetGrade), 'reading_18_20'),
-            generateBatch(model, getReadingBatch6Prompt(targetGrade), 'reading_25_28'),
+            generateBatchClaude(getListeningBatch4Prompt(targetGrade), 'listening_16_17'),
+            generateBatchClaude(getReadingBatch5Prompt(targetGrade), 'reading_18_20'),
+            generateBatchClaude(getReadingBatch6Prompt(targetGrade), 'reading_25_28'),
         ]);
         console.log('[ListeningSet] Group 2 done');
 
@@ -119,7 +117,7 @@ export async function POST(req: Request) {
 
         // Group 3: Reading 43-45
         const group3 = await Promise.allSettled([
-            generateBatch(model, getReadingBatch7Prompt(targetGrade), 'reading_43_45'),
+            generateBatchClaude(getReadingBatch7Prompt(targetGrade), 'reading_43_45'),
         ]);
         console.log('[ListeningSet] Group 3 done');
 
@@ -171,15 +169,15 @@ export async function POST(req: Request) {
         listeningProblems.sort((a, b) => a.number - b.number);
         readingProblems.sort((a, b) => a.number - b.number);
 
-        // ── Generate picture for problem 4 via Imagen API ──
+        // ── Generate picture for problem 4 via Imagen API (still uses Gemini) ──
         let pictureUrl: string | null = null;
-        if (pictureDescription) {
+        if (pictureDescription && GEMINI_API_KEY) {
             try {
-                console.log('[ListeningSet] Generating picture for problem 4...');
+                console.log('[ListeningSet] Generating picture for problem 4 via Imagen...');
                 const imagePrompt = `Create a simple, clean black-and-white line drawing illustration for a Korean CSAT English listening test. Do NOT include any numbers, labels, or text annotations (①②③④⑤ etc.) in the image. Numbers will be added as separate overlays. Style: textbook illustration, simple line art, clear and easy to read, no text. Scene: ${pictureDescription}`;
                 
                 const imagenResponse = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${GEMINI_API_KEY}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -221,6 +219,7 @@ export async function POST(req: Request) {
             errors: errors.length > 0 ? errors : undefined,
             hasPicture: !!pictureUrl,
             targetGrade,
+            model: 'claude-sonnet-4-20250514',
         };
 
         console.log(`[ListeningSet] Generation complete:`, JSON.stringify(summary));
