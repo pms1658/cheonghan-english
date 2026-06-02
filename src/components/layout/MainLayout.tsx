@@ -83,8 +83,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                          style={{ height: 'env(safe-area-inset-top, 0px)' }} />
                 )}
 
-                {/* Page Content */}
-                <main role="main" aria-label="페이지 콘텐츠" className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0">
+                {/* Page Content — transform creates a new containing block for fixed children,
+                    so assignment fixed overlays stay within this area and don't cover the sidebar */}
+                <main
+                    role="main"
+                    aria-label="페이지 콘텐츠"
+                    className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0"
+                    style={{ transform: 'translateZ(0)' }}
+                >
                     {children}
                 </main>
 
