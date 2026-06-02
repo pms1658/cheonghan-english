@@ -42,7 +42,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     className="hidden lg:block fixed top-2 left-2 z-[9997] group"
                     title="사이드바 펼치기"
                 >
-                    <div className="w-10 h-10 bg-[#083973] rounded-xl shadow-xl ring-1 ring-white/20 overflow-hidden flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:ring-white/40 transition-all duration-300">
+                    <div className="w-10 h-10 bg-[#083973] rounded-xl shadow-xl ring-1 ring-white/20 overflow-hidden flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:ring-white/40 transition-all duration-300 text-white">
                         <Logo className="w-full h-full" />
                     </div>
                 </button>
