@@ -66,7 +66,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             />
 
             {/* Main Content Area — flex-1 naturally expands when sidebar collapses */}
-            <div className="flex-1 flex flex-col min-w-0 h-[100dvh] relative bg-slate-50 dark:bg-slate-950">
+            <div className="flex-1 flex flex-col min-w-0 h-[100dvh] relative bg-[#0A0E27]">
 
                 {/* Top Navigation Bar */}
                 {!pathname?.includes('/assignment/') && (
