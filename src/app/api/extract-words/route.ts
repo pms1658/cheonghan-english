@@ -54,7 +54,7 @@ export async function POST(request: Request) {
             Instructions:
             1. For each Target Word, find where it appears in the Source Context.
             2. "meaning": Provide the Korean meaning of the word AS IT IS USED in that specific context. 
-            3. "pronunciation": Provide the IPA (International Phonetic Alphabet) pronunciation guide (e.g., /w??rd/).
+            3. "pronunciation": Provide the IPA (International Phonetic Alphabet) pronunciation guide (e.g., /wɜːrd/).
             4. "contextSentence": Copy the EXACT sentence from the Source Context where the word appears. 
                - If the word is NOT found in the Source Context, create a natural example sentence yourself and mark "partOfSpeech" as "Generic".
             5. "partOfSpeech": n, v, adj, adv, etc.

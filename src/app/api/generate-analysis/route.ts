@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         const response = await result.response;
         const text = response.text();
 
-        // Clean JSON ??remove markdown code blocks if present
+        // Clean JSON — remove markdown code blocks if present
         const cleanedText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
         const json = JSON.parse(cleanedText);
 

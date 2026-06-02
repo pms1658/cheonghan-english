@@ -18,7 +18,7 @@ import {
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
-// ?€?€ Single batch generator with Claude API ?€?€
+// â”€â”€ Single batch generator with Claude API â”€â”€
 async function generateBatchClaude(
     prompt: string,
     batchLabel: string,
@@ -70,12 +70,12 @@ async function generateBatchClaude(
     return { label: batchLabel, data: null, error: 'All retries failed' };
 }
 
-// ?€?€ Delay helper ?€?€
+// â”€â”€ Delay helper â”€â”€
 function delay(ms: number) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-// ?€?€ POST Handler ?€?€
+// â”€â”€ POST Handler â”€â”€
 export async function POST(req: Request) {
     const blocked = apiGuard(req, { rateLimit: AI_RATE_LIMIT });
     if (blocked) return blocked;
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     try {
         if (!ANTHROPIC_API_KEY) {
             return NextResponse.json(
-                { error: 'ANTHROPIC_API_KEYê°€ ?¤ì •?˜ì? ?Šì•˜?µë‹ˆ?? .env.local??ì¶”ê??´ì£¼?¸ìš”.' },
+                { error: 'ANTHROPIC_API_KEYê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. .env.localì— ì¶”ê°€í•´ì£¼ì„¸ìš”.' },
                 { status: 500 }
             );
         }
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
 
         console.log('[ListeningSet] Starting generation via Claude Sonnet for grade:', targetGrade);
 
-        // ?€?€ Run batches in groups to respect rate limits ?€?€
+        // â”€â”€ Run batches in groups to respect rate limits â”€â”€
         // Group 1: Listening 1-5, 6-10, 11-15
         const group1 = await Promise.allSettled([
             generateBatchClaude(getListeningBatch1Prompt(targetGrade), 'listening_1_5'),
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
 
         const results = [...group1, ...group2, ...group3];
 
-        // ?€?€ Aggregate results ?€?€
+        // â”€â”€ Aggregate results â”€â”€
         const listeningProblems: any[] = [];
         const readingProblems: any[] = [];
         const errors: string[] = [];
@@ -169,12 +169,12 @@ export async function POST(req: Request) {
         listeningProblems.sort((a, b) => a.number - b.number);
         readingProblems.sort((a, b) => a.number - b.number);
 
-        // ?€?€ Generate picture for problem 4 via Imagen API (still uses Gemini) ?€?€
+        // â”€â”€ Generate picture for problem 4 via Imagen API (still uses Gemini) â”€â”€
         let pictureUrl: string | null = null;
         if (pictureDescription && GEMINI_API_KEY) {
             try {
                 console.log('[ListeningSet] Generating picture for problem 4 via Imagen...');
-                const imagePrompt = `Create a simple, clean black-and-white line drawing illustration for a Korean CSAT English listening test. Do NOT include any numbers, labels, or text annotations (? â‘¡?¢â‘£??etc.) in the image. Numbers will be added as separate overlays. Style: textbook illustration, simple line art, clear and easy to read, no text. Scene: ${pictureDescription}`;
+                const imagePrompt = `Create a simple, clean black-and-white line drawing illustration for a Korean CSAT English listening test. Do NOT include any numbers, labels, or text annotations (â‘ â‘¡â‘¢â‘£â‘¤ etc.) in the image. Numbers will be added as separate overlays. Style: textbook illustration, simple line art, clear and easy to read, no text. Scene: ${pictureDescription}`;
                 
                 const imagenResponse = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${GEMINI_API_KEY}`,
@@ -211,7 +211,7 @@ export async function POST(req: Request) {
             }
         }
 
-        // ?€?€ Summary ?€?€
+        // â”€â”€ Summary â”€â”€
         const summary = {
             listeningCount: listeningProblems.length,
             readingCount: readingProblems.length,
