@@ -66,31 +66,31 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
                 <div className="mb-6 px-3">
                     <div className="px-3 xl:px-4 text-[9px] xl:text-[10px] uppercase tracking-wider font-bold text-white/40 mb-2">Notice & Guide</div>
 
-                    <div className="bg-white/5 rounded-xl xl:rounded-2xl py-1 mx-1 xl:mx-2 ring-1 ring-white/5 shadow-sm space-y-0.5">
+                    <div className="space-y-0.5 mx-1">
                         <Link href="/board"
                             onClick={onClose}
-                            className={`flex items-center justify-between px-4 py-2.5 mx-1 rounded-xl transition-all duration-200 ${pathname.startsWith('/board') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
+                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-200 ${pathname.startsWith('/board') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
                             <span className="text-[12px] xl:text-[13px]">공지사항</span>
                             {pathname.startsWith('/board') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
                         </Link>
 
                         <Link href="/feedback"
                             onClick={onClose}
-                            className={`flex items-center justify-between px-4 py-2.5 mx-1 rounded-xl transition-all duration-200 ${pathname.startsWith('/feedback') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
+                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-200 ${pathname.startsWith('/feedback') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
                             <span className="text-[12px] xl:text-[13px]">피드백</span>
                             {pathname.startsWith('/feedback') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
                         </Link>
 
                         <Link href="/guide"
                             onClick={onClose}
-                            className={`flex items-center justify-between px-4 py-2.5 mx-1 rounded-xl transition-all duration-200 ${pathname.startsWith('/guide') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
+                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-200 ${pathname.startsWith('/guide') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
                             <span className="text-[12px] xl:text-[13px]">구조독해 가이드</span>
                             {pathname.startsWith('/guide') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
                         </Link>
 
                         <Link href="/writing"
                             onClick={onClose}
-                            className={`flex items-center justify-between px-4 py-2.5 mx-1 rounded-xl transition-all duration-200 ${pathname.startsWith('/writing') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
+                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-200 ${pathname.startsWith('/writing') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
                             <span className="text-[12px] xl:text-[13px]">구조작문 가이드</span>
                             {pathname.startsWith('/writing') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
                         </Link>
