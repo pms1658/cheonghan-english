@@ -34,6 +34,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen font-sans selection:bg-blue-500/30 text-slate-800 dark:text-slate-100 overflow-hidden relative transition-colors">
             <CommandPalette />
 
+            {/* Persistent sidebar expand button — fixed, visible on ALL pages when collapsed, desktop only */}
+            {isSidebarCollapsed && (
+                <button
+                    onClick={toggleSidebar}
+                    className="hidden lg:flex fixed top-3 left-3 z-[9997] w-8 h-8 items-center justify-center rounded-lg bg-[#0A0E27]/90 border border-white/10 text-white/50 hover:text-white hover:border-white/30 hover:bg-[#0A0E27] backdrop-blur-md transition-all duration-200 shadow-lg"
+                    title="사이드바 펼치기"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M3 12h17" />
+                    </svg>
+                </button>
+            )}
+
             {/* Mobile Sidebar Overlay */}
             {isMobileMenuOpen && (
                 <div
