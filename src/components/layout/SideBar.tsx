@@ -29,7 +29,7 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
             className={`
             fixed lg:sticky top-0 inset-y-0 left-0 z-[9999] lg:z-50
             w-[280px] lg:w-[220px] xl:w-[280px] h-[100dvh] bg-[#0A0E27] text-slate-300 flex flex-col
-            transform transition-transform duration-300 ease-in-out
+            transform transition-transform duration-300 ease-in-out border-r border-white/[0.08]
             ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
         `}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}

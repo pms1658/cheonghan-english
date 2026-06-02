@@ -241,8 +241,9 @@ export default function NewDashboardPage() {
         <div className="p-5 md:p-8 max-w-7xl mx-auto pb-24 lg:pb-12">
             {/* Header Text */}
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
                 className="mb-6 px-1"
             >
                 <p className="text-slate-400 dark:text-slate-500 text-xs font-bold tracking-[0.25em] uppercase mb-1.5">{greeting}</p>
@@ -259,9 +260,9 @@ export default function NewDashboardPage() {
             <div className="space-y-4 md:space-y-6">
                 {/* 1. Daily Quote & D-Day Section */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12, duration: 0.55, ease: "easeOut" }}
                     className="grid grid-cols-1 lg:grid-cols-3 gap-4"
                 >
                     <div className="lg:col-span-2 min-h-[200px]">
@@ -273,13 +274,19 @@ export default function NewDashboardPage() {
                 </motion.div>
 
                 {/* 1.5 Homework Widget */}
-                <HomeworkWidget user={user} isAdmin={isAdmin} />
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.22, duration: 0.55, ease: "easeOut" }}
+                >
+                    <HomeworkWidget user={user} isAdmin={isAdmin} />
+                </motion.div>
 
                 {/* 2. Navigation Hub */}
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15, duration: 0.4 }}
+                    transition={{ delay: 0.32, duration: 0.55, ease: "easeOut" }}
                 >
                     {navGrid}
                 </motion.div>
