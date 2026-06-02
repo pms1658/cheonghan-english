@@ -179,98 +179,79 @@ export default function NewDashboardPage() {
 
     const isAdmin = (user as any)?.role === 'admin';
 
-    // --- HERO: DAILY QUOTE CARD (Street / Urban Graffiti Aesthetic but Sleek Colors) ---
+    // --- HERO: DAILY QUOTE CARD ---
     const quoteSection = (
-        <div className="relative w-full h-full bg-[#0d1334] flex flex-col justify-center p-8 md:p-12 shadow-2xl overflow-hidden rounded-2xl border-l-[12px] border-blue-500">
-            {/* Dark & Gritty vibe */}
-            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="relative w-full h-full flex flex-col justify-center p-8 md:p-12 shadow-2xl overflow-hidden rounded-2xl border border-white/8 bg-gradient-to-br from-[#0d1334] via-[#0a1128] to-[#080c20]">
+            {/* Ambient glow */}
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none"></div>
+            {/* Left accent line */}
+            <div className="absolute left-0 top-8 bottom-8 w-[3px] bg-gradient-to-b from-blue-400/0 via-blue-500 to-blue-400/0 rounded-full"></div>
             
             {/* Content */}
             <div className="relative z-10 flex flex-col w-full h-full justify-center items-center px-4 md:px-8">
                 <div className="flex flex-col items-center w-full max-w-4xl">
-                    <span className="text-blue-400 text-xs md:text-sm font-black uppercase mb-6 md:mb-8 text-center w-full" style={{ letterSpacing: "0.2em" }}>
+                    <span className="text-blue-400/80 text-[10px] md:text-xs font-black uppercase mb-6 md:mb-8 text-center w-full tracking-[0.3em]">
                         DAILY INSPIRATION
                     </span>
                     
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl text-white leading-[1.6] md:leading-[1.7] tracking-tight mb-10 font-black uppercase italic text-center w-full" style={{ transform: "skewX(-8deg)" }}>
-                        &quot;{quote.text}&quot;
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl text-white/90 leading-[1.7] tracking-tight mb-8 font-black italic text-center w-full">
+                        &ldquo;{quote.text}&rdquo;
                     </h2>
                     
-                    <div className="w-full flex justify-end items-center gap-4 mt-2">
-                        <div className="h-[4px] md:h-[6px] w-8 md:w-12 bg-blue-500"></div>
-                        <p className="text-blue-400 text-xs md:text-sm uppercase font-bold italic" style={{ letterSpacing: "0.15em", transform: "skewX(-8deg)" }}>
+                    <div className="flex items-center gap-3">
+                        <div className="h-px w-8 bg-blue-500/60"></div>
+                        <p className="text-blue-400/70 text-xs uppercase font-bold tracking-[0.2em]">
                             {quote.author}
                         </p>
+                        <div className="h-px w-8 bg-blue-500/60"></div>
                     </div>
                 </div>
             </div>
         </div>
     );
 
-    // --- NAVIGATION GRID (Minimal Text-Only Style) ---
+    // --- NAVIGATION GRID ---
+    const navItems = [
+        { href: '/guide',                             label: 'GUIDE',    sub: '구조독해 학습 가이드', accent: 'from-blue-600/20 to-blue-400/5',   border: 'hover:border-blue-500/40',   text: 'group-hover:text-blue-400' },
+        { href: '/history',                           label: 'HISTORY',  sub: '지난 학습 기록',      accent: 'from-indigo-600/20 to-indigo-400/5', border: 'hover:border-indigo-500/40', text: 'group-hover:text-indigo-400' },
+        { href: '/board',                             label: 'NOTICE',   sub: '공지사항 확인',       accent: 'from-rose-600/20 to-rose-400/5',    border: 'hover:border-rose-500/40',   text: 'group-hover:text-rose-400' },
+        { href: isAdmin ? '/admin/feedback' : '/feedback', label: 'FEEDBACK', sub: '건의사항 보내기', accent: 'from-emerald-600/20 to-emerald-400/5', border: 'hover:border-emerald-500/40', text: 'group-hover:text-emerald-400' },
+    ];
     const navGrid = (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-            {/* 1. Guide */}
-            <Link
-                href="/guide"
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
-            >
-                <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-blue-600 transition-all duration-300 group-hover:w-full"></div>
-                <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">GUIDE</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">구조독해 학습 가이드</p>
-                </div>
-            </Link>
-
-            {/* 2. History */}
-            <Link
-                href="/history"
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-indigo-200 dark:hover:border-indigo-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
-            >
-                <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></div>
-                <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">HISTORY</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">지난 학습 기록</p>
-                </div>
-            </Link>
-
-            {/* 3. Notice Board */}
-            <Link
-                href="/board"
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-rose-200 dark:hover:border-rose-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
-            >
-                <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-rose-500 transition-all duration-300 group-hover:w-full"></div>
-                <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">NOTICE</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">공지사항 확인</p>
-                </div>
-            </Link>
-
-            {/* 4. Feedback */}
-            <Link
-                href={isAdmin ? "/admin/feedback" : "/feedback"}
-                className="bg-white dark:bg-[#0c102b] rounded-xl p-5 md:p-6 border border-slate-200 dark:border-white/10 hover:border-emerald-200 dark:hover:border-emerald-500/50 shadow-sm hover-lift transition-all duration-300 group flex flex-col justify-center relative overflow-hidden h-28 md:h-32"
-            >
-                <div className="absolute bottom-0 left-0 w-0 h-[3px] bg-emerald-600 transition-all duration-300 group-hover:w-full"></div>
-                <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">FEEDBACK</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">건의사항 보내기</p>
-                </div>
-            </Link>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+            {navItems.map(item => (
+                <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`relative bg-white/4 border border-white/8 rounded-2xl p-5 md:p-6 ${item.border} hover:bg-white/6 transition-all duration-300 group flex flex-col justify-center overflow-hidden h-28 md:h-32`}
+                >
+                    {/* Hover gradient fill */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`}></div>
+                    <div className="relative z-10">
+                        <h3 className={`text-xl md:text-2xl font-black text-white/80 tracking-tighter ${item.text} transition-colors duration-200`}>{item.label}</h3>
+                        <p className="text-xs text-white/40 font-medium mt-1.5 group-hover:text-white/60 transition-colors">{item.sub}</p>
+                    </div>
+                </Link>
+            ))}
         </div>
     );
 
     return (
-        <div className="p-6 md:p-10 max-w-7xl mx-auto pb-24 lg:pb-12">
+        <div className="p-5 md:p-8 max-w-7xl mx-auto pb-24 lg:pb-12">
+            {/* Ambient background glows */}
+            <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none -z-0"></div>
+            <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none -z-0"></div>
+
             {/* Header Text */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-8 px-2"
+                className="mb-6 px-1 relative z-10"
             >
-                <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2 transition-colors leading-tight overflow-visible font-bold-ios-fix">
-                    {greeting}, <br className="md:hidden" />
-                    <span className="text-blue-700 dark:text-blue-400 font-black inline-block mt-1 md:mt-0 md:text-5xl md:align-baseline transition-colors font-bold-ios-fix">
+                <p className="text-white/40 text-xs font-bold tracking-[0.25em] uppercase mb-2">{greeting}</p>
+                <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-white">
                         {(user as any)?.role === 'admin'
                             ? getAdminDisplayName((user as any)?.email).replace('!', '')
                             : `${(user as any)?.name} 학생`
@@ -279,18 +260,18 @@ export default function NewDashboardPage() {
                 </h1>
             </motion.div>
 
-            <div className="space-y-6 md:space-y-8 mt-6">
+            <div className="space-y-4 md:space-y-6 relative z-10">
                 {/* 1. Daily Quote & D-Day Section */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-4"
                 >
-                    <div className="lg:col-span-2 min-h-[220px]">
+                    <div className="lg:col-span-2 min-h-[200px]">
                         {quoteSection}
                     </div>
-                    <div className="lg:col-span-1 min-h-[220px]">
+                    <div className="lg:col-span-1 min-h-[200px]">
                         <DDayWidget />
                     </div>
                 </motion.div>
@@ -298,11 +279,11 @@ export default function NewDashboardPage() {
                 {/* 1.5 Homework Widget */}
                 <HomeworkWidget user={user} isAdmin={isAdmin} />
 
-                {/* 2. Navigation Hub (Bento Grid) */}
+                {/* 2. Navigation Hub */}
                 <motion.div
-                    initial={{ opacity: 0, y: 40 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
+                    transition={{ delay: 0.15, duration: 0.4 }}
                 >
                     {navGrid}
                 </motion.div>

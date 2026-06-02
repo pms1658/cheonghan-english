@@ -16,13 +16,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const pathname = usePathname();
 
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen font-sans selection:bg-blue-500/30 text-slate-800 dark:text-slate-100 overflow-hidden relative transition-colors">
+        <div className="flex bg-[#080c20] min-h-screen font-sans selection:bg-blue-500/30 text-slate-100 overflow-hidden relative">
             <CommandPalette />
 
             {/* Mobile Sidebar Overlay */}
             {isMobileMenuOpen && (
                 <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] lg:hidden"
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] lg:hidden"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
@@ -35,7 +35,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 h-[100dvh] transition-all duration-300 relative bg-slate-50 dark:bg-slate-950">
+            <div className="flex-1 flex flex-col min-w-0 h-[100dvh] transition-all duration-300 relative bg-[#080c20]">
 
                 {/* Top Navigation Bar — Hidden on assignment pages (assignments have own headers) */}
                 {!pathname?.includes('/assignment/') && (
@@ -51,7 +51,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 )}
 
                 {/* Page Content */}
-                <main role="main" aria-label="페이지 콘텐츠" className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0">
+                <main role="main" aria-label="페이지 콘텐츠" className="flex-1 overflow-y-auto bg-[#080c20] pb-20 lg:pb-0">
                     {children}
                 </main>
 
