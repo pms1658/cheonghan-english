@@ -247,7 +247,7 @@ export default function NewDashboardPage() {
             >
                 <p className="text-slate-400 dark:text-slate-500 text-xs font-bold tracking-[0.25em] uppercase mb-1.5">{greeting}</p>
                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
-                    <span className="text-blue-700 dark:text-blue-400">
+                    <span className="text-slate-900 dark:text-white">
                         {(user as any)?.role === 'admin'
                             ? getAdminDisplayName((user as any)?.email).replace('!', '')
                             : `${(user as any)?.name} 학생`

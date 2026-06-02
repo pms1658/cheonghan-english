@@ -140,13 +140,12 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                 {isSuperAdmin && (
                     <Link
                         href="/super-admin"
-                        className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${pathname?.startsWith('/super-admin')
+                        className={`hidden md:flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-colors ${pathname?.startsWith('/super-admin')
                             ? 'bg-amber-400 text-[#0A0E27] shadow-lg shadow-amber-400/20'
-                            : 'text-amber-300 hover:bg-amber-500/10 hover:text-amber-200'
+                            : 'text-amber-300/80 hover:bg-amber-500/10 hover:text-amber-200'
                             }`}
                         title="슈퍼 관리자"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         슈퍼관리
                     </Link>
                 )}
@@ -158,60 +157,51 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                 {/* 1. Homework */}
                 <Link
                     href={isAdmin ? "/admin/homework" : "/homework"}
-                    className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${
                         (pathname?.startsWith('/homework') || pathname?.startsWith('/admin/homework'))
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                         }`}
-                    title={isAdmin ? '과제 관리' : '내 과제'}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    <span className="hidden lg:inline">{isAdmin ? '과제관리' : '내 과제'}</span>
+                    {isAdmin ? '과제관리' : '내 과제'}
                     {!isAdmin && incompleteCount > 0 && (
-                        <span className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/15 border border-red-500/25 rounded-md backdrop-blur-sm">
-                            <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span className="flex items-center px-1.5 py-0.5 bg-red-500/20 border border-red-500/30 rounded-md">
                             <span className="text-[10px] font-black text-red-400">{incompleteCount}</span>
                         </span>
                     )}
                 </Link>
 
-                {/* 2. History / Learning Record */}
+                {/* 2. History */}
                 <Link
                     href="/history"
-                    className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname?.startsWith('/history')
+                    className={`hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${pathname?.startsWith('/history')
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                         }`}
-                    title="학습 내역 조회"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    <span className="hidden lg:inline">학습내역</span>
+                    학습내역
                 </Link>
 
                 {/* 2.5 Report */}
                 <Link
                     href={isAdmin ? "/admin/report" : "/student/report"}
-                    className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${
                         (pathname?.startsWith('/admin/report') || pathname?.startsWith('/student/report'))
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                         }`}
-                    title={isAdmin ? '성장 리포트' : '나의 리포트'}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span className="hidden lg:inline">{isAdmin ? '리포트' : '리포트'}</span>
+                    리포트
                 </Link>
-                {/* 3. Management (Student/PW) */}
+                {/* 3. Management */}
                 <Link
                     href="/management"
-                    className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname?.startsWith('/management')
+                    className={`hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${pathname?.startsWith('/management')
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                         }`}
-                    title={isAdmin ? '학생 관리' : '정보 설정'}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span className="hidden lg:inline">{isAdmin ? '학원관리' : '설정'}</span>
+                    {isAdmin ? '학원관리' : '설정'}
                 </Link>
 
                 {/* Password Change (admin only, non-super) */}
@@ -219,14 +209,12 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                     <div className="relative hidden md:block">
                         <button
                             onClick={() => setShowPwChange(!showPwChange)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showPwChange
+                            className={`flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${showPwChange
                                 ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                                : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                                : 'text-white/70 hover:bg-white/10 hover:text-white'
                                 }`}
-                            title="비밀번호 변경"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                            <span className="hidden lg:inline">비번변경</span>
+                            비번변경
                         </button>
 
                         {/* Password Change Dropdown */}
