@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import SideBar from './SideBar';
 import TopBar from './TopBar';
@@ -13,7 +13,22 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const pathname = usePathname();
+
+    // Persist sidebar collapsed state across sessions
+    useEffect(() => {
+        const saved = localStorage.getItem('cheonghan_sidebar_collapsed');
+        if (saved === 'true') setIsSidebarCollapsed(true);
+    }, []);
+
+    const toggleSidebar = () => {
+        setIsSidebarCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('cheonghan_sidebar_collapsed', String(next));
+            return next;
+        });
+    };
 
     return (
         <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen font-sans selection:bg-blue-500/30 text-slate-800 dark:text-slate-100 overflow-hidden relative transition-colors">
@@ -32,15 +47,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
                 isAssignmentPage={false}
+                isCollapsed={isSidebarCollapsed}
+                onCollapseToggle={toggleSidebar}
             />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 h-[100dvh] transition-all duration-300 relative bg-slate-50 dark:bg-slate-950">
+            {/* Main Content Area — flex-1 naturally expands when sidebar collapses */}
+            <div className="flex-1 flex flex-col min-w-0 h-[100dvh] relative bg-slate-50 dark:bg-slate-950">
 
-                {/* Top Navigation Bar — Hidden on assignment pages (assignments have own headers) */}
+                {/* Top Navigation Bar */}
                 {!pathname?.includes('/assignment/') && (
                     <TopBar
                         onMenuClick={() => setIsMobileMenuOpen(true)}
+                        isSidebarCollapsed={isSidebarCollapsed}
+                        onSidebarToggle={toggleSidebar}
                     />
                 )}
 
@@ -55,10 +74,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     {children}
                 </main>
 
-                {/* Mobile Bottom Nav — Hidden on assignment pages */}
+                {/* Mobile Bottom Nav */}
                 {(!pathname?.includes('/assignment/')) && <MobileBottomNav />}
             </div>
         </div>
     );
 }
-

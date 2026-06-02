@@ -10,9 +10,11 @@ import { toast } from 'sonner';
 
 interface TopBarProps {
     onMenuClick: () => void;
+    isSidebarCollapsed?: boolean;
+    onSidebarToggle?: () => void;
 }
 
-export default function TopBar({ onMenuClick }: TopBarProps) {
+export default function TopBar({ onMenuClick, isSidebarCollapsed = false, onSidebarToggle }: TopBarProps) {
     const { user, logout } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
@@ -129,12 +131,25 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
+                {/* Desktop: Expand sidebar button — visible only when collapsed */}
+                {isSidebarCollapsed && onSidebarToggle && (
+                    <button
+                        onClick={onSidebarToggle}
+                        className="hidden lg:flex w-8 h-8 items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200 -ml-1"
+                        title="사이드바 펼치기"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M3 12h17" />
+                        </svg>
+                    </button>
+                )}
 
                 <div className="block">
                     <span className="text-lg sm:text-xl font-bold text-white tracking-tight truncate max-w-[200px] block">
                         {isAdmin ? '관리자 대시보드' : '나의 학습실'}
                     </span>
                 </div>
+
 
                 {/* Super Admin - next to title */}
                 {isSuperAdmin && (
