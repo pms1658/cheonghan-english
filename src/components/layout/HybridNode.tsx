@@ -136,7 +136,7 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
                     ${isAdmin ? 'hover:pr-10' : ''} /* Space for admin button */
                     ${isActive
                         ? 'bg-white/10 text-white font-bold shadow-sm'
-                        : 'text-white/60 hover:text-white hover:bg-white/5 hover:translate-x-1'}
+                        : 'text-white hover:bg-white/5 hover:translate-x-1'}
                 `}
                 style={{ paddingLeft: `${paddingLeft}px` }}
                 onClick={handleTextClick}
@@ -150,7 +150,7 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
                     {hasChildren ? (
                         <div
                             onClick={handleChevronClick}
-                            className={`flex-shrink-0 w-3 text-center text-[10px] font-bold transition-colors ${isActive ? 'text-blue-400' : 'text-white/25 hover:text-white/60'}`}
+                            className={`flex-shrink-0 w-3 text-center text-[10px] font-bold transition-colors ${isActive ? 'text-blue-400' : 'text-white/50 hover:text-white/80'}`}
                         >
                             {isOpen ? '▾' : '▸'}
                         </div>

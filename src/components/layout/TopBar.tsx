@@ -160,7 +160,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                     className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${
                         (pathname?.startsWith('/homework') || pathname?.startsWith('/admin/homework'))
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        : 'text-white hover:bg-white/10'
                         }`}
                 >
                     {isAdmin ? '과제관리' : '내 과제'}
@@ -176,7 +176,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                     href="/history"
                     className={`hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${pathname?.startsWith('/history')
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        : 'text-white hover:bg-white/10'
                         }`}
                 >
                     학습내역
@@ -188,7 +188,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                     className={`hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${
                         (pathname?.startsWith('/admin/report') || pathname?.startsWith('/student/report'))
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        : 'text-white hover:bg-white/10'
                         }`}
                 >
                     리포트
@@ -198,7 +198,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                     href="/management"
                     className={`hidden md:flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${pathname?.startsWith('/management')
                         ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        : 'text-white hover:bg-white/10'
                         }`}
                 >
                     {isAdmin ? '학원관리' : '설정'}
@@ -211,7 +211,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
                             onClick={() => setShowPwChange(!showPwChange)}
                             className={`flex items-center px-3 py-2 rounded-lg text-sm font-semibold tracking-tight transition-colors ${showPwChange
                                 ? 'bg-white text-[#0A0E27] shadow-lg shadow-white/10'
-                                : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                : 'text-white hover:bg-white/10'
                                 }`}
                         >
                             비번변경
