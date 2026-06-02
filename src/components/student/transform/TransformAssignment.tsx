@@ -38,6 +38,7 @@ export default function TransformAssignment({
     const [resumeType, setResumeType] = useState<'progress' | 'retry' | null>(null);
     const [savedRetryData, setSavedRetryData] = useState<{ answers: number[]; incorrectProblems: number[] } | null>(null);
     const progressSavedRef = useRef(false); // in_progress submission 이미 저장했는지
+    const resumeHandledRef = useRef(false); // 재진입 프롬프트 처리 완료 여부 (중복 방지)
 
     const problems: VariantProblem[] = assignment.variantProblems || [];
 
@@ -93,25 +94,27 @@ export default function TransformAssignment({
 
             setSessions(mySessions as any[]);
 
-            // v2: 재진입 감지 - localStorage progress 확인
-            const savedProgress = loadProgress();
-            if (savedProgress && savedProgress.answers.length === problems.length) {
-                // 풀던 중간 progress가 있음
-                setShowResumePrompt(true);
-                setResumeType('progress');
-                return; // 사용자 선택을 기다림
-            }
+            // v2: 재진입 감지 - 이미 처리된 경우 스킵
+            if (!resumeHandledRef.current) {
+                // localStorage progress 확인
+                const savedProgress = loadProgress();
+                if (savedProgress && savedProgress.answers.length === problems.length) {
+                    setShowResumePrompt(true);
+                    setResumeType('progress');
+                    return;
+                }
 
-            // v2: 마지막 submission이 in_progress이고 오답이 있으면 retry 재진입 제안
-            const lastSession = mySessions.at(-1) as any;
-            if (lastSession && lastSession.status === 'in_progress' && lastSession.details?.incorrectProblems?.length > 0) {
-                setSavedRetryData({
-                    answers: lastSession.details.answers || lastSession.answers || [],
-                    incorrectProblems: lastSession.details.incorrectProblems,
-                });
-                setShowResumePrompt(true);
-                setResumeType('retry');
-                return;
+                // 마지막 submission이 in_progress이고 오답이 있으면 retry 재진입 제안
+                const lastSession = mySessions.at(-1) as any;
+                if (lastSession && lastSession.status === 'in_progress' && lastSession.details?.incorrectProblems?.length > 0) {
+                    setSavedRetryData({
+                        answers: lastSession.details.answers || lastSession.answers || [],
+                        incorrectProblems: lastSession.details.incorrectProblems,
+                    });
+                    setShowResumePrompt(true);
+                    setResumeType('retry');
+                    return;
+                }
             }
 
             // Initialize answers array
@@ -324,6 +327,7 @@ export default function TransformAssignment({
             }
             progressSavedRef.current = true; // 이미 in_progress 저장됨
         }
+        resumeHandledRef.current = true;
         setShowResumePrompt(false);
     };
 
@@ -353,6 +357,7 @@ export default function TransformAssignment({
             progressSavedRef.current = true;
             saveProgress(retryAnswers, 0, 'retry', 0, savedRetryData.incorrectProblems);
         }
+        resumeHandledRef.current = true;
         setShowResumePrompt(false);
     };
 
@@ -367,6 +372,7 @@ export default function TransformAssignment({
         setCurrentSession(null);
         setSavedRetryData(null);
         progressSavedRef.current = false;
+        resumeHandledRef.current = true;
         setShowResumePrompt(false);
     };
 
