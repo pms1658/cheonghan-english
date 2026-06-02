@@ -61,21 +61,24 @@ export default function StudentHomeworkPage() {
             // Student: subscribe to homework list + statuses simultaneously
             const unsub1 = dbSubscriptions.onStudentHomeworks(studentId, undefined, async (mine) => {
                 setHomeworks(mine);
-                // Check linked assignment completions
-                const linkedStatuses: Record<string, string[]> = {};
+                // Check linked assignment completions (v2.1: with detailed statuses)
+                const linkedCompletedMap: Record<string, string[]> = {};
+                const linkedStatusesMap: Record<string, Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'>> = {};
                 await Promise.all(mine.map(async (hw) => {
                     if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                         const ids = hw.linkedAssignments.map(la => la.assignmentId);
-                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids, hw.createdAt);
-                        if (completed.length > 0) linkedStatuses[hw.id] = completed;
+                        const result = await dbService.checkLinkedAssignmentStatuses(studentId, ids, hw.createdAt);
+                        if (result.completedIds.length > 0) linkedCompletedMap[hw.id] = result.completedIds;
+                        if (Object.keys(result.statuses).length > 0) linkedStatusesMap[hw.id] = result.statuses;
                     }
                 }));
                 // Merge linked statuses into statusMap
                 setStatusMap(prev => {
                     const next = { ...prev };
-                    for (const [hwId, completedIds] of Object.entries(linkedStatuses)) {
+                    for (const hwId of Object.keys({ ...linkedCompletedMap, ...linkedStatusesMap })) {
                         if (!next[hwId]) next[hwId] = { id: `${hwId}_${studentId}`, homeworkId: hwId, studentId, studentName: '', completed: false };
-                        next[hwId].completedAssignments = completedIds;
+                        if (linkedCompletedMap[hwId]) next[hwId].completedAssignments = linkedCompletedMap[hwId];
+                        if (linkedStatusesMap[hwId]) next[hwId].assignmentStatuses = { ...next[hwId].assignmentStatuses, ...linkedStatusesMap[hwId] };
                     }
                     return next;
                 });
@@ -89,8 +92,9 @@ export default function StudentHomeworkPage() {
                         const existing = merged[s.homeworkId];
                         merged[s.homeworkId] = {
                             ...s,
-                            // Preserve client-computed completedAssignments if Firestore doc doesn't have it
+                            // Preserve client-computed fields if Firestore doc doesn't have them
                             completedAssignments: s.completedAssignments || existing?.completedAssignments,
+                            assignmentStatuses: s.assignmentStatuses || existing?.assignmentStatuses,
                         };
                     });
                     return merged;
@@ -109,6 +113,11 @@ export default function StudentHomeworkPage() {
     // v2: Check linked assignment completion
     const isLinkedComplete = (hwId: string, assignmentId: string): boolean => {
         return statusMap[hwId]?.completedAssignments?.includes(assignmentId) || false;
+    };
+
+    // v2.1: Get linked assignment detailed status
+    const getLinkedStatus = (hwId: string, assignmentId: string): 'pending_review' | 'approved' | 'in_progress' | 'completed' | null => {
+        return statusMap[hwId]?.assignmentStatuses?.[assignmentId] || null;
     };
 
     // Phase 2: Toggle individual item check
@@ -429,6 +438,7 @@ export default function StudentHomeworkPage() {
                                             {/* Linked assignments */}
                                             {(expanded ? hw.linkedAssignments || [] : (hw.linkedAssignments || []).slice(0, Math.max(0, 3 - hw.items.length))).map((la, i) => {
                                                 const isComplete = isLinkedComplete(hw.id, la.assignmentId);
+                                                const linkedStatus = getLinkedStatus(hw.id, la.assignmentId);
                                                 const itemNum = hw.items.length + i + 1;
                                                 return (
                                                     <div
@@ -449,11 +459,33 @@ export default function StudentHomeworkPage() {
                                                             <span className="mt-0.5 flex-shrink-0 w-[18px] h-[18px] rounded border-2 bg-emerald-500 border-emerald-500 text-white flex items-center justify-center">
                                                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                                                             </span>
+                                                        ) : linkedStatus === 'pending_review' ? (
+                                                            <span className="mt-0.5 flex-shrink-0 w-[18px] h-[18px] rounded border-2 bg-yellow-400 border-yellow-400 text-white flex items-center justify-center">
+                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                            </span>
+                                                        ) : linkedStatus === 'approved' ? (
+                                                            <span className="mt-0.5 flex-shrink-0 w-[18px] h-[18px] rounded border-2 bg-sky-400 border-sky-400 text-white flex items-center justify-center">
+                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                                            </span>
+                                                        ) : linkedStatus === 'in_progress' ? (
+                                                            <span className="mt-0.5 flex-shrink-0 w-[18px] h-[18px] rounded border-2 border-blue-400 text-blue-500 flex items-center justify-center">
+                                                                <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                                                            </span>
                                                         ) : (
                                                             <span className="text-indigo-500 font-bold min-w-[20px] text-right">{itemNum}.</span>
                                                         )}
                                                         <span className={`${isComplete ? 'line-through' : 'text-indigo-600 dark:text-indigo-400 hover:underline'}`}>{la.title}</span>
-                                                        {!isComplete && !isAdmin && (
+                                                        {/* 상태 배지 */}
+                                                        {linkedStatus === 'pending_review' && (
+                                                            <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[9px] font-black rounded-md whitespace-nowrap">승인대기</span>
+                                                        )}
+                                                        {linkedStatus === 'approved' && (
+                                                            <span className="px-1.5 py-0.5 bg-sky-100 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[9px] font-black rounded-md whitespace-nowrap">승인완료</span>
+                                                        )}
+                                                        {linkedStatus === 'in_progress' && (
+                                                            <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-black rounded-md whitespace-nowrap">학습중</span>
+                                                        )}
+                                                        {!isComplete && !isAdmin && !linkedStatus && (
                                                             <svg className="w-3 h-3 text-indigo-400 opacity-50 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                                                         )}
                                                     </div>

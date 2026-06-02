@@ -677,6 +677,7 @@ export const dbService = {
     toggleStudentHomeworkItem: homeworkService.toggleStudentHomeworkItem,
     getStudentHomeworkStatus: homeworkService.getStudentHomeworkStatus,
     checkLinkedAssignmentCompletion: homeworkService.checkLinkedAssignmentCompletion,
+    checkLinkedAssignmentStatuses: homeworkService.checkLinkedAssignmentStatuses,
 
     // ─── Reports ───
 

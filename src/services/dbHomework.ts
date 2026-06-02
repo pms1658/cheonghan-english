@@ -220,6 +220,126 @@ export const homeworkService = {
             return [];
         }
     },
+    /** 과제방 linked assignment 세부 상태 조회 (v2.1)
+     * 반환: { completedIds: string[], statuses: Record<assignmentId, status> }
+     * status: 'pending_review' | 'approved' | 'in_progress' | 'completed'
+     */
+    checkLinkedAssignmentStatuses: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number): Promise<{
+        completedIds: string[];
+        statuses: Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'>;
+    }> => {
+        if (!assignmentIds.length) return { completedIds: [], statuses: {} };
+        try {
+            const q = query(
+                collection(db, 'submissions'),
+                where('studentId', '==', studentId)
+            );
+            const sn = await getDocs(q);
+
+            // 과제 유형 조회
+            const assignmentTypes: Record<string, string> = {};
+            await Promise.all(assignmentIds.map(async (aid) => {
+                try {
+                    const aDoc = await getDoc(doc(db, 'assignments', aid));
+                    if (aDoc.exists()) {
+                        assignmentTypes[aid] = (aDoc.data().type as string) || '';
+                    }
+                } catch { /* ignore */ }
+            }));
+
+            const getPassScore = (type: string): number => {
+                switch (type) {
+                    case 'structure':
+                    case 'analysis':
+                        return 80;
+                    case 'writing':
+                    case 'writing_session':
+                        return 90;
+                    default:
+                        return 100;
+                }
+            };
+
+            // 각 assignment별 submission 정보 수집
+            const bestScores: Record<string, number> = {};
+            const latestStatuses: Record<string, string> = {};  // 최신 status
+            const hasTestSubmission: Record<string, boolean> = {};  // 테스트 제출 여부
+            const hasRoundComplete: Record<string, boolean> = {};  // round_complete 상태 추적
+
+            sn.docs.forEach(d => {
+                const data = d.data();
+                const aid = data.assignmentId;
+                if (!aid || !assignmentIds.includes(aid)) return;
+
+                if (sinceTimestamp) {
+                    const submittedAt = data.submittedAt || data.timestamp || 0;
+                    if (submittedAt < sinceTimestamp) return;
+                }
+
+                const score = data.score ?? 0;
+                const status = data.status || '';
+                const submittedAt = data.submittedAt || data.timestamp || 0;
+
+                // 최고 점수 추적
+                bestScores[aid] = Math.max(bestScores[aid] || 0, score);
+
+                // 테스트 제출 여부 추적 (score > 0이면 테스트를 본 것)
+                if (score > 0) {
+                    hasTestSubmission[aid] = true;
+                }
+
+                // round_complete status 추적 (변형문제 완료 표시)
+                if (status === 'round_complete') {
+                    hasRoundComplete[aid] = true;
+                }
+
+                // 최신 status 추적 (승인대기, 승인완료 등)
+                if (status === 'pending_review' || status === 'approved' || status === 'selection_rejected') {
+                    // 이 상태들은 시간 관계없이 가장 우선
+                    const prevStatus = latestStatuses[aid];
+                    if (!prevStatus ||
+                        status === 'approved' ||
+                        (status === 'pending_review' && prevStatus !== 'approved')) {
+                        latestStatuses[aid] = status;
+                    }
+                }
+            });
+
+            // 상태 결정
+            const statuses: Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'> = {};
+            const completedIds: string[] = [];
+
+            assignmentIds.forEach(aid => {
+                const passScore = getPassScore(assignmentTypes[aid] || '');
+                const best = bestScores[aid] || 0;
+                const latestStatus = latestStatuses[aid];
+                const type = assignmentTypes[aid] || '';
+                const isVocabType = type === 'vocabulary' || type === 'selection';
+                const isTransformType = type === 'transform' || type === 'transform_subjective' || type === 'external_subjective' || type === 'mock_exam';
+
+                // transform 타입: round_complete status 또는 100점이면 완료
+                if (isTransformType && hasRoundComplete[aid]) {
+                    statuses[aid] = 'completed';
+                    completedIds.push(aid);
+                } else if (best >= passScore) {
+                    statuses[aid] = 'completed';
+                    completedIds.push(aid);
+                } else if (isVocabType && latestStatus === 'pending_review') {
+                    statuses[aid] = 'pending_review';
+                } else if (isVocabType && latestStatus === 'approved') {
+                    statuses[aid] = 'approved';
+                } else if (hasTestSubmission[aid] || best > 0) {
+                    statuses[aid] = 'in_progress';
+                }
+                // else: 아직 아무것도 안 함 → statuses에 키 없음
+            });
+
+            return { completedIds, statuses };
+        } catch (e) {
+            console.error('Error checking linked assignment statuses:', e);
+            return { completedIds: [], statuses: {} };
+        }
+    },
 };
 
 // ─── Real-time Subscription Functions ───

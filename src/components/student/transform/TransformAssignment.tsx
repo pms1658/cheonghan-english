@@ -33,7 +33,51 @@ export default function TransformAssignment({
     const searchParams = useSearchParams();
     const viewAttempt = searchParams.get('viewAttempt');
 
+    // v2: 재진입 관련 상태
+    const [showResumePrompt, setShowResumePrompt] = useState(false);
+    const [resumeType, setResumeType] = useState<'progress' | 'retry' | null>(null);
+    const [savedRetryData, setSavedRetryData] = useState<{ answers: number[]; incorrectProblems: number[] } | null>(null);
+    const progressSavedRef = useRef(false); // in_progress submission 이미 저장했는지
+
     const problems: VariantProblem[] = assignment.variantProblems || [];
+
+    // localStorage key
+    const PROGRESS_KEY = `transform_progress_${assignment.id}_${studentId}`;
+
+    // v2: localStorage에 진행 상태 저장
+    const saveProgress = useCallback((answers: number[], idx: number, currentMode: 'test' | 'retry', elapsed: number, retryIncorrect?: number[]) => {
+        try {
+            localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+                answers,
+                currentIdx: idx,
+                timeElapsed: elapsed,
+                mode: currentMode,
+                retryIncorrect,
+                savedAt: Date.now(),
+            }));
+        } catch { /* ignore quota errors */ }
+    }, [PROGRESS_KEY]);
+
+    // v2: localStorage에서 진행 상태 로드
+    const loadProgress = useCallback((): { answers: number[]; currentIdx: number; timeElapsed: number; mode: 'test' | 'retry'; retryIncorrect?: number[] } | null => {
+        try {
+            const raw = localStorage.getItem(PROGRESS_KEY);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            // 24시간 이상 지난 progress는 무시
+            if (Date.now() - data.savedAt > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem(PROGRESS_KEY);
+                return null;
+            }
+            return data;
+        } catch {
+            return null;
+        }
+    }, [PROGRESS_KEY]);
+
+    const clearProgress = useCallback(() => {
+        try { localStorage.removeItem(PROGRESS_KEY); } catch { /* ignore */ }
+    }, [PROGRESS_KEY]);
 
     const loadSessions = useCallback(async () => {
         try {
@@ -49,6 +93,27 @@ export default function TransformAssignment({
 
             setSessions(mySessions as any[]);
 
+            // v2: 재진입 감지 - localStorage progress 확인
+            const savedProgress = loadProgress();
+            if (savedProgress && savedProgress.answers.length === problems.length) {
+                // 풀던 중간 progress가 있음
+                setShowResumePrompt(true);
+                setResumeType('progress');
+                return; // 사용자 선택을 기다림
+            }
+
+            // v2: 마지막 submission이 in_progress이고 오답이 있으면 retry 재진입 제안
+            const lastSession = mySessions.at(-1) as any;
+            if (lastSession && lastSession.status === 'in_progress' && lastSession.details?.incorrectProblems?.length > 0) {
+                setSavedRetryData({
+                    answers: lastSession.details.answers || lastSession.answers || [],
+                    incorrectProblems: lastSession.details.incorrectProblems,
+                });
+                setShowResumePrompt(true);
+                setResumeType('retry');
+                return;
+            }
+
             // Initialize answers array
             if (currentAnswers.length === 0) {
                 setCurrentAnswers(new Array(problems.length).fill(-1));
@@ -56,7 +121,7 @@ export default function TransformAssignment({
         } catch (error) {
             console.error('Error loading sessions:', error);
         }
-    }, [assignment.id, studentId, problems.length, currentAnswers.length]);
+    }, [assignment.id, studentId, problems.length, currentAnswers.length, loadProgress]);
 
     useEffect(() => {
         loadSessions();
@@ -100,6 +165,28 @@ export default function TransformAssignment({
         const newAnswers = [...currentAnswers];
         newAnswers[problemIndex] = choiceIndex;
         setCurrentAnswers(newAnswers);
+
+        // v2: localStorage에 자동 저장
+        const retryIncorrect = mode === 'retry' && currentSession ? currentSession.incorrectProblems : undefined;
+        saveProgress(newAnswers, currentIdx, mode === 'retry' ? 'retry' : 'test', timeLeft, retryIncorrect);
+
+        // v2: 첫 답안 선택 시 Firestore에 in_progress 기록 (배지 "학습중" 표시용)
+        if (!progressSavedRef.current) {
+            progressSavedRef.current = true;
+            dbService.addSubmission({
+                assignmentId: assignment.id,
+                assignmentTitle: assignment.title,
+                studentId,
+                studentName,
+                classId,
+                attempt: sessions.length + 1,
+                answers: newAnswers,
+                score: -1,
+                status: 'in_progress',
+                type: 'variant_session' as any,
+                details: { type: 'in_progress_save' }
+            } as any).catch(() => { /* ignore */ });
+        }
     };
 
     const calculateScore = (answers: number[]) => {
@@ -131,6 +218,10 @@ export default function TransformAssignment({
 
         const score = calculateScore(currentAnswers);
         const incorrectProblems = getIncorrectProblems(currentAnswers);
+        const isPerfect = incorrectProblems.length === 0;
+
+        // v2: round_complete 횟수 카운트 (기존 sessions에서)
+        const previousRoundCompletes = sessions.filter((s: any) => s.status === 'round_complete' || (s as any).score >= 100).length;
 
         const newSession: VariantSession = {
             id: `session_${Date.now()}`,
@@ -149,14 +240,15 @@ export default function TransformAssignment({
             // Store as regular submission with custom type
             await dbService.addSubmission({
                 assignmentId: assignment.id,
-                assignmentTitle: assignment.title, // Added title
+                assignmentTitle: assignment.title,
                 studentId,
                 studentName,
-                classId, // Added classId
+                classId,
                 attempt: newSession.attemptNumber,
                 answers: currentAnswers,
                 score,
-                status: 'passed',
+                // v2: 오답이 없으면 round_complete, 있으면 in_progress
+                status: isPerfect ? 'round_complete' : 'in_progress',
                 type: 'variant_session' as any,
                 details: newSession
             } as any);
@@ -164,6 +256,10 @@ export default function TransformAssignment({
             setCurrentSession(newSession);
             setSessions([...sessions, newSession]);
             setMode('result');
+
+            // v2: localStorage 정리 (제출 완료)
+            clearProgress();
+            progressSavedRef.current = false;
 
         } catch (error) {
             toast.error('제출 중 오류가 발생했습니다.');
@@ -187,12 +283,91 @@ export default function TransformAssignment({
             retryAnswers[idx] = -1;
         });
         setCurrentAnswers(retryAnswers);
+
+        // v2: retry 상태도 localStorage에 저장
+        saveProgress(retryAnswers, 0, 'retry', 0, currentSession.incorrectProblems);
     };
 
     const handleNewAttempt = () => {
         setMode('test');
         setCurrentAnswers(new Array(problems.length).fill(-1));
         setCurrentSession(null);
+        // v2: progress 초기화
+        clearProgress();
+        progressSavedRef.current = false;
+    };
+
+    // v2: 재진입 핸들러 - 이어서 풀기
+    const handleResumeProgress = () => {
+        const saved = loadProgress();
+        if (saved) {
+            setCurrentAnswers(saved.answers);
+            setCurrentIdx(saved.currentIdx);
+            setTimeLeft(saved.timeElapsed);
+            setIsActive(true);
+            if (saved.mode === 'retry' && saved.retryIncorrect) {
+                setMode('retry');
+                // 가상 session 생성 (retry 표시를 위해)
+                setCurrentSession({
+                    id: 'resumed',
+                    assignmentId: assignment.id,
+                    studentId,
+                    attemptNumber: sessions.length,
+                    answers: saved.answers,
+                    score: 0,
+                    incorrectProblems: saved.retryIncorrect,
+                    completedAt: 0,
+                    isRetry: true,
+                });
+            } else {
+                setMode('test');
+            }
+            progressSavedRef.current = true; // 이미 in_progress 저장됨
+        }
+        setShowResumePrompt(false);
+    };
+
+    // v2: 재진입 핸들러 - 오답 이어하기
+    const handleResumeRetry = () => {
+        if (savedRetryData) {
+            const retryAnswers = [...savedRetryData.answers];
+            savedRetryData.incorrectProblems.forEach(idx => {
+                retryAnswers[idx] = -1;
+            });
+            setCurrentAnswers(retryAnswers);
+            setCurrentIdx(0);
+            setTimeLeft(0);
+            setIsActive(true);
+            setMode('retry');
+            setCurrentSession({
+                id: 'resumed_retry',
+                assignmentId: assignment.id,
+                studentId,
+                attemptNumber: sessions.length,
+                answers: savedRetryData.answers,
+                score: 0,
+                incorrectProblems: savedRetryData.incorrectProblems,
+                completedAt: 0,
+                isRetry: true,
+            });
+            progressSavedRef.current = true;
+            saveProgress(retryAnswers, 0, 'retry', 0, savedRetryData.incorrectProblems);
+        }
+        setShowResumePrompt(false);
+    };
+
+    // v2: 재진입 핸들러 - 처음부터 다시
+    const handleStartFresh = () => {
+        clearProgress();
+        setCurrentAnswers(new Array(problems.length).fill(-1));
+        setCurrentIdx(0);
+        setTimeLeft(0);
+        setIsActive(false);
+        setMode('test');
+        setCurrentSession(null);
+        setSavedRetryData(null);
+        progressSavedRef.current = false;
+        setShowResumePrompt(false);
     };
 
     // Direction tracking for slide animation (before any early returns per React hooks rule)
@@ -210,6 +385,54 @@ export default function TransformAssignment({
     const displayIndices = mode === 'retry' && currentSession
         ? currentSession.incorrectProblems
         : problems.map((_, idx) => idx);
+
+    // v2: 재진입 프롬프트 UI
+    if (showResumePrompt) {
+        const answeredCount = resumeType === 'progress'
+            ? (loadProgress()?.answers.filter(a => a !== -1).length || 0)
+            : (savedRetryData?.incorrectProblems.length || 0);
+
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 p-8 text-center">
+                    <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                        {resumeType === 'progress' ? '이전에 풀던 문제가 있습니다' : '오답 학습이 남아있습니다'}
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                        {resumeType === 'progress'
+                            ? `${answeredCount}/${problems.length}문제를 풀었습니다. 이어서 풀까요?`
+                            : `${answeredCount}개의 오답을 다시 풀어야 합니다.`
+                        }
+                    </p>
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={resumeType === 'progress' ? handleResumeProgress : handleResumeRetry}
+                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-sm transition-all active:scale-[0.98]"
+                        >
+                            {resumeType === 'progress' ? '📝 이어서 풀기' : '🔄 오답 학습 이어하기'}
+                        </button>
+                        <button
+                            onClick={handleStartFresh}
+                            className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all"
+                        >
+                            처음부터 다시 풀기
+                        </button>
+                        <button
+                            onClick={onComplete}
+                            className="w-full py-2.5 text-slate-400 hover:text-slate-600 text-xs font-medium transition-colors"
+                        >
+                            나가기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (problems.length === 0) {
         return (
@@ -442,13 +665,35 @@ export default function TransformAssignment({
                     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500">
                         {/* Score Board */}
                         <div className="bg-white dark:bg-slate-900 px-8 py-10 md:py-12 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] text-center relative overflow-hidden border border-slate-200/30 dark:border-white/10">
-                            <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest mb-4">Assessment Complete</h2>
-                            <div className="flex flex-col items-center justify-center relative z-10">
-                                <div className={`text-[64px] md:text-[80px] font-semibold leading-none tracking-tighter ${currentSession?.score === 100 ? 'text-blue-600' : 'text-slate-900 dark:text-white'}`}>
-                                    {currentSession?.score}
-                                </div>
-                                <div className="text-[13px] font-medium text-slate-500 mt-2">Total Score</div>
-                            </div>
+                            {/* v2: round_complete 축하 메시지 */}
+                            {currentSession?.incorrectProblems.length === 0 ? (
+                                <>
+                                    <div className="text-[13px] font-bold text-blue-500 uppercase tracking-widest mb-4">
+                                        🎉 {(() => {
+                                            const roundCount = sessions.filter((s: any) => s.status === 'round_complete' || (s as any).score >= 100).length;
+                                            return roundCount >= 2 ? `${roundCount}회 완료!` : '학습 완료!';
+                                        })()}
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center relative z-10">
+                                        <div className="text-[64px] md:text-[80px] font-semibold leading-none tracking-tighter text-blue-600">
+                                            {currentSession?.score}
+                                        </div>
+                                        <div className="text-[13px] font-medium text-blue-400 mt-2">Perfect Score</div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="text-[13px] font-bold text-amber-500 uppercase tracking-widest mb-4">
+                                        오답이 {currentSession?.incorrectProblems.length}개 있습니다
+                                    </h2>
+                                    <div className="flex flex-col items-center justify-center relative z-10">
+                                        <div className="text-[64px] md:text-[80px] font-semibold leading-none tracking-tighter text-slate-900 dark:text-white">
+                                            {currentSession?.score}
+                                        </div>
+                                        <div className="text-[13px] font-medium text-slate-500 mt-2">오답 학습을 완료해야 학습완료가 됩니다</div>
+                                    </div>
+                                </>
+                            )}
 
                             <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
                                 <button
@@ -462,7 +707,16 @@ export default function TransformAssignment({
                                         onClick={handleRetryWrong}
                                         className="px-6 py-3 bg-amber-500 text-white rounded-full text-[13px] font-semibold hover:bg-amber-600 active:scale-[0.98] transition-all shadow-sm shadow-amber-200"
                                     >
-                                        Retry Wrong ({currentSession.incorrectProblems.length})
+                                        🔄 오답 학습하기 ({currentSession.incorrectProblems.length})
+                                    </button>
+                                )}
+                                {/* v2: 100점 달성 시 다시 학습 버튼 */}
+                                {currentSession && currentSession.incorrectProblems.length === 0 && (
+                                    <button
+                                        onClick={handleNewAttempt}
+                                        className="px-6 py-3 bg-blue-600 text-white rounded-full text-[13px] font-semibold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm shadow-blue-200"
+                                    >
+                                        🔁 다시 학습하기
                                     </button>
                                 )}
                                 <button

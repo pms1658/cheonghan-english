@@ -180,14 +180,16 @@ export const StudentStatusBadge = ({ assignment, submissions, userId, allAssignm
                 statusColor = 'bg-blue-50 text-blue-600 border-blue-100';
             }
         } else if (assignment.type === 'transform' || (assignment as any).type === 'variant_session' || assignment.type === 'transform_subjective' || assignment.type === 'external_subjective' || assignment.type === 'mock_exam') {
-            const maxScore = Math.max(...mySubs.map((s: any) => s.score || 0));
-            if (maxScore >= 80) {
-                const completionCount = mySubs.filter((s: any) => (s.score || 0) >= 80).length;
+            // round_complete 또는 100점 달성 기준으로 완료 카운트
+            const roundCompleteSubs = mySubs.filter((s: any) => s.status === 'round_complete' || (s.score || 0) >= 100);
+            const hasInProgress = mySubs.some((s: any) => s.status === 'in_progress' || ((s.score || 0) > 0 && (s.score || 0) < 100));
+            if (roundCompleteSubs.length > 0) {
+                const completionCount = roundCompleteSubs.length;
                 statusText = completionCount >= 2 ? `${completionCount}회완료` : '학습완료';
                 statusColor = 'bg-blue-100 text-blue-700 border-blue-200';
-            } else {
+            } else if (hasInProgress || mySubs.length > 0) {
                 statusText = '학습 중';
-                statusColor = 'bg-blue-50 text-blue-600 border-blue-100';
+                statusColor = 'bg-yellow-50 text-yellow-600 border-yellow-200';
             }
         } else {
             const validSubs = mySubs.filter((s: any) => s.score >= 0);

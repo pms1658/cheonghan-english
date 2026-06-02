@@ -425,6 +425,8 @@ export interface HomeworkStatus {
     studentCheckedAt?: number;   // 학생 마지막 체크 시간
     // v2: 과제방 자동완료 추적
     completedAssignments?: string[];  // 자동완료된 assignmentId 목록
+    // v2.1: 과제방 linked assignment 세부 상태 추적
+    assignmentStatuses?: Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'>;
     // v3: 관리자 개별 항목 확인
     adminConfirmedItems?: number[];   // 관리자가 확인한 오프라인 항목 인덱스
 }
