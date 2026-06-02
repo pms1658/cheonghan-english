@@ -213,10 +213,10 @@ export default function NewDashboardPage() {
 
     // --- NAVIGATION GRID ---
     const navItems = [
-        { href: '/guide',                             label: 'GUIDE',    sub: '구조독해 학습 가이드', accent: 'from-blue-600/20 to-blue-400/5',   border: 'hover:border-blue-500/40',   text: 'group-hover:text-blue-400' },
-        { href: '/history',                           label: 'HISTORY',  sub: '지난 학습 기록',      accent: 'from-indigo-600/20 to-indigo-400/5', border: 'hover:border-indigo-500/40', text: 'group-hover:text-indigo-400' },
-        { href: '/board',                             label: 'NOTICE',   sub: '공지사항 확인',       accent: 'from-rose-600/20 to-rose-400/5',    border: 'hover:border-rose-500/40',   text: 'group-hover:text-rose-400' },
-        { href: isAdmin ? '/admin/feedback' : '/feedback', label: 'FEEDBACK', sub: '건의사항 보내기', accent: 'from-emerald-600/20 to-emerald-400/5', border: 'hover:border-emerald-500/40', text: 'group-hover:text-emerald-400' },
+        { href: '/guide',                                  label: 'GUIDE',    sub: '구조독해 학습 가이드', accent: 'from-blue-500/10 to-blue-300/5',    border: 'hover:border-blue-200 dark:hover:border-blue-500/40',   text: 'group-hover:text-blue-600 dark:group-hover:text-blue-400' },
+        { href: '/history',                                label: 'HISTORY',  sub: '지난 학습 기록',      accent: 'from-indigo-500/10 to-indigo-300/5',  border: 'hover:border-indigo-200 dark:hover:border-indigo-500/40', text: 'group-hover:text-indigo-600 dark:group-hover:text-indigo-400' },
+        { href: '/board',                                  label: 'NOTICE',   sub: '공지사항 확인',       accent: 'from-rose-500/10 to-rose-300/5',      border: 'hover:border-rose-200 dark:hover:border-rose-500/40',     text: 'group-hover:text-rose-500 dark:group-hover:text-rose-400' },
+        { href: isAdmin ? '/admin/feedback' : '/feedback', label: 'FEEDBACK', sub: '건의사항 보내기', accent: 'from-emerald-500/10 to-emerald-300/5', border: 'hover:border-emerald-200 dark:hover:border-emerald-500/40', text: 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400' },
     ];
     const navGrid = (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
@@ -224,13 +224,13 @@ export default function NewDashboardPage() {
                 <Link
                     key={item.href}
                     href={item.href}
-                    className={`relative bg-white/4 border border-white/8 rounded-2xl p-5 md:p-6 ${item.border} hover:bg-white/6 transition-all duration-300 group flex flex-col justify-center overflow-hidden h-28 md:h-32`}
+                    className={`relative bg-white dark:bg-[#0c102b] border border-slate-200 dark:border-white/10 rounded-2xl p-5 md:p-6 ${item.border} shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-center overflow-hidden h-28 md:h-32`}
                 >
                     {/* Hover gradient fill */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`}></div>
                     <div className="relative z-10">
-                        <h3 className={`text-xl md:text-2xl font-black text-white/80 tracking-tighter ${item.text} transition-colors duration-200`}>{item.label}</h3>
-                        <p className="text-xs text-white/40 font-medium mt-1.5 group-hover:text-white/60 transition-colors">{item.sub}</p>
+                        <h3 className={`text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tighter ${item.text} transition-colors duration-200`}>{item.label}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5 group-hover:text-slate-600 dark:group-hover:text-white/60 transition-colors">{item.sub}</p>
                     </div>
                 </Link>
             ))}
@@ -239,19 +239,15 @@ export default function NewDashboardPage() {
 
     return (
         <div className="p-5 md:p-8 max-w-7xl mx-auto pb-24 lg:pb-12">
-            {/* Ambient background glows */}
-            <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none -z-0"></div>
-            <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none -z-0"></div>
-
             {/* Header Text */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 px-1 relative z-10"
+                className="mb-6 px-1"
             >
-                <p className="text-white/40 text-xs font-bold tracking-[0.25em] uppercase mb-2">{greeting}</p>
-                <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-white">
+                <p className="text-slate-400 dark:text-slate-500 text-xs font-bold tracking-[0.25em] uppercase mb-1.5">{greeting}</p>
+                <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
+                    <span className="text-blue-700 dark:text-blue-400">
                         {(user as any)?.role === 'admin'
                             ? getAdminDisplayName((user as any)?.email).replace('!', '')
                             : `${(user as any)?.name} 학생`
@@ -260,7 +256,7 @@ export default function NewDashboardPage() {
                 </h1>
             </motion.div>
 
-            <div className="space-y-4 md:space-y-6 relative z-10">
+            <div className="space-y-4 md:space-y-6">
                 {/* 1. Daily Quote & D-Day Section */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}

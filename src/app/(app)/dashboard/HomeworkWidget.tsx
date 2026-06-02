@@ -145,8 +145,8 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.4 }}
             >
-                <div className="bg-white/4 border border-white/8 rounded-2xl p-6 text-center">
-                    <p className="text-white/40 text-sm font-medium">이번 주 부여된 과제가 없습니다</p>
+                <div className="bg-white dark:bg-[#0c102b] rounded-2xl border border-slate-200 dark:border-white/10 p-6 text-center">
+                    <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">이번 주 부여된 과제가 없습니다</p>
                 </div>
             </motion.div>
         );
@@ -184,11 +184,11 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.4 }}
             >
-                <div className="bg-white/4 border border-white/8 rounded-2xl p-5 md:p-6">
+                <div className="bg-white dark:bg-[#0c102b] rounded-2xl border border-slate-200 dark:border-white/10 p-5 md:p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-base font-black text-white tracking-tight flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                            <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                                 이번주 과제 현황
                             </h2>
                             {homeworks.some(h => isNewHw(h.createdAt)) && (
@@ -200,7 +200,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                         </div>
                         <Link
                             href="/admin/homework"
-                            className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors flex items-center gap-1"
                         >
                             과제관리
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
@@ -208,20 +208,20 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                     </div>
 
                     {entries.length === 0 ? (
-                        <p className="text-[13px] text-white/40 font-medium py-2">모든 학생이 과제를 완료했습니다 ✓</p>
+                        <p className="text-[13px] text-slate-400 dark:text-slate-500 font-medium py-2">모든 학생이 과제를 완료했습니다 ✓</p>
                     ) : (
                         <div className="flex flex-wrap gap-2">
                             {entries.map(({ sid, name, pending }) => (
                                 <Link
                                     key={sid}
                                     href={`/admin/homework?student=${sid}`}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[12px] font-bold text-white/60 hover:bg-blue-500/15 hover:border-blue-500/30 hover:text-blue-300 transition-all"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 rounded-full text-[12px] font-bold text-slate-600 dark:text-slate-400 hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-500/10 dark:hover:border-blue-500/20 hover:text-blue-700 dark:hover:text-blue-400 transition-all"
                                 >
-                                    <span className="w-5 h-5 rounded-full bg-blue-500/30 text-blue-300 flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+                                    <span className="w-5 h-5 rounded-full bg-[#0A0E27] dark:bg-blue-500/30 text-white dark:text-blue-300 flex items-center justify-center text-[9px] font-bold flex-shrink-0">
                                         {name.charAt(0)}
                                     </span>
                                     {name}
-                                    <span className="text-blue-400 font-black">{pending}</span>
+                                    <span className="text-blue-600 dark:text-blue-400 font-black">{pending}</span>
                                 </Link>
                             ))}
                         </div>
@@ -268,11 +268,11 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.4 }}
         >
-            <div className="bg-white/4 border border-white/8 rounded-2xl p-5 md:p-6">
+            <div className="bg-white dark:bg-[#0c102b] rounded-2xl border border-slate-200 dark:border-white/10 p-5 md:p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-base font-black text-white tracking-tight flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                        <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                             이번주 과제
                         </h2>
                         {homeworks.some(h => isNewHw(h.createdAt)) && (
@@ -284,7 +284,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                     </div>
                     <Link
                         href="/homework"
-                        className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors"
+                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
                     >
                         전체보기 →
                     </Link>
@@ -321,13 +321,13 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                                                 ? `/student/assignment/${item.linked.assignmentId}?classId=${item.linked.classId}`
                                                 : `/student/assignment/${item.linked.assignmentId}`
                                             }
-                                            className={`text-[13px] leading-relaxed flex items-start gap-2 hover:underline ${isCompleted ? 'text-white/30' : 'text-blue-400'}`}
+                                            className={`text-[13px] leading-relaxed flex items-start gap-2 hover:underline ${isCompleted ? 'text-slate-400 dark:text-slate-600' : 'text-indigo-600 dark:text-indigo-400'}`}
                                             onClick={e => e.stopPropagation()}
                                         >
-                                            <span className={`font-bold min-w-[18px] text-right ${isCompleted ? 'text-white/30' : 'text-blue-500'}`}>{num}.</span>
+                                            <span className={`font-bold min-w-[18px] text-right ${isCompleted ? 'text-slate-400' : 'text-indigo-500'}`}>{num}.</span>
                                             <span className={isCompleted ? 'line-through' : ''}>{item.text}</span>
                                             {isCompleted
-                                                ? <span className="text-emerald-400 text-[10px] mt-0.5 flex-shrink-0">✓</span>
+                                                ? <span className="text-emerald-500 text-[10px] mt-0.5 flex-shrink-0">✓</span>
                                                 : <svg className="w-3 h-3 mt-1 opacity-50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                                             }
                                         </Link>
@@ -335,23 +335,23 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                                 }
 
                                 return (
-                                    <p key={`t-${num}`} className={`text-[13px] leading-relaxed flex items-start gap-2 ${isCompleted ? 'text-white/25' : 'text-white/60'}`}>
-                                        <span className={`font-bold min-w-[18px] text-right ${isCompleted ? 'text-white/25' : 'text-blue-500'}`}>{num}.</span>
+                                    <p key={`t-${num}`} className={`text-[13px] leading-relaxed flex items-start gap-2 ${isCompleted ? 'text-slate-400 dark:text-slate-600' : 'text-slate-600 dark:text-slate-400'}`}>
+                                        <span className={`font-bold min-w-[18px] text-right ${isCompleted ? 'text-slate-400' : 'text-blue-500'}`}>{num}.</span>
                                         <span className={isCompleted ? 'line-through' : ''}>{item.text}</span>
-                                        {isCompleted && <span className="text-emerald-400 text-[10px] mt-0.5 flex-shrink-0">✓</span>}
+                                        {isCompleted && <span className="text-emerald-500 text-[10px] mt-0.5 flex-shrink-0">✓</span>}
                                     </p>
                                 );
                             };
 
                             return (
                                 <div key={hw.id}>
-                                    {idx > 0 && <div className="border-t border-white/8 mb-4" />}
+                                    {idx > 0 && <div className="border-t border-slate-100 dark:border-white/5 mb-4" />}
                                     <div className="flex items-center gap-2 mb-2">
                                         {isTodayHw(hw.date) && (
-                                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] font-black rounded-md">TODAY</span>
+                                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded-md">TODAY</span>
                                         )}
-                                        <h3 className="text-[13px] font-bold text-white/80">{hw.title}</h3>
-                                        <span className="text-[10px] text-white/30 font-medium">{hw.date}</span>
+                                        <h3 className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{hw.title}</h3>
+                                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{hw.date}</span>
                                     </div>
                                     <div className="space-y-1 pl-1">
                                         {structuredItems.map((item, i) => renderItem(item, i + 1, i))}
@@ -363,19 +363,19 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
 
                     {/* Mini Calendar */}
                     <div className="lg:col-span-2 hidden lg:block">
-                        <div className="bg-white/4 border border-white/6 rounded-xl p-3">
+                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
                             <div className="flex items-center justify-between mb-2">
-                                <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else { setCalMonth(m => m - 1); } }} className="p-1 rounded hover:bg-white/10 text-white/40 transition-colors">
+                                <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else { setCalMonth(m => m - 1); } }} className="p-1 rounded hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 transition-colors">
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                                 </button>
-                                <span className="text-xs font-black text-white/70">{calYear}년 {calMonth + 1}월</span>
-                                <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else { setCalMonth(m => m + 1); } }} className="p-1 rounded hover:bg-white/10 text-white/40 transition-colors">
+                                <span className="text-xs font-black text-slate-700 dark:text-slate-300">{calYear}년 {calMonth + 1}월</span>
+                                <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else { setCalMonth(m => m + 1); } }} className="p-1 rounded hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 transition-colors">
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                                 </button>
                             </div>
                             <div className="grid grid-cols-7 mb-0.5">
                                 {['일','월','화','수','목','금','토'].map((d, i) => (
-                                    <div key={d} className={`text-center text-[8px] font-bold py-0.5 ${i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-white/30'}`}>{d}</div>
+                                    <div key={d} className={`text-center text-[8px] font-bold py-0.5 ${i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}>{d}</div>
                                 ))}
                             </div>
                             <div className="grid grid-cols-7 gap-0.5">
@@ -388,22 +388,22 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                                             key={idx}
                                             href="/homework"
                                             className={`relative flex flex-col items-center justify-center h-7 rounded-md text-[10px] font-bold transition-all ${
-                                                !day.isCurrentMonth ? 'text-white/15' :
+                                                !day.isCurrentMonth ? 'text-slate-300 dark:text-slate-700' :
                                                 isToday ? 'bg-blue-600 text-white' :
-                                                hasHw ? 'text-white/70 hover:bg-blue-500/15' :
-                                                dayOfWeek === 0 ? 'text-rose-400/60' :
-                                                dayOfWeek === 6 ? 'text-blue-400/60' :
-                                                'text-white/40'
+                                                hasHw ? 'text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-500/10' :
+                                                dayOfWeek === 0 ? 'text-rose-400' :
+                                                dayOfWeek === 6 ? 'text-blue-400' :
+                                                'text-slate-500 dark:text-slate-500'
                                             }`}
                                         >
                                             {day.date}
-                                            {hasHw && !isToday && <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-400" />}
+                                            {hasHw && !isToday && <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-500" />}
                                         </Link>
                                     );
                                 })}
                             </div>
-                            <div className="mt-2 flex items-center gap-2 text-[8px] text-white/30">
-                                <span className="flex items-center gap-0.5"><span className="w-1 h-1 rounded-full bg-blue-400" /> 과제</span>
+                            <div className="mt-2 flex items-center gap-2 text-[8px] text-slate-400 dark:text-slate-500">
+                                <span className="flex items-center gap-0.5"><span className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400" /> 과제</span>
                             </div>
                         </div>
                     </div>
