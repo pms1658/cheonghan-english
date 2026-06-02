@@ -35,14 +35,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen font-sans selection:bg-blue-500/30 text-slate-800 dark:text-slate-100 overflow-hidden relative transition-colors">
             <CommandPalette />
 
-            {/* Persistent mini-logo expand button — fixed top-left, all pages, desktop only */}
+            {/* Persistent mini-logo expand button — just the logo badge floating, no outer box */}
             {isSidebarCollapsed && (
                 <button
                     onClick={toggleSidebar}
-                    className="hidden lg:flex fixed top-0 left-0 z-[9997] w-14 h-14 items-center justify-center bg-[#0A0E27] border-r border-b border-white/[0.08] hover:bg-[#0d1337] transition-colors duration-200 group"
+                    className="hidden lg:block fixed top-2 left-2 z-[9997] group"
                     title="사이드바 펼치기"
                 >
-                    <div className="w-9 h-9 bg-[#083973] rounded-xl shadow-lg ring-1 ring-white/15 overflow-hidden flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform duration-300">
+                    <div className="w-10 h-10 bg-[#083973] rounded-xl shadow-xl ring-1 ring-white/20 overflow-hidden flex items-center justify-center p-0.5 group-hover:scale-105 group-hover:ring-white/40 transition-all duration-300">
                         <Logo className="w-full h-full" />
                     </div>
                 </button>

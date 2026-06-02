@@ -119,7 +119,7 @@ export default function TopBar({ onMenuClick, isSidebarCollapsed = false, onSide
 
     return (
         <header
-            className={`px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#0A0E27]/90 backdrop-blur-md sticky top-0 z-20 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'lg:pl-14' : ''}`}
+            className={`px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#0A0E27]/90 backdrop-blur-md sticky top-0 z-20 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'lg:pl-16' : ''}`}
             style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
         >
             {/* Left: Mobile Menu & Breadcrumb/Title */}
