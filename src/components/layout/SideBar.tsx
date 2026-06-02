@@ -49,18 +49,28 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false, isC
                         </div>
                     </Link>
 
-                    {/* Desktop collapse button — top-right of header */}
+                    {/* Desktop collapse button — panel icon (always visible) + hover label */}
                     {onCollapseToggle && (
                         <button
                             onClick={onCollapseToggle}
-                            className="hidden lg:flex absolute top-4 right-4 w-7 h-7 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all duration-200"
+                            className="hidden lg:flex items-center gap-2 absolute top-3 right-3 group"
                             title="사이드바 접기"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7M21 12H4" />
-                            </svg>
+                            {/* Label fades in to the left of the icon on hover */}
+                            <span className="text-[11px] font-semibold text-white/70 bg-white/10 px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap select-none backdrop-blur-sm border border-white/10">
+                                사이드바 닫기
+                            </span>
+                            {/* Panel icon — always visible */}
+                            <div className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/50 group-hover:text-white group-hover:bg-white/15 group-hover:border-white/30 transition-all duration-200">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" />
+                                    <path strokeWidth="1.5" d="M9 3v18" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M14 15l-2.5-3 2.5-3" />
+                                </svg>
+                            </div>
                         </button>
                     )}
+
                 </div>
 
                 {/* Theme Toggle */}
