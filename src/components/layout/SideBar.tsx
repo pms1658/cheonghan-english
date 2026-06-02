@@ -98,7 +98,7 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false }: S
                 </div>
 
                 {/* Section 2: Class Tree */}
-                <div className="flex-1 bg-black/50 pt-6 px-3">
+                <div className="flex-1 pt-6 px-3">
                     <ClassTree onNavigate={onClose} />
                 </div>
 
