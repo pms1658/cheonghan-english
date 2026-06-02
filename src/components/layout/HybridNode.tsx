@@ -39,15 +39,8 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
     // Fallback: If no ID, Text click toggles.
 
     // Visuals
-    const isActive = activeId === node.id; // Needs node.id to be passed from Tree builder
+    const isActive = activeId === node.id;
     const hasChildren = node.children.length > 0 || node.classes.length > 0;
-
-    // Dynamic Icon — Folders: book open/closed, Leaf: academic cap
-    const Icon = hasChildren
-        ? (isOpen
-            ? <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-            : <svg className="w-4 h-4 text-slate-500 group-hover:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>)
-        : <svg className="w-4 h-4 text-slate-500 group-hover:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>; // Document icon for leaf rooms
 
     const nodeRef = React.useRef<HTMLDivElement>(null);
     const [labelPos, setLabelPos] = useState({ top: 0, left: 0 });
@@ -152,33 +145,27 @@ export default function HybridNode({ node, depth, isOpen, onToggle, onAddChild, 
                 onTouchEnd={handleTouchEnd}
                 onTouchMove={handleTouchEnd}
             >
-                <div className="flex items-center gap-3 overflow-custom min-w-0 flex-1">
-                    {/* Chevron: Only if children exist */}
+                <div className="flex items-center gap-2 overflow-hidden min-w-0 flex-1">
+                    {/* Depth indent + folder toggle indicator */}
                     {hasChildren ? (
                         <div
                             onClick={handleChevronClick}
-                            className={`p-0.5 rounded-md transition-colors hover:bg-white/10 ${isActive ? 'text-white' : 'text-white/40'}`}
+                            className={`flex-shrink-0 w-3 text-center text-[10px] font-bold transition-colors ${isActive ? 'text-blue-400' : 'text-white/25 hover:text-white/60'}`}
                         >
-                            <svg className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                            {isOpen ? '▾' : '▸'}
                         </div>
                     ) : (
-                        <div className="w-4 flex-shrink-0" /> // Spacer
+                        <div className="w-3 flex-shrink-0" />
                     )}
-
-                    {/* Icon */}
-                    <div className="shrink-0 flex items-center justify-center">
-                        {/* Dynamic Icon Color Override for Active State if needed, defaulting to inherit or explicit */}
-                        {React.cloneElement(Icon as React.ReactElement, { className: `w-[18px] h-[18px] ${isActive ? 'text-blue-400' : 'text-white/40 group-hover:text-blue-400'}` })}
-                    </div>
 
                     {/* Text */}
                     <span className={`text-[13px] truncate flex-1 ${isActive ? 'font-bold' : 'font-medium'}`}>
                         {node.name}
                     </span>
 
-                    {/* Active Indicator (Blinking Blue Dot) */}
+                    {/* Active Indicator */}
                     {isActive && (
-                        <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse shrink-0 ml-2"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 ml-1"></div>
                     )}
                 </div>
 
