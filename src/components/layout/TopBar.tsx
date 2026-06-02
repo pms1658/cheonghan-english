@@ -119,7 +119,7 @@ export default function TopBar({ onMenuClick, isSidebarCollapsed = false, onSide
 
     return (
         <header
-            className="px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#0A0E27]/90 backdrop-blur-md sticky top-0 z-20"
+            className={`px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#0A0E27]/90 backdrop-blur-md sticky top-0 z-20 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'lg:pl-14' : ''}`}
             style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
         >
             {/* Left: Mobile Menu & Breadcrumb/Title */}
@@ -131,18 +131,7 @@ export default function TopBar({ onMenuClick, isSidebarCollapsed = false, onSide
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
-                {/* Desktop: Expand sidebar button — visible only when collapsed */}
-                {isSidebarCollapsed && onSidebarToggle && (
-                    <button
-                        onClick={onSidebarToggle}
-                        className="hidden lg:flex w-8 h-8 items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200 -ml-1"
-                        title="사이드바 펼치기"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M3 12h17" />
-                        </svg>
-                    </button>
-                )}
+
 
                 <div className="block">
                     <span className="text-lg sm:text-xl font-bold text-white tracking-tight truncate max-w-[200px] block">
