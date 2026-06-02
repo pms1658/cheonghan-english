@@ -28,7 +28,7 @@ export async function POST(req: Request) {
             generationConfig: { responseMimeType: "application/json" }
         });
 
-        // Build compact prompt — all items in one call
+        // Build compact prompt ??all items in one call
         const itemLines = items.map((item: any, idx: number) => {
             return `${idx + 1}. word: "${item.word}" | correctMeaning: "${item.correctMeaning}" | studentInput: "${item.studentInput}"`;
         }).join('\n');
@@ -38,16 +38,16 @@ You are a Korean vocabulary grading assistant for a high-school English study pl
 
 Below is a list of vocabulary test answers. For each item:
 - "word" is the English word being tested.
-- "correctMeaning" is the original Korean meaning stored in the database. It may contain multiple meanings separated by commas (e.g., "추측하다, 가정하다").
+- "correctMeaning" is the original Korean meaning stored in the database. It may contain multiple meanings separated by commas (e.g., "추측?�다, 가?�하??).
 - "studentInput" is what the student typed in Korean.
 
 ### Grading Rules:
 1. If the student's input matches ANY ONE of the correct meanings (even partially or with synonyms), mark it as CORRECT.
-2. Accept reasonable synonyms. For example: "추론하다" for "추측하다", "상상하다" for "상상, 가상", "기부하다" for "기증하다".
-3. Accept minor variations: "~하다" vs "~하는 것", trailing particles like "를", "을", "의" differences.
+2. Accept reasonable synonyms. For example: "추론?�다" for "추측?�다", "?�상?�다" for "?�상, 가??, "기�??�다" for "기증?�다".
+3. Accept minor variations: "~?�다" vs "~?�는 �?, trailing particles like "�?, "??, "?? differences.
 4. If the student wrote nothing (empty string), mark as INCORRECT.
-5. Be generous — if the student clearly understands the concept behind the word, mark CORRECT.
-6. However, if the meaning is fundamentally different (e.g., "사과" for "apple" when the word means "apply"), mark INCORRECT.
+5. Be generous ??if the student clearly understands the concept behind the word, mark CORRECT.
+6. However, if the meaning is fundamentally different (e.g., "?�과" for "apple" when the word means "apply"), mark INCORRECT.
 
 ### Input:
 ${itemLines}

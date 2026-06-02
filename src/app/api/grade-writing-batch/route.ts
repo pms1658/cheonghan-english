@@ -29,53 +29,53 @@ export async function POST(req: Request) {
 
         const problemsText = problems.map((p: any, i: number) => 
             `### 문제 ${i + 1}
-- 한국어: ${p.korean}
-- 정답 예시: ${p.correctAnswer}
-- 학생 답안: ${p.studentAnswer}
-- 핵심 문법: ${p.keyGrammar}`
+- ?�국?? ${p.korean}
+- ?�답 ?�시: ${p.correctAnswer}
+- ?�생 ?�안: ${p.studentAnswer}
+- ?�심 문법: ${p.keyGrammar}`
         ).join('\n\n');
 
-        const prompt = `당신은 한국 고등학교 영어 내신 채점 교사입니다. 아래 ${problems.length}개 영작 문제를 한꺼번에 채점해주세요.
+        const prompt = `?�신?� ?�국 고등?�교 ?�어 ?�신 채점 교사?�니?? ?�래 ${problems.length}�??�작 문제�??�꺼번에 채점?�주?�요.
 
-## 과제 정보
+## 과제 ?�보
 - 목표 구문: ${targetGrammar}
-- 난이도: ${level}
+- ?�이?? ${level}
 
-## 채점할 문제들
+## 채점??문제??
 
 ${problemsText}
 
-## 채점 기준 (100점 만점, 문제당)
-1. **구문 정확도 (40점)**: 목표 구문을 정확히 사용했는가?
-2. **문법 정확도 (30점)**: 시제, 수일치, 관사, 전치사 등 문법이 맞는가?
-3. **의미 전달 (20점)**: 한국어 의미가 정확히 전달되었는가?
-4. **자연스러움 (10점)**: 영어로서 자연스러운 표현인가?
+## 채점 기�? (100??만점, 문제??
+1. **구문 ?�확??(40??**: 목표 구문???�확???�용?�는가?
+2. **문법 ?�확??(30??**: ?�제, ?�일�? 관?? ?�치????문법??맞는가?
+3. **?��? ?�달 (20??**: ?�국???��?가 ?�확???�달?�었?��??
+4. **?�연?�러?� (10??**: ?�어로서 ?�연?�러???�현?��??
 
-## 채점 원칙
-- 정답과 완전히 다른 구문을 사용했으면 구문 점수는 0점
-- 정답과 다른 표현이라도 문법적으로 맞고 의미가 같으면 관대하게 채점
-- 사소한 관사/전치사 실수는 약간만 감점 (-5~10점)
-- 핵심 구문의 구조적 오류는 크게 감점 (-20~40점)
-- 답안이 비어있거나 의미없는 답이면 0점
+## 채점 ?�칙
+- ?�답�??�전???�른 구문???�용?�으�?구문 ?�수??0??
+- ?�답�??�른 ?�현?�라??문법?�으�?맞고 ?��?가 같으�?관?�?�게 채점
+- ?�소??관???�치???�수???�간�?감점 (-5~10??
+- ?�심 구문??구조???�류???�게 감점 (-20~40??
+- ?�안??비어?�거???��??�는 ?�이�?0??
 
-## 피드백 가이드
-- 반드시 한국어로 작성
-- 친절하고 격려하는 톤으로
-- 잘한 점을 먼저 언급하고, 개선점을 알려주기
+## ?�드�?가?�드
+- 반드???�국?�로 ?�성
+- 친절?�고 격려?�는 ?�으�?
+- ?�한 ?�을 먼�? ?�급?�고, 개선?�을 ?�려주기
 
-## 응답 형식 (JSON)
+## ?�답 ?�식 (JSON)
 {
   "results": [
     {
       "score": number,
-      "feedback": "한국어 피드백 (2-3문장)",
-      "correctedSentence": "수정된 정답 문장",
-      "grammarNotes": "핵심 문법 포인트 한 줄 설명"
+      "feedback": "?�국???�드�?(2-3문장)",
+      "correctedSentence": "?�정???�답 문장",
+      "grammarNotes": "?�심 문법 ?�인????�??�명"
     }
   ]
 }
 
-results 배열은 반드시 ${problems.length}개여야 합니다. 문제 순서대로 채점해주세요.`;
+results 배열?� 반드??${problems.length}개여???�니?? 문제 ?�서?��?채점?�주?�요.`;
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();
@@ -89,7 +89,7 @@ results 배열은 반드시 ${problems.length}개여야 합니다. 문제 순서
                 // Try to pad or trim
                 const results = Array.isArray(parsed.results) ? parsed.results : [];
                 while (results.length < problems.length) {
-                    results.push({ score: 0, feedback: '채점 오류가 발생했습니다.', correctedSentence: '', grammarNotes: '' });
+                    results.push({ score: 0, feedback: '채점 ?�류가 발생?�습?�다.', correctedSentence: '', grammarNotes: '' });
                 }
                 return NextResponse.json({ results: results.slice(0, problems.length) });
             }

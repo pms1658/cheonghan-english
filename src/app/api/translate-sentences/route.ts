@@ -27,16 +27,16 @@ export async function POST(req: Request) {
         });
 
         const prompt = `
-다음 영어 문장들을 한국어로 자연스럽게 번역해주세요.
-직역보다는 의미가 잘 전달되도록 자연스러운 한국어로 번역하세요.
+?�음 ?�어 문장?�을 ?�국?�로 ?�연?�럽�?번역?�주?�요.
+직역보다???��?가 ???�달?�도�??�연?�러???�국?�로 번역?�세??
 
 문장 목록:
 ${sentences.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}
 
-JSON 형식으로 응답:
+JSON ?�식?�로 ?�답:
 { "translations": ["번역1", "번역2", ...] }
 
-반드시 입력 문장 수와 동일한 수의 번역을 반환하세요.
+반드???�력 문장 ?��? ?�일???�의 번역??반환?�세??
 `;
 
         const result = await model.generateContent(prompt);

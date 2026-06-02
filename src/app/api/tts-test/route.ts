@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { createErrorResponse } from '@/lib/apiMiddleware';
 
 /**
- * TTS 진단 테스트 엔드포인트
+ * TTS 진단 ?�스???�드?�인??
  * GET /api/tts-test
  * 
- * 브라우저에서 직접 접근하여 Google Cloud TTS 상태를 확인
- * M(남성), W(여성), N(한국어) 각각 테스트
+ * 브라?��??�서 직접 ?�근?�여 Google Cloud TTS ?�태�??�인
+ * M(?�성), W(?�성), N(?�국?? 각각 ?�스??
  */
 
 const VOICE_MAP: Record<string, { languageCode: string; name: string }> = {
@@ -18,7 +18,7 @@ const VOICE_MAP: Record<string, { languageCode: string; name: string }> = {
 const TEST_TEXTS: Record<string, string> = {
     M: 'Hello, I am a male speaker. Can you hear me clearly?',
     W: 'Hello, I am a female speaker. Can you hear me clearly?',
-    N: '안녕하세요. 한국어 음성 테스트입니다.',
+    N: '?�녕?�세?? ?�국???�성 ?�스?�입?�다.',
 };
 
 export async function GET() {
@@ -58,14 +58,14 @@ export async function GET() {
             if (res.ok) {
                 const data = await res.json();
                 results.tests[speaker] = {
-                    status: '✅ 성공',
+                    status: '???�공',
                     voice: voiceConfig.name,
                     audioSize: data.audioContent ? `${Math.round(data.audioContent.length * 0.75 / 1024)}KB` : 'no data',
                 };
             } else {
                 const errText = await res.text();
                 results.tests[speaker] = {
-                    status: '❌ 실패',
+                    status: '???�패',
                     voice: voiceConfig.name,
                     httpStatus: res.status,
                     error: errText.substring(0, 300),
@@ -73,7 +73,7 @@ export async function GET() {
             }
         } catch (err: any) {
             results.tests[speaker] = {
-                status: '❌ 에러',
+                status: '???�러',
                 voice: voiceConfig.name,
                 error: err.message,
             };
@@ -81,10 +81,10 @@ export async function GET() {
     }
 
     // Summary
-    const allSuccess = Object.values(results.tests).every((t: any) => t.status === '✅ 성공');
+    const allSuccess = Object.values(results.tests).every((t: any) => t.status === '???�공');
     results.summary = allSuccess
-        ? '✅ Google Cloud TTS 정상 작동! Studio 남녀 음성 사용 가능.'
-        : '❌ Google Cloud TTS 문제 발견! 아래 에러를 확인하세요. GCP 콘솔에서 "Cloud Text-to-Speech API"가 활성화되어 있는지 확인하세요.';
+        ? '??Google Cloud TTS ?�상 ?�동! Studio ?��? ?�성 ?�용 가??'
+        : '??Google Cloud TTS 문제 발견! ?�래 ?�러�??�인?�세?? GCP 콘솔?�서 "Cloud Text-to-Speech API"가 ?�성?�되???�는지 ?�인?�세??';
 
     return NextResponse.json(results, {
         headers: { 'Content-Type': 'application/json; charset=utf-8' },

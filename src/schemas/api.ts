@@ -20,9 +20,10 @@ const targetGradeSchema = z.enum(['e4', 'e5', 'e6', 'm1', 'm2', 'm3', '1', '2', 
 /** POST /api/grade — 구조독해 배치 채점 */
 export const gradeRequestSchema = z.object({
     assignments: z.array(z.object({
-        standard_answer: z.string(),
-        student_answers: z.array(z.string()),
-        sentence_index: z.number(),
+        sentence: z.string(),
+        analysisString: z.string(),
+        translation: z.string(),
+        selectedForms: z.array(z.string()).optional(),
     })).min(1, 'At least one assignment is required'),
 });
 

@@ -3,18 +3,18 @@ import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddlew
 import { ttsRequestSchema } from '@/schemas/api';
 
 /**
- * Gemini TTS API í”„ë¡ì‹œ (ì„œë²„ ìºì‹œ í¬í•¨)
+ * Gemini TTS API ?„ë¡??(?œë²„ ìºì‹œ ?¬í•¨)
  * POST /api/tts
  * Body: { text, speaker ('M'|'W'|'N'), lang ('en'|'ko') }
  * Returns: { audioContent: base64 WAV }
  *
- * Uses Gemini 2.5 Flash TTS â€” works with the standard GEMINI_API_KEY!
+ * Uses Gemini 2.5 Flash TTS ??works with the standard GEMINI_API_KEY!
  * No separate Google Cloud TTS API key needed.
  */
 
-// â”€â”€ Server-side audio cache â”€â”€
+// ?€?€ Server-side audio cache ?€?€
 const audioCache = new Map<string, { base64: string; timestamp: number }>();
-const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2ì‹œê°„
+const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2?œê°„
 
 function getCachedAudio(key: string): string | null {
     const entry = audioCache.get(key);
@@ -36,7 +36,7 @@ function setCachedAudio(key: string, base64: string) {
     audioCache.set(key, { base64, timestamp: Date.now() });
 }
 
-// â”€â”€ WAV header for PCM 16-bit 16kHz mono â”€â”€
+// ?€?€ WAV header for PCM 16-bit 16kHz mono ?€?€
 function createWavHeader(pcmLength: number, sampleRate = 16000, channels = 1, bitsPerSample = 16): Buffer {
     const byteRate = sampleRate * channels * bitsPerSample / 8;
     const blockAlign = channels * bitsPerSample / 8;
@@ -59,7 +59,7 @@ function createWavHeader(pcmLength: number, sampleRate = 16000, channels = 1, bi
     return header;
 }
 
-// â”€â”€ Voice name mapping for Google Cloud TTS â”€â”€
+// ?€?€ Voice name mapping for Google Cloud TTS ?€?€
 // Studio = Google's highest quality tier (most natural, human-like)
 // Korean uses Neural2 (Studio not available for ko-KR)
 const VOICE_MAP: Record<string, { languageCode: string, name: string }> = {
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
         }
         const voiceConfig = VOICE_MAP[voiceKey] || VOICE_MAP['M'];
 
-        // â”€â”€ Check server cache â”€â”€
+        // ?€?€ Check server cache ?€?€
         const cacheKey = `${voiceKey}_${text}`;
         const cached = getCachedAudio(cacheKey);
         if (cached) {
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
 
         console.log(`[TTS] Generating: speaker=${voiceKey}, voice=${voiceConfig.name}, text="${text.substring(0, 40)}..."`);
 
-        // â”€â”€ Call Google Cloud TTS API â”€â”€
+        // ?€?€ Call Google Cloud TTS API ?€?€
         const ttsResponse = await fetch(
             `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
             {
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
                     voice: voiceConfig,
                     audioConfig: {
                         audioEncoding: 'LINEAR16',      // Raw PCM
-                        sampleRateHertz: 16000,          // 16kHz (Studio í’ˆì§ˆ ìœ ì§€, ìš©ëŸ‰ ê°ì†Œ)
+                        sampleRateHertz: 16000,          // 16kHz (Studio ?ˆì§ˆ ? ì?, ?©ëŸ‰ ê°ì†Œ)
                         speakingRate: 0.95,
                     }
                 }),
@@ -141,13 +141,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No audio data returned' }, { status: 500 });
         }
 
-        // â”€â”€ Wrap raw PCM in WAV header (for browser AudioContext.decodeAudioData) â”€â”€
+        // ?€?€ Wrap raw PCM in WAV header (for browser AudioContext.decodeAudioData) ?€?€
         const pcmBuffer = Buffer.from(pcmBase64, 'base64');
         const wavHeader = createWavHeader(pcmBuffer.length);
         const wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);
         const wavBase64 = wavBuffer.toString('base64');
 
-        // â”€â”€ Cache the WAV â”€â”€
+        // ?€?€ Cache the WAV ?€?€
         setCachedAudio(cacheKey, wavBase64);
 
         return NextResponse.json({

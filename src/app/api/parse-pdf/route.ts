@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     } catch (e: any) {
         console.error('Library Load Error:', e);
         return NextResponse.json({
-            error: '라이브러리 로드 실패',
+            error: '?�이브러�?로드 ?�패',
             details: e.message
         }, { status: 500 });
     }
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         const endPage = parseInt(formData.get('endPage') as string) || 9999;
 
         if (!file) {
-            return NextResponse.json({ error: '파일이 업로드되지 않았습니다.' }, { status: 400 });
+            return NextResponse.json({ error: '?�일???�로?�되지 ?�았?�니??' }, { status: 400 });
         }
 
         console.log(`Processing file: ${file.name}, Target Pages: ${startPage}-${endPage}`);
@@ -74,6 +74,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ text: data.text });
 
     } catch (error) {
-        return createErrorResponse(error, 'PDF 처리 중 오류가 발생했습니다.');
+        return createErrorResponse(error, 'PDF 처리 �??�류가 발생?�습?�다.');
     }
 }

@@ -6,31 +6,31 @@ import { ttsProblemRequestSchema } from '@/schemas/api';
 export const maxDuration = 60;
 
 /**
- * TTS 문제별 합성 API — Google Cloud TTS (Studio 음성 16kHz)
+ * TTS 문제�??�성 API ??Google Cloud TTS (Studio ?�성 16kHz)
  * POST /api/tts-problem
  * Body: { lines: { speaker, text, lang }[], problemNumber: number }
  * Returns: { audioContent: base64 WAV }
  *
- * 각 문제의 대본(script)을 한 번에 합성하여 하나의 WAV로 반환.
- * 관리자가 과제 생성 시 사전 캐싱용으로 사용.
+ * �?문제???��?script)????번에 ?�성?�여 ?�나??WAV�?반환.
+ * 관리자가 과제 ?�성 ???�전 캐싱?�으�??�용.
  *
- * ★ Studio 16kHz = 기존 24kHz 대비 33% 용량 감소, 품질 유지
- *   M: en-US-Studio-Q (남성), W: en-US-Studio-O (여성), N: ko-KR-Neural2-B (한국어)
+ * ??Studio 16kHz = 기존 24kHz ?��?33% ?�량 감소, ?�질 ?��?
+ *   M: en-US-Studio-Q (?�성), W: en-US-Studio-O (?�성), N: ko-KR-Neural2-B (?�국??
  */
 
-// ── Voice config — Google Cloud TTS Studio (same as /api/tts) ──
+// ?�?� Voice config ??Google Cloud TTS Studio (same as /api/tts) ?�?�
 const VOICE_MAP: Record<string, { languageCode: string; name: string }> = {
     M: { languageCode: 'en-US', name: 'en-US-Studio-Q' },  // Natural Male
     W: { languageCode: 'en-US', name: 'en-US-Studio-O' },  // Natural Female
     N: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-B' }, // Korean narrator
 };
 
-// 한자어 숫자 변환 (TTS가 "일번" "십육번"으로 정확히 읽도록)
+// ?�자???�자 변??(TTS가 "?�번" "??���??�로 ?�확???�도�?
 const SINO_KOREAN: Record<number, string> = {
-    0: '영', 1: '일', 2: '이', 3: '삼', 4: '사', 5: '오',
-    6: '육', 7: '칠', 8: '팔', 9: '구', 10: '십',
-    11: '십일', 12: '십이', 13: '십삼', 14: '십사', 15: '십오',
-    16: '십육', 17: '십칠',
+    0: '??, 1: '??, 2: '??, 3: '??, 4: '??, 5: '??,
+    6: '??, 7: '�?, 8: '??, 9: '�?, 10: '??,
+    11: '??��', 12: '??��', 13: '??��', 14: '??��', 15: '??��',
+    16: '??��', 17: '??��',
 };
 
 function toSinoKorean(n: number): string {
@@ -38,7 +38,7 @@ function toSinoKorean(n: number): string {
     if (n < 100) {
         const tens = Math.floor(n / 10);
         const ones = n % 10;
-        const tensStr = tens === 1 ? '십' : (SINO_KOREAN[tens] || tens) + '십';
+        const tensStr = tens === 1 ? '?? : (SINO_KOREAN[tens] || tens) + '??;
         const onesStr = ones === 0 ? '' : (SINO_KOREAN[ones] || String(ones));
         return tensStr + onesStr;
     }
@@ -46,26 +46,26 @@ function toSinoKorean(n: number): string {
 }
 
 function convertNumbersInKorean(text: string): string {
-    return text.replace(/(\d+)번/g, (_, numStr) => {
-        return toSinoKorean(parseInt(numStr, 10)) + '번';
+    return text.replace(/(\d+)�?g, (_, numStr) => {
+        return toSinoKorean(parseInt(numStr, 10)) + '�?;
     }).replace(/(\d+)교시/g, (_, numStr) => {
         return toSinoKorean(parseInt(numStr, 10)) + '교시';
     });
 }
 
-// ══════════════════════════════════════
-// 무대지시(Stage Direction) 필터링
-// [Pause], [Cell phone rings.], [Tapping sound] 등을 TTS에서 제거
-// ══════════════════════════════════════
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
+// 무�?지??Stage Direction) ?�터�?
+// [Pause], [Cell phone rings.], [Tapping sound] ?�을 TTS?�서 ?�거
+// ?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═
 
-/** 전체가 무대지시인 라인인지 판별 (예: "[Cell phone rings.]") */
+/** ?�체가 무�?지?�인 ?�인?��? ?�별 (?? "[Cell phone rings.]") */
 function isStagDirectionOnly(text: string): boolean {
     const trimmed = text.trim();
-    // 전체가 [...]로만 이루어진 경우
+    // ?�체가 [...]로만 ?�루?�진 경우
     return /^\[.+\]\s*$/.test(trimmed);
 }
 
-/** 텍스트 내 인라인 무대지시 제거 (예: "Let me check. [Pause] Oh..." → "Let me check. Oh...") */
+/** ?�스?????�라??무�?지???�거 (?? "Let me check. [Pause] Oh..." ??"Let me check. Oh...") */
 function stripStageDirections(text: string): string {
     return text
         .replace(/\[Pause\]/gi, ' ')
@@ -76,19 +76,19 @@ function stripStageDirections(text: string): string {
         .replace(/\[Mouse clicking sound\]/gi, ' ')
         .replace(/\[Knocking( sound)?\]/gi, ' ')
         .replace(/\[Doorbell( rings)?\.?\]/gi, ' ')
-        .replace(/\[\w[^\]]*\]/g, ' ')  // 기타 모든 [대괄호 내용] 제거
-        .replace(/\s{2,}/g, ' ')         // 다중 공백 정리
+        .replace(/\[\w[^\]]*\]/g, ' ')  // 기�? 모든 [?�괄호 ?�용] ?�거
+        .replace(/\s{2,}/g, ' ')         // ?�중 공백 ?�리
         .trim();
 }
 
-/** 무대지시 라인에 대응하는 침묵 시간(ms) */
+/** 무�?지???�인???�?�하??침묵 ?�간(ms) */
 function getStageDirectionSilenceMs(text: string): number {
     const t = text.trim().toLowerCase();
     if (t.includes('pause')) return 1500;
     if (t.includes('phone rings') || t.includes('telephone rings')) return 2000;
     if (t.includes('tapping') || t.includes('typing') || t.includes('clicking')) return 1500;
     if (t.includes('knock') || t.includes('doorbell')) return 1500;
-    return 1000; // 기타 효과음
+    return 1000; // 기�? ?�과??
 }
 
 // WAV header for PCM 16-bit 24kHz mono
@@ -120,15 +120,15 @@ function createSilence(durationMs: number, sampleRate = 16000): Buffer {
     return Buffer.alloc(samples * 2); // 16-bit = 2 bytes per sample
 }
 
-// ★ Noise Gate + Fade: 세그먼트 경계 클릭/틱 소리 완전 제거
-// 1) threshold 이하의 작은 노이즈를 앞뒤에서 잘라냄 (noise gate)
-// 2) 부드러운 fade-in/out으로 파형 불연속 제거
+// ??Noise Gate + Fade: ?�그먼트 경계 ?�릭/???�리 ?�전 ?�거
+// 1) threshold ?�하???��? ?�이즈�? ?�뒤?�서 ?�라??(noise gate)
+// 2) 부?�러??fade-in/out?�로 ?�형 불연???�거
 function applyFade(pcm: Buffer, fadeSamples = 250, threshold = 150): Buffer {
-    const result = Buffer.from(pcm); // 원본 보존
+    const result = Buffer.from(pcm); // ?�본 보존
     const totalSamples = Math.floor(result.length / 2);
     if (totalSamples < fadeSamples * 2) return result;
 
-    // ── Noise Gate: 앞쪽에서 threshold 이하인 샘플 제거 ──
+    // ?�?� Noise Gate: ?�쪽?�서 threshold ?�하???�플 ?�거 ?�?�
     let trimStart = 0;
     for (let i = 0; i < Math.min(fadeSamples * 2, totalSamples); i++) {
         const sample = Math.abs(result.readInt16LE(i * 2));
@@ -137,33 +137,33 @@ function applyFade(pcm: Buffer, fadeSamples = 250, threshold = 150): Buffer {
         trimStart = i;
     }
 
-    // ── Noise Gate: 뒤쪽에서 threshold 이하인 샘플 제거 ──
+    // ?�?� Noise Gate: ?�쪽?�서 threshold ?�하???�플 ?�거 ?�?�
     for (let i = totalSamples - 1; i > Math.max(totalSamples - fadeSamples * 2, 0); i--) {
         const sample = Math.abs(result.readInt16LE(i * 2));
         if (sample > threshold) break;
         result.writeInt16LE(0, i * 2);
     }
 
-    // ── Fade-in (처음 fadeSamples개) ──
+    // ?�?� Fade-in (처음 fadeSamples�? ?�?�
     for (let i = 0; i < fadeSamples; i++) {
         const offset = i * 2;
         const sample = result.readInt16LE(offset);
-        const factor = i / fadeSamples; // 0 → 1
+        const factor = i / fadeSamples; // 0 ??1
         result.writeInt16LE(Math.round(sample * factor), offset);
     }
 
-    // ── Fade-out (마지막 fadeSamples개) ──
+    // ?�?� Fade-out (마�?�?fadeSamples�? ?�?�
     for (let i = 0; i < fadeSamples; i++) {
         const offset = (totalSamples - fadeSamples + i) * 2;
         const sample = result.readInt16LE(offset);
-        const factor = (fadeSamples - i) / fadeSamples; // 1 → 0
+        const factor = (fadeSamples - i) / fadeSamples; // 1 ??0
         result.writeInt16LE(Math.round(sample * factor), offset);
     }
 
     return result;
 }
 
-// ── Call Google Cloud TTS for a single text ──
+// ?�?� Call Google Cloud TTS for a single text ?�?�
 async function generateTTS(
     text: string,
     voiceConfig: { languageCode: string; name: string },
@@ -179,9 +179,9 @@ async function generateTTS(
                     input: { text },
                     voice: voiceConfig,
                     audioConfig: {
-                        audioEncoding: 'LINEAR16',      // Raw PCM — compatible with concat
-                        sampleRateHertz: 16000,          // 16kHz (학교 스피커 충분)
-                        speakingRate: 0.90,              // ★ 수능 속도 (살짝 느림)
+                        audioEncoding: 'LINEAR16',      // Raw PCM ??compatible with concat
+                        sampleRateHertz: 16000,          // 16kHz (?�교 ?�피�?충분)
+                        speakingRate: 0.90,              // ???�능 ?�도 (?�짝 ?�림)
                     }
                 }),
             }
@@ -229,14 +229,14 @@ export async function POST(req: Request) {
 
         console.log(`[TTS-Problem] Generating audio for problem ${problemNumber}: ${lines.length} lines (Google Cloud TTS Studio)`);
 
-        // Pre-process all lines (★ 무대지시 필터링 포함)
+        // Pre-process all lines (??무�?지???�터�??�함)
         const lineConfigs = lines.map((line: any) => {
             const rawText = line.text || '';
 
-            // ★ 전체가 무대지시인 라인 → 침묵으로 대체
+            // ???�체가 무�?지?�인 ?�인 ??침묵?�로 ?��?
             if (isStagDirectionOnly(rawText)) {
                 return {
-                    textToSpeak: null, // TTS 호출 안 함
+                    textToSpeak: null, // TTS ?�출 ????
                     silenceMs: getStageDirectionSilenceMs(rawText),
                     voiceConfig: null,
                     speaker: line.speaker,
@@ -244,13 +244,13 @@ export async function POST(req: Request) {
                 };
             }
 
-            // ★ 인라인 무대지시 제거 (예: "Let me check. [Pause] Oh...")
+            // ???�라??무�?지???�거 (?? "Let me check. [Pause] Oh...")
             let textToSpeak = stripStageDirections(rawText);
             if (line.lang === 'ko' || line.speaker === 'N') {
                 textToSpeak = convertNumbersInKorean(textToSpeak);
             }
 
-            // 필터링 후 텍스트가 비었으면 침묵 처리
+            // ?�터�????�스?��? 비었?�면 침묵 처리
             if (!textToSpeak.trim()) {
                 return {
                     textToSpeak: null,
@@ -267,7 +267,7 @@ export async function POST(req: Request) {
             return { textToSpeak, voiceConfig, speaker: line.speaker, isStageDirection: false };
         });
 
-        // Generate all lines in parallel batches (★ 무대지시는 침묵 버퍼로 대체)
+        // Generate all lines in parallel batches (??무�?지?�는 침묵 버퍼�??��?
         const BATCH_SIZE = 5;
         const lineResults: (Buffer | null)[] = new Array(lines.length).fill(null);
 
@@ -275,7 +275,7 @@ export async function POST(req: Request) {
             const batch = lineConfigs.slice(batchStart, batchStart + BATCH_SIZE);
             const promises = batch.map((cfg: any) => {
                 if (cfg.isStageDirection) {
-                    // ★ 무대지시 → 침묵 버퍼 생성 (TTS 호출 안 함)
+                    // ??무�?지????침묵 버퍼 ?�성 (TTS ?�출 ????
                     return Promise.resolve(createSilence(cfg.silenceMs || 1000));
                 }
                 return generateTTS(cfg.textToSpeak, cfg.voiceConfig, apiKey);
@@ -286,7 +286,7 @@ export async function POST(req: Request) {
             });
         }
 
-        // Assemble PCM in order with gaps (★ fade 적용하여 딸깍 소리 제거)
+        // Assemble PCM in order with gaps (??fade ?�용?�여 ?�깍 ?�리 ?�거)
         const pcmBuffers: Buffer[] = [];
         for (let i = 0; i < lineResults.length; i++) {
             if (lineResults[i]) {
@@ -310,7 +310,7 @@ export async function POST(req: Request) {
         const wavBuffer = Buffer.concat([wavHeader, combinedPcm]);
         const wavBase64 = wavBuffer.toString('base64');
 
-        console.log(`[TTS-Problem] Problem ${problemNumber}: ${lines.length} lines → ${(wavBuffer.length / 1024).toFixed(0)}KB WAV (Studio 16kHz)`);
+        console.log(`[TTS-Problem] Problem ${problemNumber}: ${lines.length} lines ??${(wavBuffer.length / 1024).toFixed(0)}KB WAV (Studio 16kHz)`);
 
         return NextResponse.json({
             audioContent: wavBase64,

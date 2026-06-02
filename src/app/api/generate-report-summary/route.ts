@@ -23,45 +23,45 @@ export async function POST(req: Request) {
             generationConfig: { responseMimeType: 'application/json' }
         });
 
-        const prompt = `당신은 한국의 영어 교육 전문가입니다. 학생의 월간 학습 데이터를 바탕으로 격려하고 구체적인 학습 제안을 포함한 총평을 작성해주세요.
+        const prompt = `?�신?� ?�국???�어 교육 ?�문가?�니?? ?�생???�간 ?�습 ?�이?��? 바탕?�로 격려?�고 구체?�인 ?�습 ?�안???�함??총평???�성?�주?�요.
 
-## 학생 정보
-- 이름: ${studentName}
+## ?�생 ?�보
+- ?�름: ${studentName}
 - 기간: ${yearMonth}
 
-## 학습 데이터
-### 어휘 (${vocabScore}점/100)
-- 이번 달 학습 단어: ${vocab.monthlyWordsLearned}개
-- 누적 학습 단어: ${vocab.totalWordsLearned}개
-- 첫 시도 통과율: ${vocab.firstTryPassRate}%
-- 100점까지 평균 시도: ${vocab.avgAttemptsToPass}회
-- 추세: ${growth.vocabTrend === 'up' ? '상승' : growth.vocabTrend === 'stable' ? '유지' : '하락'}
+## ?�습 ?�이??
+### ?�휘 (${vocabScore}??100)
+- ?�번 ???�습 ?�어: ${vocab.monthlyWordsLearned}�?
+- ?�적 ?�습 ?�어: ${vocab.totalWordsLearned}�?
+- �??�도 ?�과?? ${vocab.firstTryPassRate}%
+- 100?�까지 ?�균 ?�도: ${vocab.avgAttemptsToPass}??
+- 추세: ${growth.vocabTrend === 'up' ? '?�승' : growth.vocabTrend === 'stable' ? '?��?' : '?�락'}
 
-### 문법 (${grammarScore}점/100)
-- 시도 구문: ${grammar.sessionsAttempted}개
-- 통과 구문: ${grammar.sessionsPassed}개
-- 1차 시도 평균: ${grammar.avgFirstAttemptScore}점
-- 약점: ${grammar.weakSessions.map((s: any) => s.title).join(', ') || '없음'}
-- 강점: ${grammar.strongSessions.map((s: any) => s.title).join(', ') || '없음'}
-- 추세: ${growth.grammarTrend === 'up' ? '상승' : growth.grammarTrend === 'stable' ? '유지' : '하락'}
+### 문법 (${grammarScore}??100)
+- ?�도 구문: ${grammar.sessionsAttempted}�?
+- ?�과 구문: ${grammar.sessionsPassed}�?
+- 1�??�도 ?�균: ${grammar.avgFirstAttemptScore}??
+- ?�점: ${grammar.weakSessions.map((s: any) => s.title).join(', ') || '?�음'}
+- 강점: ${grammar.strongSessions.map((s: any) => s.title).join(', ') || '?�음'}
+- 추세: ${growth.grammarTrend === 'up' ? '?�승' : growth.grammarTrend === 'stable' ? '?��?' : '?�락'}
 
-### 독해 (${readingScore}점/100)
-- 해석 포함 제출: ${reading.withTranslation}건
-- 평균 점수: ${reading.avgScore}점
-- 추세: ${growth.readingTrend === 'up' ? '상승' : growth.readingTrend === 'stable' ? '유지' : '하락'}
+### ?�해 (${readingScore}??100)
+- ?�석 ?�함 ?�출: ${reading.withTranslation}�?
+- ?�균 ?�수: ${reading.avgScore}??
+- 추세: ${growth.readingTrend === 'up' ? '?�승' : growth.readingTrend === 'stable' ? '?��?' : '?�락'}
 
-### 보완 필요 영역
+### 보완 ?�요 ?�역
 ${growth.improvements.join('\n')}
 
-## 작성 규칙
-1. 3문단으로 작성 (현재 수준 → 성장 포인트 → 학습 제안)
-2. 구체적인 수치를 인용하여 설득력 있게
-3. 격려하되 현실적으로 (잘하는 부분 칭찬 + 부족한 부분 부드럽게 언급)
-4. 존댓말 사용 (학생과 학부모가 읽을 수 있으므로)
-5. 전체 200자~400자 사이
+## ?�성 규칙
+1. 3문단?�로 ?�성 (?�재 ?��? ???�장 ?�인?????�습 ?�안)
+2. 구체?�인 ?�치�??�용?�여 ?�득???�게
+3. 격려?�되 ?�실?�으�?(?�하??부�?�?�� + 부족한 부�?부?�럽�??�급)
+4. 존댓�??�용 (?�생�??��?모�? ?�을 ???�으므�?
+5. ?�체 200??400???�이
 
-## 응답 형식
-{ "summary": "총평 내용" }`;
+## ?�답 ?�식
+{ "summary": "총평 ?�용" }`;
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();
