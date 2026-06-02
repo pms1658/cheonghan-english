@@ -116,6 +116,7 @@ const DDayWidget = () => {
                         <div>
                             <label className="text-blue-200 text-[10px] uppercase font-bold tracking-wider block mb-1 text-left">목표 날짜</label>
                             <input type="date" value={editForm.date} onChange={e => setEditForm(p => ({...p, date: e.target.value}))} className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white select-none" />
+                            {/* Section 2: Class Tree */}
                         </div>
                         <div className="flex gap-2 pt-2">
                             <button onClick={() => setIsEditingDday(false)} className="flex-1 py-2 rounded-lg text-xs font-bold text-white/70 hover:bg-white/10 transition-colors">취소</button>
@@ -128,7 +129,7 @@ const DDayWidget = () => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
                         <p className="text-blue-200 font-black tracking-widest uppercase text-base md:text-lg mb-2">{dday.title}</p>
-                        <div className="text-6xl md:text-7xl font-black text-white tracking-tighter flex items-center justify-center tabular-nums">
+                        <div className="text-[42px] md:text-[50px] font-black text-white tracking-tighter flex items-center justify-center tabular-nums leading-none">
                             <span className="text-blue-300">D</span>
                             {calculateDday(dday.date)}
                         </div>
