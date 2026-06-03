@@ -538,8 +538,15 @@ export default function ClassRoomPage() {
                             strategy={verticalListSortingStrategy}
                             disabled={!isReordering}
                         >
-                            {assignments.map(ass => (
-                                <div key={ass.id} data-assignment-id={ass.id} className={`rounded-2xl transition-all duration-500 ${isReordering ? 'touch-none' : ''}`}>
+                            {assignments.map((ass, idx) => (
+                                <motion.div
+                                    key={ass.id}
+                                    data-assignment-id={ass.id}
+                                    initial={{ opacity: 0, y: 24 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + idx * 0.08, duration: 0.45, ease: 'easeOut' }}
+                                    className={`rounded-2xl transition-all duration-500 ${isReordering ? 'touch-none' : ''}`}
+                                >
                                     <SortableItem id={ass.id} disabled={!isReordering}>
                                         <AssignmentItem
                                             assignment={ass}
@@ -573,7 +580,7 @@ export default function ClassRoomPage() {
                                             setMoveAssignmentModal={setMoveAssignmentModal}
                                         />
                                     </SortableItem>
-                                </div>
+                                </motion.div>
                             ))}
                         </SortableContext>
                     </DndContext>

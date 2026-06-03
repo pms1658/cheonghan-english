@@ -479,9 +479,14 @@ export default function HistoryPage() {
                                 const student = allStudentsData.find((s: any) => s.id === sg.studentId);
                                 return (student?.groupName || '') === groupFilter;
                             })
-                            .map(studentGroup => (
-                            <StudentAccordion
+                            .map((studentGroup, idx) => (
+                            <motion.div
                                 key={studentGroup.studentId}
+                                initial={{ opacity: 0, y: 24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + idx * 0.07, duration: 0.45, ease: 'easeOut' }}
+                            >
+                            <StudentAccordion
                                 group={studentGroup}
                                 isOpen={openStudentIds.has(studentGroup.studentId)}
                                 onToggle={() => setOpenStudentIds(prev => {
@@ -508,6 +513,7 @@ export default function HistoryPage() {
                                 userRole={(user as any)?.role || 'student'}
                                 assignments={allAssignments}
                             />
+                            </motion.div>
                         ))}
 
                         {groupedHistory.length === 0 && (
