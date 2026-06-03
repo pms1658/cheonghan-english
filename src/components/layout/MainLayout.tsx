@@ -92,7 +92,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0"
                     style={{ transform: 'translateZ(0)' }}
                 >
-                    <AnimatePresence mode="sync" initial={false}>
+                    <AnimatePresence mode="sync">
                         <motion.div
                             key={pathname}
                             initial={{ opacity: 0 }}
