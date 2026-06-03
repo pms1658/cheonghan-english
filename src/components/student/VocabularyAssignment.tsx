@@ -15,6 +15,7 @@ interface VocabularyAssignmentProps {
 }
 
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { SkeletonFullPage } from '@/components/common/Skeleton';
 import { toast } from 'sonner';
 
 export default function VocabularyAssignment({ assignment, student, onExit }: VocabularyAssignmentProps) {
@@ -404,25 +405,17 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
     };
 
 
-    if (mode === 'loading') return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    if (mode === 'loading') return <SkeletonFullPage message="과제를 불러오는 중입니다..." />;
 
     if (mode === 'grading') {
         return (
-            <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }}>
-                <div className="w-20 h-20 bg-[#083973] rounded-[1.2rem] flex items-center justify-center p-2 shadow-2xl shadow-blue-900/30 overflow-hidden animate-pulse mb-6">
-                    <img src="/logo.svg" alt="Logo" className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
-                </div>
-                <div className="text-center">
-                    <h2 className="text-xl font-bold text-white mb-2">AI 채점 중...</h2>
-                    <p className="text-sm text-slate-400">
-                        입력하신 뜻을 AI가 분석하고 있습니다.<br />
-                        유의어와 문맥을 고려하여 채점합니다.
-                    </p>
-                </div>
-                <div className="mt-4 flex justify-center gap-1">
-                    {[0, 1, 2].map(i => (
-                        <div key={i} className="w-2 h-2 bg-[#1e3a5f] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                    ))}
+            <div className="fixed inset-0 z-[200] bg-[#0A0E27] flex flex-col items-center justify-center" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }}>
+                <div className="space-y-4 text-center">
+                    <div className="w-10 h-10 border-2 border-slate-700 border-t-blue-400 rounded-full animate-spin mx-auto" />
+                    <div>
+                        <h2 className="text-lg font-bold text-white">AI 채점 중...</h2>
+                        <p className="text-sm text-slate-400 mt-1">입력하신 뜻을 AI가 분석하고 있습니다.{"\n"}잠시만 기다려주세요!</p>
+                    </div>
                 </div>
             </div>
         );
