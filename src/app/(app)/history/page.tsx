@@ -484,7 +484,7 @@ export default function HistoryPage() {
                                 key={studentGroup.studentId}
                                 initial={{ opacity: 0, y: 24 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + idx * 0.07, duration: 0.45, ease: 'easeOut' }}
+                                transition={{ type: 'tween', delay: 0.1 + idx * 0.07, duration: 0.45, ease: [0.25, 0.4, 0.45, 1] }}
                             >
                             <StudentAccordion
                                 group={studentGroup}

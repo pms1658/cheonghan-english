@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentAssignment } from '@/hooks/useStudentAssignment';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -72,9 +73,13 @@ export default function StudentAssignmentPage() {
     }
 
     // Render component based on screen size
-    return isMobile ? (
-        <MobileAssignment {...data} />
-    ) : (
-        <DesktopAssignment {...data} />
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}
+        >
+            {isMobile ? <MobileAssignment {...data} /> : <DesktopAssignment {...data} />}
+        </motion.div>
     );
 }
