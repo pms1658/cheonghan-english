@@ -372,7 +372,7 @@ export default function StudentHomeworkPage() {
                                     id={`hw-${hw.date}`}
                                     initial={{ opacity: 0, y: 28 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.05 + idx * 0.07, duration: 0.45, ease: 'easeOut' }}
+                                    transition={{ delay: 0.15 + idx * 0.1, duration: 0.5, ease: 'easeOut' }}
                                 >
                                     <div
                                         onClick={() => setExpandedId(expanded ? null : hw.id)}
