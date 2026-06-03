@@ -133,13 +133,20 @@ export default function WritingGuidePage() {
 
     if (selectedSession && selectedTheme) {
         return (
-            <WritingSessionView
-                session={selectedSession}
-                theme={selectedTheme}
-                level={selectedLevel}
-                targetGrade={selectedGrade}
-                onBack={() => { setSelectedSession(null); setSelectedTheme(null); }}
-            />
+            <motion.div
+                key="session-view"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28, ease: 'easeOut' }}
+            >
+                <WritingSessionView
+                    session={selectedSession}
+                    theme={selectedTheme}
+                    level={selectedLevel}
+                    targetGrade={selectedGrade}
+                    onBack={() => { setSelectedSession(null); setSelectedTheme(null); }}
+                />
+            </motion.div>
         );
     }
 

@@ -275,8 +275,40 @@ export default function StudentHomeworkPage() {
 
     if (authLoading || loading) {
         return (
-            <div className="flex items-center justify-center h-[60vh]">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-full pb-24 lg:pb-12 animate-pulse">
+                {/* Header skeleton */}
+                <div className="mb-12">
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-2.5 w-24 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    </div>
+                    <div className="h-11 w-36 bg-slate-200 dark:bg-slate-700 rounded-2xl mb-4" />
+                    <div className="h-3.5 w-52 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                </div>
+                {/* Content grid skeleton */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    {/* Single card skeleton — loads and then real items slide up */}
+                    <div className="lg:col-span-3">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="h-4 w-40 bg-slate-100 dark:bg-slate-800 rounded-full" />
+                                <div className="h-3 w-14 bg-slate-100 dark:bg-slate-800 rounded-full" />
+                            </div>
+                            <div className="space-y-3">
+                                {[1, 0.75, 0.5].map((w, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded bg-slate-100 dark:bg-slate-800 flex-shrink-0" />
+                                        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full flex-1" style={{ maxWidth: `${w * 100}%` }} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {/* Calendar skeleton */}
+                    <div className="hidden lg:block lg:col-span-2">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 p-4 h-56" />
+                    </div>
+                </div>
             </div>
         );
     }
