@@ -107,7 +107,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <VocabularyAssignment
                         assignment={assignment as any}
@@ -122,7 +122,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -132,7 +132,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <ListeningSetAssignment
                         assignment={assignment as any}
@@ -143,7 +143,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -153,7 +153,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <SentenceOrderAssignment
                         assignment={assignment as any}
@@ -166,7 +166,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -176,7 +176,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <TransformAssignment
                         assignment={assignment as any}
@@ -189,7 +189,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -199,7 +199,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <SubjectiveAssignment
                         assignment={assignment as any}
@@ -212,7 +212,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -222,7 +222,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <SubjectiveAssignment
                         assignment={assignment as any}
@@ -235,7 +235,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -245,7 +245,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <MockExamAssignment
                         assignment={assignment as any}
@@ -258,7 +258,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -290,7 +290,7 @@ export default function DesktopAssignment({
         };
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <AnalysisAssignment
                         assignmentId={assignment.id}
@@ -302,7 +302,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -312,7 +312,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <WorkbookAssignmentView
                         assignment={assignment as any}
@@ -324,7 +324,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -334,7 +334,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto">
+            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <WritingAssignment
                         assignment={assignment as any}
@@ -347,7 +347,7 @@ export default function DesktopAssignment({
                         }}
                     />
                 </ErrorBoundary>
-            </div>
+            </motion.div>
         );
     }
 
@@ -355,7 +355,12 @@ export default function DesktopAssignment({
         const passageSentences = assignment.sentences?.map((s: any) => typeof s === 'string' ? s : s.original) || [];
 
         return (
-            <div className="bg-slate-100 dark:bg-slate-950 py-10 px-4 flex justify-center items-start overflow-y-auto font-sans">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'tween', duration: 0.35, ease: [0.25, 0.4, 0.45, 1] }}
+                className="bg-slate-100 dark:bg-slate-950 py-10 px-4 flex justify-center items-start overflow-y-auto font-sans"
+            >
                 <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl max-w-4xl w-full overflow-hidden print:hidden">
                     <div className="relative bg-[#0A0E27] p-6 text-white text-center">
                         <div className="relative z-10">
@@ -392,8 +397,16 @@ export default function DesktopAssignment({
                         </button>
                     </div>
 
+                    <AnimatePresence mode="wait" initial={false}>
                     {showPassageView ? (
-                        <div className="p-8">
+                        <motion.div
+                            key="passage"
+                            initial={{ opacity: 0, x: 12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -12 }}
+                            transition={{ type: 'tween', duration: 0.22, ease: [0.25, 0.4, 0.45, 1] }}
+                            className="p-8"
+                        >
                             <FinalPassageView
                                 sentences={passageSentences}
                                 answers={answers}
@@ -404,9 +417,16 @@ export default function DesktopAssignment({
                                 score={submissionResult.totalScore}
                                 attempt={attemptsCount}
                             />
-                        </div>
+                        </motion.div>
                     ) : (
-                    <div className="p-4 space-y-3">
+                    <motion.div
+                        key="detail"
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 12 }}
+                        transition={{ type: 'tween', duration: 0.22, ease: [0.25, 0.4, 0.45, 1] }}
+                        className="p-4 space-y-3"
+                    >
                         {assignment.sentences?.map((sentenceItem, idx) => {
                             const sentence = typeof sentenceItem === 'string' ? sentenceItem : sentenceItem.original;
                             const result = submissionResult.details[idx];
@@ -533,8 +553,9 @@ export default function DesktopAssignment({
                                 </div>
                             );
                         })}
-                    </div>
+                    </motion.div>
                     )}
+                    </AnimatePresence>
 
                     <div className="p-8 bg-slate-50/50 backdrop-blur-xl border-t border-slate-200/50 flex justify-center gap-4 relative z-20">
                         <button
@@ -567,7 +588,7 @@ export default function DesktopAssignment({
                         </button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
