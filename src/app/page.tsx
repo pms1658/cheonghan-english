@@ -48,6 +48,17 @@ export default function Home() {
                             상담 문의
                         </a>
                     </div>
+                    <div className="mt-3 flex justify-center animate-fade-in-up-delay" style={{ animationDelay: '0.7s' }}>
+                        <a
+                            href="https://blog.naver.com/cheonghan_eng/224307664023"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-8 py-4 rounded-full bg-[#03C75A]/15 hover:bg-[#03C75A]/30 backdrop-blur-md border border-[#03C75A]/40 hover:border-[#03C75A]/70 text-[#03C75A] hover:text-white font-bold transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-[#03C75A]/20 active:scale-95 flex items-center gap-2.5"
+                        >
+                            <span className="w-5 h-5 bg-[#03C75A] rounded-[5px] flex items-center justify-center text-white font-black text-sm leading-none">N</span>
+                            학원 블로그
+                        </a>
+                    </div>
                 </div>
 
                 {/* Right Content (Login Card) */}
