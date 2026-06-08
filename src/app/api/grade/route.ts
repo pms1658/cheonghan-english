@@ -223,10 +223,11 @@ export async function POST(req: Request) {
           throw { message: 'JSON Parse Error', rawText: text };
         }
       } catch (err: any) {
-        console.error(`[Grading] Item ${index} - Failed`, err);
+        const errMsg = err?.message || err?.rawText?.substring(0, 100) || String(err) || 'Unknown error';
+        console.error(`[Grading] Item ${index} - Failed: ${errMsg}`, err);
         return {
           score: 0,
-          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요.`
+          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요. [${errMsg}]`
         };
       }
     });

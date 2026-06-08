@@ -346,12 +346,13 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
             const payload = targetIndices.map(idx => {
                 const ans = answers[idx] || { marks: [], translation: '', selectedForms: [] };
                 const rawSent = assignment.sentences?.[idx] || '';
-                const sentenceText = typeof rawSent === 'string' ? rawSent : rawSent.original;
+                const sentenceText = (typeof rawSent === 'string' ? rawSent : (rawSent.original || '')) || '';
+                const safeMarks = Array.isArray(ans.marks) ? ans.marks : [];
 
                 return {
                     sentence: sentenceText,
-                    analysisString: convertMarksToString(sentenceText, ans.marks),
-                    translation: ans.translation,
+                    analysisString: convertMarksToString(sentenceText, safeMarks),
+                    translation: ans.translation || '',
                     selectedForms: ans.selectedForms || []
                 };
             });
@@ -375,12 +376,20 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
             let finalDetails = submissionResult ? [...submissionResult.details] : new Array((assignment.sentences?.length || 0)).fill(null);
 
             if (Array.isArray(data.results)) {
+                let failedCount = 0;
                 data.results.forEach((result: any, i: number) => {
                     const originalIdx = targetIndices[i];
                     if (originalIdx !== undefined) {
                         finalDetails[originalIdx] = result;
+                        // 개별 문장 채점 실패 감지
+                        if (result && result.score === 0 && result.feedback && result.feedback.includes('오류')) {
+                            failedCount++;
+                        }
                     }
                 });
+                if (failedCount > 0) {
+                    toast.warning(`${failedCount}개 문장의 채점 중 오류가 발생했습니다. 다시 제출해주세요.`, { duration: 6000 });
+                }
             } else {
                 console.error('Unexpected grading response format:', data);
                 throw new Error('채점 결과 형식이 올바르지 않습니다.');
