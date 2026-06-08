@@ -480,7 +480,7 @@ export default function WritingAssignment({ assignment, studentId, studentName, 
 
                 {/* ═══════════ GRADING PHASE ═══════════ */}
                 {phase === 'grading' && (
-                    <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }}>
+                    <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center">
                         <div className="w-20 h-20 bg-[#083973] rounded-[1.2rem] flex items-center justify-center p-2 shadow-2xl shadow-blue-900/30 overflow-hidden animate-pulse mb-6">
                             <img src="/logo.svg" alt="Logo" className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
                         </div>

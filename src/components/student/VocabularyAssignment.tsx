@@ -409,7 +409,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
 
     if (mode === 'grading') {
         return (
-            <div className="fixed inset-0 z-[200] bg-[#0A0E27] flex flex-col items-center justify-center" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }}>
+            <div className="fixed inset-0 z-[200] bg-[#0A0E27] flex flex-col items-center justify-center">
                 <div className="space-y-4 text-center">
                     <div className="w-10 h-10 border-2 border-slate-700 border-t-blue-400 rounded-full animate-spin mx-auto" />
                     <div>

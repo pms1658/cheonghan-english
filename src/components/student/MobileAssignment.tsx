@@ -69,7 +69,7 @@ export default function MobileAssignment({
         // Structure reading: show grading UI when assignment is loaded (AI scoring in progress)
         if (assignment) {
             return (
-                <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }}>
+                <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center">
                     <div className="w-20 h-20 bg-[#083973] rounded-[1.2rem] flex items-center justify-center p-2 shadow-2xl shadow-blue-900/30 overflow-hidden animate-pulse mb-6">
                         <Logo className="w-full h-full" />
                     </div>
@@ -89,7 +89,7 @@ export default function MobileAssignment({
         }
         // Initial data loading: show skeleton
         return (
-            <div className="fixed inset-0 z-[100] bg-[#F8FAFC] dark:bg-slate-950 flex flex-col items-center justify-center" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }}>
+            <div className="fixed inset-0 z-[100] bg-[#F8FAFC] dark:bg-slate-950 flex flex-col items-center justify-center">
                 <SkeletonFullPage message="학습을 불러오는 중입니다..." />
             </div>
         );

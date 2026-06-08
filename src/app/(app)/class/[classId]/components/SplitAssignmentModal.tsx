@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SplitAssignmentModalProps {
     isOpen: boolean;
@@ -19,10 +20,17 @@ export default function SplitAssignmentModal({
     setSplitOptions,
     handleSplitAssignment
 }: SplitAssignmentModalProps) {
-    if (!isOpen || !splitTarget) return null;
+    const [mounted, setMounted] = useState(false);
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    if (!isOpen || !splitTarget || !mounted) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
                 <h3 className="text-lg font-bold text-slate-800 mb-2">단어장 나누기</h3>
                 <p className="text-sm text-slate-500 mb-6">총 {splitTarget?.words?.length || 0}개의 단어를 분할합니다.</p>
@@ -66,6 +74,7 @@ export default function SplitAssignmentModal({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
