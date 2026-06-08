@@ -9,7 +9,7 @@ export default function LoginCard() {
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-blue-700"></div>
 
             <div className="mb-6 text-center pt-2">
-                <h2 className="text-3xl font-black text-white tracking-tight leading-tight mb-2 drop-shadow-md">Welcome Back</h2>
+                <h2 className="text-3xl font-black text-white tracking-tight leading-tight mb-2 drop-shadow-md">Login</h2>
                 <p className="text-blue-100/80 text-sm font-medium tracking-wide">청한영어 학습 시스템에 접속하세요</p>
             </div>
 

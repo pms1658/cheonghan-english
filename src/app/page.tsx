@@ -29,15 +29,15 @@ export default function Home() {
                         <div className="absolute inset-0 rounded-[48px] ring-1 ring-inset ring-white/20 pointer-events-none"></div>
                     </div>
 
-                    <h1 className="text-4xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-tight mb-6 break-keep drop-shadow-lg">
+                    <h1 className="text-[2rem] lg:text-[3.375rem] xl:text-[4rem] font-extrabold tracking-tight leading-tight mb-6 break-keep drop-shadow-lg">
                         <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">구조가 보이면</span>
                         <span className="block mt-2">영어가 보인다</span>
                     </h1>
 
-                    <p className="text-lg lg:text-2xl text-blue-100/80 font-medium leading-relaxed max-w-2xl mx-auto break-keep animate-fade-in-up-delay">
+                    <p className="text-base lg:text-[1.35rem] text-blue-100/80 font-medium leading-relaxed max-w-2xl mx-auto break-keep animate-fade-in-up-delay">
                         수능 1등급 비율 단 <span className="text-yellow-400 font-bold">3%</span>의 시대.<br />
                         단순한 해석을 넘어 정답을 꿰뚫는<br className="hidden lg:block" />
-                        가장 <span className="text-blue-300 font-bold">효율적인 구조독해 전략</span>을 제시합니다.
+                        <span className="text-blue-300 font-bold">효율적인 구조독해 전략</span>을 제시합니다.
                     </p>
 
                     <div className="mt-10 flex flex-wrap gap-4 justify-center animate-fade-in-up-delay" style={{ animationDelay: '0.5s' }}>
@@ -50,7 +50,7 @@ export default function Home() {
                     </div>
                     <div className="mt-3 flex justify-center animate-fade-in-up-delay" style={{ animationDelay: '0.7s' }}>
                         <a
-                            href="https://blog.naver.com/cheonghan_eng/224307664023"
+                            href="https://blog.naver.com/cheonghan_eng"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-8 py-4 rounded-full bg-[#03C75A]/15 hover:bg-[#03C75A]/30 backdrop-blur-md border border-[#03C75A]/40 hover:border-[#03C75A]/70 text-[#03C75A] hover:text-white font-bold transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-[#03C75A]/20 active:scale-95 flex items-center gap-2.5"
