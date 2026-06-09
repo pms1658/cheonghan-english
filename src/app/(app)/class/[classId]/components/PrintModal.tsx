@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ModalPortal from '@/components/common/ModalPortal';
 
 interface PrintModalProps {
     isOpen: boolean;
@@ -184,6 +185,7 @@ export default function PrintModal({
     };
 
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">🖨️ 과제 인쇄</h3>
@@ -263,5 +265,6 @@ export default function PrintModal({
                 </div>
             </div>
         </div>
+        </ModalPortal>
     );
 }

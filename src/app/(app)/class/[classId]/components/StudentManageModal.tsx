@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ModalPortal from '@/components/common/ModalPortal';
 
 interface StudentManageModalProps {
     isOpen: boolean;
@@ -34,6 +35,7 @@ export default function StudentManageModal({
     if (!isOpen) return null;
 
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white dark:bg-slate-900 rounded-[24px] p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between mb-6">
@@ -152,5 +154,6 @@ export default function StudentManageModal({
                 )}
             </div>
         </div>
+        </ModalPortal>
     );
 }

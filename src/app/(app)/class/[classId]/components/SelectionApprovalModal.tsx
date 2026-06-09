@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ModalPortal from '@/components/common/ModalPortal';
 
 interface SelectionApprovalModalProps {
     approvalModal: {
@@ -31,6 +32,7 @@ export default function SelectionApprovalModal({
     if (!approvalModal) return null;
 
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
             <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
                 {/* Header */}
@@ -129,5 +131,6 @@ export default function SelectionApprovalModal({
                 </div>
             </div>
         </div>
+        </ModalPortal>
     );
 }

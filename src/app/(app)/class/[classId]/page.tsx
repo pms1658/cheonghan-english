@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import ModalPortal from '@/components/common/ModalPortal';
 import AssignmentEditor from '@/components/admin/AssignmentEditor';
 import StructurePrintModal from '@/components/student/StructurePrintModal';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -678,6 +679,7 @@ export default function ClassRoomPage() {
 
             {/* Move Assignment Modal */}
             {moveAssignmentModal && (
+                <ModalPortal>
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
                         <h3 className="text-lg font-bold text-slate-800 mb-1">과제 이동</h3>
@@ -712,6 +714,7 @@ export default function ClassRoomPage() {
                         </button>
                     </div>
                 </div>
+                </ModalPortal>
             )}
         </div>
     );

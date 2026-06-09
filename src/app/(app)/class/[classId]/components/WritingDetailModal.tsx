@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ModalPortal from '@/components/common/ModalPortal';
 
 interface WritingDetailModalProps {
     writingDetailTarget: {
@@ -48,6 +49,7 @@ export default function WritingDetailModal({ writingDetailTarget, onClose }: Wri
     };
 
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto m-4" onClick={e => e.stopPropagation()}>
                 <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-3xl z-10">
@@ -111,5 +113,6 @@ export default function WritingDetailModal({ writingDetailTarget, onClose }: Wri
                 </div>
             </div>
         </div>
+        </ModalPortal>
     );
 }

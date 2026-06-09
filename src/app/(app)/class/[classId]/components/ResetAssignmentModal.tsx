@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ModalPortal from '@/components/common/ModalPortal';
 
 interface ResetAssignmentModalProps {
     isOpen: boolean;
@@ -26,6 +27,7 @@ export default function ResetAssignmentModal({
     if (!isOpen || !resetTargetAssignment) return null;
 
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
                 <div className="flex items-center gap-3 mb-6">
@@ -111,5 +113,6 @@ export default function ResetAssignmentModal({
                 </div>
             </div>
         </div>
+        </ModalPortal>
     );
 }
