@@ -29,6 +29,7 @@ export default function TransformAssignmentForm({
     const [rewrittenPassage, setRewrittenPassage] = useState<string | null>(null);
     const [changesSummary, setChangesSummary] = useState<string | null>(null);
     const [selectedTypes, setSelectedTypes] = useState<VariantProblemType[]>(initialData?.variantConfig?.problemTypes || []);
+    const [autoCount, setAutoCount] = useState<number>(6);
     const [includeWorkbook, setIncludeWorkbook] = useState(false);
     // Classes for distribution
     const [availableClasses, setAvailableClasses] = useState<{id: string; name: string}[]>([]);
@@ -182,6 +183,7 @@ export default function TransformAssignmentForm({
                     passage: passage.trim(),
                     problemTypes: generationMode === 'manual' ? selectedTypes : [],
                     autoGenerate: generationMode === 'auto' || isSpecial,
+                    autoCount: (generationMode === 'auto' || isSpecial) ? autoCount : undefined,
                     targetGrade,
                     isSpecialLevel: isSpecial
                 })
@@ -425,6 +427,28 @@ export default function TransformAssignmentForm({
                                 ✨ SL
                             </button>
                         </div>
+
+                        {(generationMode === 'auto' || generationMode === 'special') && (
+                            <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">문제 수</label>
+                                    <span className="text-sm font-bold text-[#1e3a5f] bg-[#1e3a5f]/10 px-2.5 py-0.5 rounded-full">{autoCount}문제</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={12}
+                                    value={autoCount}
+                                    onChange={e => setAutoCount(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#1e3a5f]"
+                                />
+                                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                                    <span>1</span>
+                                    <span className="text-slate-500">최대 12가지 유형 중 AI가 지문에 맞는 유형 선택</span>
+                                    <span>12</span>
+                                </div>
+                            </div>
+                        )}
 
                         {generationMode === 'special' && (
                             <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">

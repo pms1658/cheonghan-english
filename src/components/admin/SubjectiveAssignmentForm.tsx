@@ -51,6 +51,7 @@ export default function SubjectiveAssignmentForm({
     const [modifiedPassage, setModifiedPassage] = useState<string>(initialData?.modifiedPassage || '');
     const [isGenerating, setIsGenerating] = useState(false);
     const [isPdfParsing, setIsPdfParsing] = useState(false);
+    const [autoCount, setAutoCount] = useState<number>(7);
     const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
     const [pdfStartPage, setPdfStartPage] = useState(1);
     const [pdfEndPage, setPdfEndPage] = useState(1);
@@ -130,6 +131,7 @@ export default function SubjectiveAssignmentForm({
                     targetGrade,
                     mode: generationMode,
                     problemTypes: generationMode === 'manual' ? selectedTypes : [],
+                    autoCount: generationMode === 'auto' ? autoCount : undefined,
                     source: 'transform'
                 })
             });
@@ -274,7 +276,7 @@ export default function SubjectiveAssignmentForm({
                         <div>
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">문제 수</label>
                             <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-sm text-slate-500">
-                                {generationMode === 'auto' ? '7문제 (전체)' : `${selectedTypes.length}문제 선택`}
+                                {generationMode === 'auto' ? `${autoCount}문제` : `${selectedTypes.length}문제 선택`}
                             </div>
                         </div>
                     </div>
@@ -321,7 +323,7 @@ export default function SubjectiveAssignmentForm({
                                 onClick={() => setGenerationMode('auto')}
                                 className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-colors ${generationMode === 'auto' ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'bg-white text-slate-500 border-slate-200'}`}
                             >
-                                Auto (7문제)
+                                Auto ({autoCount}문제)
                             </button>
                             <button
                                 onClick={() => setGenerationMode('manual')}
@@ -330,6 +332,28 @@ export default function SubjectiveAssignmentForm({
                                 Manual (유형 선택)
                             </button>
                         </div>
+
+                        {generationMode === 'auto' && (
+                            <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">문제 수 조절</label>
+                                    <span className="text-sm font-bold text-[#1e3a5f] bg-[#1e3a5f]/10 px-2.5 py-0.5 rounded-full">{autoCount}문제</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={7}
+                                    value={autoCount}
+                                    onChange={e => setAutoCount(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#1e3a5f]"
+                                />
+                                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                                    <span>1</span>
+                                    <span className="text-slate-500">영작·해석·어법·빈칸·지칭·요약·전환 중 선택</span>
+                                    <span>7</span>
+                                </div>
+                            </div>
+                        )}
 
                         {generationMode === 'manual' && (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">

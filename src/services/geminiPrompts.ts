@@ -1,4 +1,4 @@
-﻿export const GRADE_LABELS: Record<string, string> = {
+export const GRADE_LABELS: Record<string, string> = {
   'e4': 'Korean Elementary 4th Grade (초4 — 기초 어휘 200-300단어. be동사, 현재시제 기초. "I like apples" 수준의 매우 짧은 문장. 대화문 위주. 주제: 가족, 동물, 음식, 학교)',
   'e5': 'Korean Elementary 5th Grade (초5 — 어휘 400-500단어. 현재시제, can 조동사, 의문문. "What do you want to do?" 수준. 3-4문장 짧은 지문. 주제: 일상, 여행, 날씨)',
   'e6': 'Korean Elementary 6th Grade (초6 — 어휘 600-800단어. 과거시제 도입, 접속사 and/but. "I went to the park and played soccer" 수준. 5-6문장 지문. 관계사/분사 절대 금지)',
@@ -725,7 +725,7 @@ Provide ONLY a valid JSON object:
 // 변형문제 주관식 (Transform Subjective) 프롬프트
 // ═══════════════════════════════════════
 
-export const getSubjectiveProblemsPrompt = (passage: string, grade: string, problemTypes?: string[], source?: string) => {
+export const getSubjectiveProblemsPrompt = (passage: string, grade: string, problemTypes?: string[], source?: string, autoCount?: number) => {
   const gradeLabel = GRADE_LABELS[grade] || GRADE_LABELS['2'];
   
   // Build type descriptions based on mode
@@ -748,15 +748,19 @@ export const getSubjectiveProblemsPrompt = (passage: string, grade: string, prob
     typeInstruction = 'Generate problems ONLY for these ' + problemTypes.length + ' types: ' + problemTypes.join(', ') + '. Do NOT generate any other types.';
     typeBlock = problemTypes.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
   } else if (source === 'external') {
-    // \uc678\ubd80\uc9c0\ubb38 auto: 9\uac1c \uc804\uccb4 \uc720\ud615
+    // 외부지문 auto: 9개 전체 유형 (autoCount로 제한 가능)
     const externalTypes = Object.keys(allTypes);
-    typeInstruction = 'Generate ALL 9 types of problems (one problem per type): ' + externalTypes.join(', ') + '. Do NOT skip any type.';
-    typeBlock = Object.values(allTypes).join('\n\n');
+    const limit = autoCount && autoCount > 0 ? Math.min(autoCount, externalTypes.length) : externalTypes.length;
+    const selectedExternal = externalTypes.slice(0, limit);
+    typeInstruction = `Generate ${limit} types of problems (one problem per type): ` + selectedExternal.join(', ') + '. Do NOT skip any of the listed types.';
+    typeBlock = selectedExternal.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
   } else {
-    // \ubcc0\ud615\uc8fc\uad00\uc2dd auto: 7\uac1c \ud575\uc2ec \uc720\ud615\ub9cc
+    // 변형주관식 auto: 7개 핵심 유형만 (autoCount로 제한 가능)
     const coreTypes = ['eng_composition', 'sentence_interpretation', 'grammar_correction', 'blank_fill', 'pronoun_reference', 'summary_completion', 'sentence_transform'];
-    typeInstruction = 'Generate ALL 7 types of problems (one problem per type): ' + coreTypes.join(', ') + '. Do NOT generate any other types.';
-    typeBlock = coreTypes.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
+    const limit = autoCount && autoCount > 0 ? Math.min(autoCount, coreTypes.length) : coreTypes.length;
+    const selectedCore = coreTypes.slice(0, limit);
+    typeInstruction = `Generate ${limit} types of problems (one problem per type): ` + selectedCore.join(', ') + '. Do NOT generate any other types.';
+    typeBlock = selectedCore.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
   }
 
   return `You are an expert Korean high school English teacher creating **서술형 (subjective/written-answer) exam problems** for Korean students.

@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         validateRequest(generateVariantRequestSchema, body, 'generate-variant-problems');
-        let { passage: rawPassage, problemTypes, autoGenerate, targetGrade = '3', isSpecialLevel = false } = body;
+        let { passage: rawPassage, problemTypes, autoGenerate, autoCount, targetGrade = '3', isSpecialLevel = false } = body;
         let passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) {
@@ -97,13 +97,19 @@ export async function POST(req: Request) {
                 const suggestedTypes = extractJSON(rawTypeResponse);
 
                 if (Array.isArray(suggestedTypes) && suggestedTypes.length > 0) {
-                    problemTypes = suggestedTypes;
+                    // Limit to autoCount if specified
+                    const limit = autoCount && autoCount > 0 ? Math.min(autoCount, suggestedTypes.length) : suggestedTypes.length;
+                    problemTypes = suggestedTypes.slice(0, limit);
                 } else {
-                    problemTypes = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
+                    const defaults = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
+                    const limit = autoCount && autoCount > 0 ? Math.min(autoCount, defaults.length) : defaults.length;
+                    problemTypes = defaults.slice(0, limit);
                 }
             } catch (e) {
                 console.warn("Smart Type Selection Failed, using default:", e);
-                problemTypes = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
+                const defaults = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion'];
+                const limit = autoCount && autoCount > 0 ? Math.min(autoCount, defaults.length) : defaults.length;
+                problemTypes = defaults.slice(0, limit);
             }
         }
 
