@@ -194,22 +194,22 @@ export const AssignmentItem = ({
 
                             {/* Transform: Problems */}
                             {assignment.type === 'transform' && (assignment as any).variantProblems && (
-                                <span>문제: {(assignment as any).variantProblems.length}개</span>
+                                <span>문제: {(assignment as any).variantProblems.length}</span>
                             )}
 
                             {/* Subjective: Problems */}
                             {assignment.type === 'transform_subjective' && (assignment as any).subjectiveProblems && (
-                                <span>문제: {(assignment as any).subjectiveProblems.length}개</span>
+                                <span>문제: {(assignment as any).subjectiveProblems.length}</span>
                             )}
 
                             {/* External Subjective: Problems */}
                             {assignment.type === 'external_subjective' && (assignment as any).subjectiveProblems && (
-                                <span>문제: {(assignment as any).subjectiveProblems.length}개</span>
+                                <span>문제: {(assignment as any).subjectiveProblems.length}</span>
                             )}
 
                             {/* Sentence Order: Sentences */}
                             {assignment.type === 'sentence_order' && (assignment as any).sentenceOrderConfig?.originalSentences && (
-                                <span>문장: {(assignment as any).sentenceOrderConfig.originalSentences.length}개</span>
+                                <span>문장: {(assignment as any).sentenceOrderConfig.originalSentences.length}</span>
                             )}
 
                             {/* Selection: Words & Selected */}
