@@ -76,7 +76,7 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false, isC
                 <div className="sidebar-scroll flex-1 overflow-y-auto overflow-x-hidden flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
 
                     {/* Section 1: Notice & Guide */}
-                    <div className="mb-6 px-3">
+                    <div className="pt-5 mb-6 px-3">
                         <div className="px-3 xl:px-4 text-[9px] xl:text-[10px] uppercase tracking-wider font-bold text-white/40 mb-2">Notice & Guide</div>
 
                         <div className="space-y-0.5 mx-1">
