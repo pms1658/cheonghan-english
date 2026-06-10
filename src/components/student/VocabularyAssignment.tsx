@@ -266,7 +266,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
                 await dbService.addSubmission({
                     studentId: student.id,
                     studentName: student.name,
-                    classId: student.classId,
+                    classId: student.classId || (assignment.classIds && assignment.classIds[0]) || 'unknown',
                     assignmentId: assignment.id,
                     assignmentTitle: assignment.title,
                     attempt: nextAttempt,
@@ -311,7 +311,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
         await dbService.addSubmission({
             studentId: student.id,
             studentName: student.name,
-            classId: student.classId,
+            classId: student.classId || (assignment.classIds && assignment.classIds[0]) || 'unknown',
             assignmentId: assignment.id,
             assignmentTitle: assignment.title,
             attempt: nextAttempt,
@@ -340,7 +340,7 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
         await dbService.addSubmission({
             studentId: student.id,
             studentName: student.name,
-            classId: student.classId,
+            classId: student.classId || (assignment.classIds && assignment.classIds[0]) || 'unknown',
             assignmentId: assignment.id,
             assignmentTitle: assignment.title,
             attempt: nextAttempt,
