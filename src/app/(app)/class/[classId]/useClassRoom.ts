@@ -249,17 +249,17 @@ export function useClassRoom() {
     const loadData = async () => {
         try {
             // 1. Fetch Class Info and Helpers
-            // Optimization: fetch submissions filtered by classId (Firestore server-side filter)
-            const [classes, students, allAssignments, submissionsData] = await Promise.all([
+            // NOTE: getSubmissions without classId — classId on submissions can be 'unknown' for legacy records.
+            // We filter by student membership + assignment membership below for correctness.
+            const [classes, students, allAssignments, allRawSubmissions] = await Promise.all([
                 dbService.getClasses(),
                 dbService.getStudents(),
                 dbService.getAssignments(),
-                dbService.getSubmissions(classId)  // ← classId filter: only fetch this class's submissions
+                dbService.getSubmissions()  // ← no classId filter; we filter by studentId + assignmentId below
             ]);
 
             setAllClasses(classes);
             setAllStudents(students);
-            setAllSubmissions(submissionsData);
             setAllAssignmentsRaw(allAssignments);
 
             const currentClass = classes.find(c => c.id === classId);
@@ -277,6 +277,20 @@ export function useClassRoom() {
                     .map(s => s.id)
             );
             const classStudentCount = classStudentIds.size;
+
+            // Build set of assignment IDs that belong to this class
+            const classAssignmentIds = new Set(
+                allAssignments
+                    .filter(a => (a.classIds || []).includes(classId))
+                    .map(a => a.id)
+            );
+
+            // Filter submissions: student is in this class AND assignment belongs to this class.
+            // This correctly handles legacy records with classId === 'unknown'.
+            const submissionsData = allRawSubmissions.filter(
+                s => classStudentIds.has(s.studentId) && classAssignmentIds.has(s.assignmentId)
+            );
+            setAllSubmissions(submissionsData);
 
             // Pre-index submissions by assignmentId for O(1) lookup
             const submissionsByAssignment = new Map<string, any[]>();
