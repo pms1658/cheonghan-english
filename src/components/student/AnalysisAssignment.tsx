@@ -170,7 +170,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
     };
 
     const { structure, keyGrammar, vocabSummary, examPrediction, tfCheck } = data;
-    const hasSidePanel = !!(data.topic || data.claim || structure || keyGrammar?.length || examPrediction?.length);
+    const hasSidePanel = !!(data.topic || data.claim || structure || (Array.isArray(keyGrammar) && keyGrammar.length) || (Array.isArray(examPrediction) && examPrediction.length));
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
@@ -511,10 +511,10 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                                         </div>
                                     )}
                                     {/* 본론 */}
-                                    {structure.body?.map((b, bi) => (
+                                    {(Array.isArray(structure.body) ? structure.body : structure.body ? [structure.body] : []).map((b: any, bi: number) => (
                                         <div key={bi}>
                                             <div className="flex items-center gap-2 mb-1.5">
-                                                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">본론{structure.body!.length > 1 ? ` ${bi + 1}` : ''}</span>
+                                                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">본론{(Array.isArray(structure.body) ? structure.body : [structure.body]).length > 1 ? ` ${bi + 1}` : ''}</span>
                                                 {b.note && <span className="text-[10px] text-slate-400 italic truncate">{b.note}</span>}
                                             </div>
                                             <div className="space-y-1 pl-2 border-l-2 border-green-200">
@@ -561,7 +561,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                         )}
 
                         {/* 핵심 문법 */}
-                        {keyGrammar && keyGrammar.length > 0 && (
+                        {Array.isArray(keyGrammar) && keyGrammar.length > 0 && (
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                                 <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
                                     <span className="w-5 h-5 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-[10px] font-bold">📝</span>
@@ -585,7 +585,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                         )}
 
                         {/* 변형문제 예상 */}
-                        {examPrediction && examPrediction.length > 0 && (
+                        {Array.isArray(examPrediction) && examPrediction.length > 0 && (
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                                 <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
                                     <span className="w-5 h-5 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-[10px] font-bold">🎯</span>
@@ -616,7 +616,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
             {/* Bottom Sections */}
             <div className="mt-8 space-y-6">
                 {/* Vocabulary Summary */}
-                {vocabSummary && vocabSummary.length > 0 && (
+                {Array.isArray(vocabSummary) && vocabSummary.length > 0 && (
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                         <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-[10px] font-bold">📚</span>
@@ -650,7 +650,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                 )}
 
                 {/* T/F Check */}
-                {tfCheck && tfCheck.length > 0 && (
+                {Array.isArray(tfCheck) && tfCheck.length > 0 && (
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
