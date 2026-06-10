@@ -166,6 +166,13 @@ export function sanitizeChoiceText(choice: string): string {
     cleaned = cleaned.replace(/^[①②③④⑤❶❷❸❹❺]\s*/, '');
     cleaned = cleaned.replace(/^\d+[.)]\s*/, '');
 
+    // Remove leading Roman numeral markers: i), ii), iii), iv), v), vi) etc.
+    cleaned = cleaned.replace(/^(?:i{1,4}|iv|vi{0,3}|ix|x{0,3}(?:ix|iv|v?i{0,3}))[.)]\s*/i, '');
+
+    // Remove leading (A), (B), (C) or A. B. style labels
+    cleaned = cleaned.replace(/^\([A-Za-z]\)\s*/, '');
+    cleaned = cleaned.replace(/^[A-Z][.)]\s*/, '');
+
     // Remove markdown bold
     cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1');
 
@@ -174,4 +181,5 @@ export function sanitizeChoiceText(choice: string): string {
 
     return cleaned.trim();
 }
+
 
