@@ -30,52 +30,46 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false, isC
             overflow-hidden
             border-r border-white/[0.08]
             transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
-            ${isOpen ? 'translate-x-0 shadow-2xl w-[280px]' : '-translate-x-full lg:translate-x-0 w-[280px]'}
-            ${isCollapsed ? 'lg:w-0 lg:border-r-0' : 'lg:w-[220px] xl:w-[280px]'}
+            ${isOpen ? 'translate-x-0 shadow-2xl w-[224px]' : '-translate-x-full lg:translate-x-0 w-[224px]'}
+            ${isCollapsed ? 'lg:w-0 lg:border-r-0' : 'lg:w-[176px] xl:w-[224px]'}
         `}
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
             {/* Inner container — fixed width prevents content reflow during animation */}
-            <div className="w-[280px] lg:w-[220px] xl:w-[280px] flex-shrink-0 flex flex-col h-full">
+            <div className="w-[224px] lg:w-[176px] xl:w-[224px] flex-shrink-0 flex flex-col h-full">
 
                 {/* Header / Logo Area */}
-                <div className="pt-6 pb-4 xl:pt-8 xl:pb-6 flex flex-col items-center relative">
+                <div className="pt-5 pb-3 xl:pt-6 xl:pb-4 flex flex-col items-center relative">
                     <Link href="/dashboard" className="block relative group cursor-pointer">
-                        <div className="w-[120px] h-[120px] xl:w-[160px] xl:h-[160px] relative bg-[#083973] rounded-[2rem] xl:rounded-[2.5rem] shadow-2xl shadow-blue-900/60 ring-1 ring-white/15 overflow-hidden transform group-hover:scale-[1.03] transition-transform duration-500 flex items-center justify-center p-1">
+                        <div className="w-[96px] h-[96px] xl:w-[128px] xl:h-[128px] relative bg-[#083973] rounded-[1.75rem] xl:rounded-[2rem] shadow-2xl shadow-blue-900/60 ring-1 ring-white/15 overflow-hidden transform group-hover:scale-[1.03] transition-transform duration-500 flex items-center justify-center p-1">
                             <Logo className="w-full h-full" />
                             <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
-                            <div className="absolute inset-0 rounded-[2.5rem] ring-1 ring-inset ring-white/10 pointer-events-none"></div>
+                            <div className="absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10 pointer-events-none"></div>
                             <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                         </div>
                     </Link>
 
-                    {/* Desktop collapse button — panel icon (always visible) + hover label */}
-                    {onCollapseToggle && (
-                        <button
-                            onClick={onCollapseToggle}
-                            className="hidden lg:flex items-center gap-2 absolute top-3 right-3 group"
-                            title="사이드바 접기"
-                        >
-                            {/* Label fades in to the left of the icon on hover */}
-                            <span className="text-[11px] font-semibold text-white/70 bg-white/10 px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap select-none backdrop-blur-sm border border-white/10">
-                                사이드바 닫기
-                            </span>
-                            {/* Panel icon — always visible */}
-                            <div className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/50 group-hover:text-white group-hover:bg-white/15 group-hover:border-white/30 transition-all duration-200">
+                    {/* Control cluster: Dark mode toggle + Collapse button — top-right corner */}
+                    <div className="absolute top-3 right-2 flex flex-col items-center gap-1.5">
+                        {/* Theme Toggle (compact icon-only mode) */}
+                        <ThemeToggle compact />
+
+                        {/* Collapse button */}
+                        {onCollapseToggle && (
+                            <button
+                                onClick={onCollapseToggle}
+                                className="hidden lg:flex w-7 h-7 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/50 hover:text-white hover:bg-white/15 hover:border-white/30 transition-all duration-200 group"
+                                title="사이드바 접기"
+                            >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" />
                                     <path strokeWidth="1.5" d="M9 3v18" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M14 15l-2.5-3 2.5-3" />
                                 </svg>
-                            </div>
-                        </button>
-                    )}
+                            </button>
+                        )}
+                    </div>
 
-                </div>
-
-                {/* Theme Toggle */}
-                <div className="flex justify-center pb-4">
-                    <ThemeToggle />
                 </div>
 
                 {/* Scrollable Nav Content */}
