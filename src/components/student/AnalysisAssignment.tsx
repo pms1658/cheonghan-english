@@ -331,7 +331,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                     `}</style>
                     <div ref={passageRef} className="relative p-6">
                         <div className={`analysis-passage-flow leading-[2.6] text-[12px] md:text-[13px] md:leading-[2.8] font-medium tracking-tight ${annotationMode ? '' : 'pointer-events-none'}`}>
-                            {data.sentences.map((sent, idx) => {
+                            {(data.sentences || []).map((sent, idx) => {
                                 const analyzed = normalizeAnalyzedString(sent.analyzed || '');
                                 const marks = analyzed ? parseAnalysisString(sent.original, analyzed) : [];
 
@@ -379,7 +379,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                     <div className="border-t border-slate-100 p-5">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">해석</span>
                         <div className="space-y-2">
-                            {data.sentences.map((sent, idx) => {
+                            {(data.sentences || []).map((sent, idx) => {
                                 const sentId = typeof sent.id === 'number' ? sent.id : idx + 1;
                                 return (
                                     <div key={idx} className="flex gap-2 text-sm">
@@ -397,7 +397,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                 {/* LEFT: Sentence Analysis */}
                 <div className={`flex-1 min-w-0 ${hasSidePanel ? 'lg:w-[65%]' : 'w-full'}`}>
                     <div className="flex flex-col gap-6">
-                        {data.sentences.map((sent, idx) => {
+                        {(data.sentences || []).map((sent, idx) => {
                             const sentId = typeof sent.id === 'number' ? sent.id : idx + 1;
                             const isTopicSentence = data.topicSentenceId === sentId;
                             // Find which section this sentence belongs to
