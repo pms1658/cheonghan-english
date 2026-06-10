@@ -131,7 +131,7 @@ export default function SubjectiveAssignmentForm({
                     targetGrade,
                     mode: generationMode,
                     problemTypes: generationMode === 'manual' ? selectedTypes : [],
-                    autoCount: generationMode === 'auto' ? autoCount : undefined,
+                    autoCount: autoCount,
                     source: 'transform'
                 })
             });

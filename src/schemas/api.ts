@@ -72,6 +72,7 @@ export const generateVariantRequestSchema = z.object({
     passage: z.string().min(1, 'Passage is required'),
     problemTypes: z.array(z.string()).optional(),
     autoGenerate: z.boolean().optional(),
+    autoCount: z.number().int().positive().optional(),
     targetGrade: targetGradeSchema,
     isSpecialLevel: z.boolean().optional(),
 });
@@ -80,7 +81,10 @@ export const generateVariantRequestSchema = z.object({
 export const generateSubjectiveRequestSchema = z.object({
     passage: z.string().min(1, 'Passage is required'),
     targetGrade: targetGradeSchema,
+    mode: z.enum(['auto', 'manual']).optional().default('auto'),
     problemTypes: z.array(z.string()).optional(),
+    source: z.string().optional(),
+    autoCount: z.number().int().positive().optional(),
 });
 
 /** POST /api/generate-workbook — 워크북 생성 */
