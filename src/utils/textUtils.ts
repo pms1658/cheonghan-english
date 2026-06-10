@@ -1,16 +1,13 @@
 export function splitSentences(text: string): string[] {
     if (!text) return [];
 
-    // Delimiter approach to avoid consuming the punctuation during split
     const delimiter = '|||SENTENCE_BOUNDARY|||';
 
-    // Improved Regex:
-    // ([.?!]["'"']?) -> Capture terminal punctuation optionally followed by a closing quote
-    // \s+ -> One or more whitespace characters (spaces, tabs, newlines)
-    // (?=[A-Z"'"']) -> Positive lookahead: must be followed by a capital letter or an opening quote
-
-    // We also handle cases where there might be multiple spaces or newlines.
-    const regex = /([.?!]["'"']?)\s+(?=[A-Z"'"'])/g;
+    // [.?!] — terminal punctuation
+    // ['"'"\u2019\u201d]? — optional closing quote/double-quote (straight or curly)
+    // \s* — zero or more whitespace (handles tight or newline-only gaps)
+    // (?=[A-Z"'"'\u2018\u201c]) — next char is uppercase or an opening quote
+    const regex = /([.?!]['"'"\u2019\u201d]?)\s*(?=[A-Z"'"'\u2018\u201c])/g;
 
     return text
         .replace(regex, `$1${delimiter}`)

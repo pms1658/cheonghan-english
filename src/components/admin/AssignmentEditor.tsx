@@ -13,6 +13,7 @@ import ListeningSetForm from './ListeningSetForm';
 import StructureVocabForm from './StructureVocabForm';
 import SentenceOrderForm from './SentenceOrderForm';
 import MockExamForm from './MockExamForm';
+import InaesinBatchForm from './InaesinBatchForm';
 import { toast } from 'sonner';
 
 interface AssignmentEditorProps {
@@ -24,7 +25,7 @@ interface AssignmentEditorProps {
     initialData?: Assignment | null;
 }
 
-type AssignmentType = 'structure' | 'vocabulary' | 'selection' | 'transform' | 'transform_subjective' | 'external_subjective' | 'writing' | 'workbook' | 'analysis' | 'listening_set' | 'sentence_order' | 'mock_exam';
+type AssignmentType = 'structure' | 'vocabulary' | 'selection' | 'transform' | 'transform_subjective' | 'external_subjective' | 'writing' | 'workbook' | 'analysis' | 'listening_set' | 'sentence_order' | 'mock_exam' | 'inaesin_batch';
 
 export default function AssignmentEditor({ initialClassId, classes, allStudents, onClose, onSave, initialData }: AssignmentEditorProps) {
     const [creationStep, setCreationStep] = useState<'type_select' | 'form'>('type_select');
@@ -124,6 +125,19 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    {/* 내신대비 일괄출제 - 최상단 강조 */}
+                    <div
+                        onClick={() => { setAssignmentType('inaesin_batch'); setCreationStep('form'); }}
+                        className="group cursor-pointer bg-gradient-to-br from-rose-600 to-rose-700 border-2 border-rose-500 rounded-3xl p-6 text-center transition-all hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden col-span-1 md:col-span-2 lg:col-span-3"
+                    >
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15),_transparent)] pointer-events-none" />
+                        <h3 className="text-xl font-black text-white mb-1 flex items-center justify-center gap-2">
+                            ⚡ 내신대비 일괄출제
+                        </h3>
+                        <p className="text-sm text-rose-100">
+                            지문 하나로 구조독해 · 본문분석 · 세부순서 · 변형문제(객관+주관)를 한 번에 생성합니다.
+                        </p>
+                    </div>
                     {/* Row 1: 단어학습, 구조독해, 본문분석 */}
                     <TypeCard type="vocabulary" color="green"
                         title="단어학습" desc="선생님이 지정한 단어로 AI 뜻/예문 생성 및 학습을 진행합니다. 단어선택 모드로 전환 가능합니다."
@@ -201,6 +215,20 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
     const selectedClass = selectedClassIds.length > 0
         ? classes.find(c => c.id === selectedClassIds[0]) || null
         : null;
+
+    // Inaesin Batch
+    if (assignmentType === 'inaesin_batch') {
+        return (
+            <div className="h-full overflow-y-auto">
+                <InaesinBatchForm
+                    selectedClass={selectedClass}
+                    onBack={handleBack}
+                    onSave={onSave}
+                    onClose={onClose}
+                />
+            </div>
+        );
+    }
 
     // Transform
     if (assignmentType === 'transform') {
