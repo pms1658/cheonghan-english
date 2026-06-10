@@ -560,62 +560,63 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
                 </div>
             )}
 
-            {/* Creation Modal */}
+            {/* Creation Inline Card */}
             {isCreating && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <h3 className="text-lg font-bold text-slate-800 mb-1">새 항목 생성</h3>
-                        <p className="text-sm text-slate-500 mb-4">
-                            <span className="font-bold text-blue-600">{isCreating.parentName}</span> 하위에 생성합니다.
-                        </p>
+                <div className="mx-2 mt-2 mb-1 bg-white/[0.06] border border-white/10 rounded-xl p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">새 항목 생성</span>
+                        <button
+                            onClick={() => setIsCreating(null)}
+                            className="w-5 h-5 flex items-center justify-center rounded-md text-white/30 hover:text-white/70 hover:bg-white/10 transition-all"
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">유형</label>
-                                <div className="flex bg-slate-100 p-1 rounded-lg">
-                                    <button
-                                        onClick={() => setNewItemType('class')}
-                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${newItemType === 'class' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                    >
-                                        과제방 (Class)
-                                    </button>
-                                    <button
-                                        onClick={() => setNewItemType('folder')}
-                                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${newItemType === 'folder' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                    >
-                                        폴더 (Folder)
-                                    </button>
-                                </div>
-                            </div>
+                    {/* Type Toggle */}
+                    <div className="flex bg-white/5 p-0.5 rounded-lg mb-2.5">
+                        <button
+                            onClick={() => setNewItemType('class')}
+                            className={`flex-1 py-1.5 text-[11px] font-bold rounded-md transition-all ${newItemType === 'class' ? 'bg-blue-600 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
+                        >
+                            과제방
+                        </button>
+                        <button
+                            onClick={() => setNewItemType('folder')}
+                            className={`flex-1 py-1.5 text-[11px] font-bold rounded-md transition-all ${newItemType === 'folder' ? 'bg-blue-600 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
+                        >
+                            폴더
+                        </button>
+                    </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">이름</label>
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    value={newItemName}
-                                    onChange={e => setNewItemName(e.target.value)}
-                                    placeholder="이름을 입력하세요"
-                                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none font-medium text-slate-900"
-                                    onKeyDown={e => e.key === 'Enter' && handleCreateSubmit()}
-                                />
-                            </div>
+                    {/* Name Input */}
+                    <input
+                        autoFocus
+                        type="text"
+                        value={newItemName}
+                        onChange={e => setNewItemName(e.target.value)}
+                        placeholder="이름을 입력하세요"
+                        className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[12px] text-white placeholder-white/20 focus:outline-none focus:border-blue-500/60 focus:bg-white/10 transition-all mb-2.5"
+                        onKeyDown={e => e.key === 'Enter' && handleCreateSubmit()}
+                    />
 
-                            <div className="flex gap-2 pt-2">
-                                <button
-                                    onClick={() => setIsCreating(null)}
-                                    className="flex-1 py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-colors"
-                                >
-                                    취소
-                                </button>
-                                <button
-                                    onClick={handleCreateSubmit}
-                                    className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
-                                >
-                                    생성하기
-                                </button>
-                            </div>
-                        </div>
+                    {/* Actions */}
+                    <div className="flex gap-1.5">
+                        <button
+                            onClick={() => setIsCreating(null)}
+                            className="flex-1 py-1.5 text-[11px] font-bold text-white/40 hover:text-white/70 hover:bg-white/5 rounded-lg transition-colors"
+                        >
+                            취소
+                        </button>
+                        <button
+                            onClick={handleCreateSubmit}
+                            className="flex-1 py-1.5 text-[11px] font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors shadow-md shadow-blue-900/30"
+                        >
+                            생성하기
+                        </button>
                     </div>
                 </div>
             )}
