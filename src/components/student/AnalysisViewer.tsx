@@ -38,7 +38,7 @@ export default function AnalysisViewer({ sentences, expandAll = false, startInde
 
     return (
         <div className="flex flex-col gap-6 w-full">
-            {sentences.map((sent, idx) => {
+            {(sentences || []).map((sent, idx) => {
                 const analyzed = normalizeAnalyzedString(sent.analyzed || '');
                 const marks = analyzed ? parseAnalysisString(sent.original, analyzed) : [];
 
@@ -77,7 +77,7 @@ export default function AnalysisViewer({ sentences, expandAll = false, startInde
                                 </div>
 
                                 {/* Grammar Points */}
-                                {sent.grammar && sent.grammar.length > 0 && (
+                                {Array.isArray(sent.grammar) && sent.grammar.length > 0 && (
                                     <div className="p-3 px-4 md:p-4 md:px-6 flex gap-3 md:gap-4 bg-sky-50/30">
                                         <span className="text-[10px] font-bold text-sky-500 tracking-widest mt-1 min-w-[36px] md:min-w-[44px]">포인트</span>
                                         <ul className="space-y-1">
@@ -92,7 +92,7 @@ export default function AnalysisViewer({ sentences, expandAll = false, startInde
                                 )}
 
                                 {/* Vocabulary */}
-                                {sent.vocab && sent.vocab.length > 0 && (
+                                {Array.isArray(sent.vocab) && sent.vocab.length > 0 && (
                                     <div className="p-3 px-4 md:p-4 md:px-6 flex gap-3 md:gap-4">
                                         <span className="text-[10px] font-bold text-slate-400 tracking-widest mt-1 min-w-[36px] md:min-w-[44px]">단어</span>
                                         <div className="flex flex-wrap gap-2">
