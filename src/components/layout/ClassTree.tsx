@@ -10,7 +10,7 @@ import {
     DndContext,
     closestCenter,
     KeyboardSensor,
-    PointerSensor,
+    MouseSensor,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -71,7 +71,9 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
     const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        // MouseSensor only: touch drag removed to prevent scroll conflicts on mobile.
+        // Mobile users can move items via the settings modal's 이동 button.
+        useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
@@ -647,6 +649,26 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
                                     placeholder="이름을 입력하세요"
                                     onKeyDown={e => e.key === 'Enter' && handleRenameSubmit()}
                                 />
+                            </div>
+
+                            {/* Move to Folder — primary mobile action */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-2">폴더 이동</label>
+                                <button
+                                    onClick={() => {
+                                        setIsMoveModalOpen({ id: isEditing.id, type: isEditing.type, name: isEditing.name });
+                                        setIsEditing(null);
+                                    }}
+                                    className="w-full h-10 px-4 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all text-left flex items-center gap-2"
+                                >
+                                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                    </svg>
+                                    다른 폴더로 이동
+                                    <svg className="w-3.5 h-3.5 ml-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
                             </div>
 
                             {/* Footer / Buttons */}

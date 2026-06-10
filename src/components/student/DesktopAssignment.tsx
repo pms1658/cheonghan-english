@@ -270,7 +270,7 @@ export default function DesktopAssignment({
         const analysisData = {
             title: assignment.title,
             passage: assignment.content || '',
-            sentences: assignment.sentences.map((s, idx) => {
+            sentences: (assignment.sentences || []).map((s, idx) => {
                 if (typeof s === 'string') {
                     return { id: `s-${idx}`, original: s, analyzed: s, translation: '', grammar: [], vocab: [] };
                 } else {
