@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import ModalPortal from '@/components/common/ModalPortal';
 import AssignmentEditor from '@/components/admin/AssignmentEditor';
 import StructurePrintModal from '@/components/student/StructurePrintModal';
@@ -132,12 +131,7 @@ export default function ClassRoomPage() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-full">
-            {/* Hero Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-12"
-            >
+            <div className="mb-12">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
@@ -416,7 +410,7 @@ export default function ClassRoomPage() {
                         )}
                     </div>
                 </div>
-            </motion.div>
+            </div>
 
             {/* Sort Controls & Select All */}
             <div className="flex items-center justify-between mb-8">
@@ -540,12 +534,9 @@ export default function ClassRoomPage() {
                             disabled={!isReordering}
                         >
                             {assignments.map((ass, idx) => (
-                                <motion.div
+                                <div
                                     key={ass.id}
                                     data-assignment-id={ass.id}
-                                    initial={{ opacity: 0, y: 24 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ type: 'tween', delay: 0.1 + idx * 0.08, duration: 0.45, ease: [0.25, 0.4, 0.45, 1] }}
                                     className={`rounded-2xl transition-all duration-500 ${isReordering ? 'touch-none' : ''}`}
                                 >
                                     <SortableItem id={ass.id} disabled={!isReordering}>
@@ -581,7 +572,7 @@ export default function ClassRoomPage() {
                                             setMoveAssignmentModal={setMoveAssignmentModal}
                                         />
                                     </SortableItem>
-                                </motion.div>
+                                </div>
                             ))}
                         </SortableContext>
                     </DndContext>

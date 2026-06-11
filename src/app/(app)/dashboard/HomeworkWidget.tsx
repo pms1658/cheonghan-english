@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { dbService, dbSubscriptions } from '@/services/db';
 import { Homework, HomeworkStatus } from '@/types';
 import { SkeletonHomeworkWidget } from '@/components/common/Skeleton';
@@ -133,22 +132,14 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
 
     const getStudentName = (id: string) => students.find(s => s.id === id)?.name || id;
 
-    if (loading) return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-            <SkeletonHomeworkWidget />
-        </motion.div>
-    );
+    if (loading) return <SkeletonHomeworkWidget />;
     if (homeworks.length === 0) {
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
-            >
+            <div>
                 <div className="bg-white dark:bg-[#0c102b] rounded-2xl border border-slate-200 dark:border-white/10 p-6 text-center">
                     <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">이번 주 부여된 과제가 없습니다</p>
                 </div>
-            </motion.div>
+            </div>
         );
     }
 
@@ -179,11 +170,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
             });
 
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
-            >
+            <div>
                 <div className="bg-white dark:bg-[#0c102b] rounded-2xl border border-slate-200 dark:border-white/10 p-5 md:p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
@@ -227,7 +214,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                         </div>
                     )}
                 </div>
-            </motion.div>
+            </div>
         );
     }
 
@@ -263,11 +250,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
     const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-        >
+        <div>
             <div className="bg-white dark:bg-[#0c102b] rounded-2xl border border-slate-200 dark:border-white/10 p-5 md:p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -409,7 +392,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 }
 

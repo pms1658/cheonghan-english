@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { getAdminDisplayName } from '@/lib/adminConfig';
-import { motion } from 'framer-motion';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import HomeworkWidget from './HomeworkWidget';
@@ -184,8 +183,8 @@ export default function NewDashboardPage() {
     const quoteSection = (
         <div className="relative w-full h-full flex flex-col justify-center p-8 md:p-12 shadow-2xl overflow-hidden rounded-2xl border border-white/8 bg-gradient-to-br from-[#0d1334] via-[#0a1128] to-[#080c20]">
             {/* Ambient glow */}
-            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-indigo-600/10 rounded-full blur-xl pointer-events-none"></div>
             {/* Left accent line */}
             <div className="absolute left-0 top-8 bottom-8 w-[3px] bg-gradient-to-b from-blue-400/0 via-blue-500 to-blue-400/0 rounded-full"></div>
             
@@ -241,12 +240,7 @@ export default function NewDashboardPage() {
     return (
         <div className="p-5 md:p-8 max-w-7xl mx-auto pb-24 lg:pb-12">
             {/* Header Text */}
-            <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, ease: "easeOut" }}
-                className="mb-6 px-1"
-            >
+            <div className="mb-6 px-1">
                 <p className="text-slate-400 dark:text-slate-500 text-xs font-bold tracking-[0.25em] uppercase mb-1.5">{greeting}</p>
                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
                     <span className="text-slate-900 dark:text-white">
@@ -256,41 +250,28 @@ export default function NewDashboardPage() {
                         }
                     </span>
                 </h1>
-            </motion.div>
+            </div>
 
             <div className="space-y-4 md:space-y-6">
                 {/* 1. Daily Quote & D-Day Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12, duration: 0.55, ease: "easeOut" }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-4"
-                >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-2 min-h-[200px]">
                         {quoteSection}
                     </div>
                     <div className="lg:col-span-1 min-h-[200px]">
                         <DDayWidget />
                     </div>
-                </motion.div>
+                </div>
 
                 {/* 1.5 Homework Widget */}
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.22, duration: 0.55, ease: "easeOut" }}
-                >
+                <div>
                     <HomeworkWidget user={user} isAdmin={isAdmin} />
-                </motion.div>
+                </div>
 
                 {/* 2. Navigation Hub */}
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.32, duration: 0.55, ease: "easeOut" }}
-                >
+                <div>
                     {navGrid}
-                </motion.div>
+                </div>
             </div>
         </div>
     );

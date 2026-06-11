@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import SideBar from './SideBar';
 import TopBar from './TopBar';
@@ -128,17 +127,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                             : { transform: 'translateZ(0)', transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)' }
                     }
                 >
-                    <AnimatePresence mode="sync">
-                        <motion.div
-                            key={pathname}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2, ease: 'easeOut' }}
-                            style={{ minHeight: '100%' }}
-                        >
-                            {children}
-                        </motion.div>
-                    </AnimatePresence>
+                    {children}
                 </main>
 
                 {/* Mobile Bottom Nav */}
