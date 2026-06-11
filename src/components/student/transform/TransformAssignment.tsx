@@ -474,6 +474,32 @@ export default function TransformAssignment({
         return questionMap[type] || '다음 글을 읽고 물음에 답하시오.';
     };
 
+    // order 유형 선지에서 AI가 첫 번째 레이블을 누락했을 때 자동 복원
+    // 예) [" - (C) - (B)", "- (A) - (C)", ...] → ["(A) - (C) - (B)", "(B) - (A) - (C)", ...]
+    const normalizeOrderChoices = (choices: string[], type: string): string[] => {
+        if (type !== 'order') return choices;
+        // 선지가 "- (X) - (Y)" 패턴으로 시작하면 앞에 알파벳이 빠진 것
+        // "(A)"~"(C)" 레이블의 가능한 순열 목록
+        const allPerms = [
+            ['(A)','(B)','(C)'], ['(A)','(C)','(B)'],
+            ['(B)','(A)','(C)'], ['(B)','(C)','(A)'],
+            ['(C)','(A)','(B)'], ['(C)','(B)','(A)'],
+        ];
+        return choices.map((choice, idx) => {
+            const trimmed = choice.trim();
+            // 선지가 " - (X)" 또는 "- (X)" 로 시작하면 첫 레이블 누락
+            if (/^-?\s*\([A-C]\)/.test(trimmed)) {
+                // 해당 인덱스의 순열을 앞에 붙여줌
+                const perm = allPerms[idx] || allPerms[0];
+                const rest = trimmed.replace(/^-?\s*/, '');
+                // 이미 "(A) - (C)" 처럼 올바른 형태면 건드리지 않음
+                if (/^\([A-C]\)\s*-/.test(trimmed)) return choice;
+                return `${perm[0]} - ${rest}`;
+            }
+            return choice;
+        });
+    };
+
     // AI가 question에 이미 넣은 한글 질문 패턴 제거 (우리가 위에서 별도로 표시하므로)
     const stripKoreanQuestion = (text: string): string => {
         if (!text) return '';
@@ -602,7 +628,7 @@ export default function TransformAssignment({
 
                                     {/* Choice Grid - Compact & Interactive */}
                                     <div className="grid grid-cols-1 gap-2.5">
-                                        {currentProblem.choices.map((choice, idx) => (
+                                        {normalizeOrderChoices(currentProblem.choices, currentProblem.type).map((choice, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => handleAnswerChange(actualProblemIdx, idx)}
@@ -760,7 +786,7 @@ export default function TransformAssignment({
                                             />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                                                {prob.choices.map((choice, cIdx) => {
+                                                {normalizeOrderChoices(prob.choices, prob.type).map((choice, cIdx) => {
                                                     const isAnswer = cIdx === prob.correctAnswer;
                                                     const isStudentPick = cIdx === currentSession?.answers[idx];
                                                     const choiceExp = (prob as any).choiceExplanations?.[cIdx];

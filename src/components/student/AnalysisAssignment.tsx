@@ -689,30 +689,66 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
             </div>
             </div>
 
-            {/* Sticky Footer — Complete Button */}
-            <div className="fixed bottom-0 left-0 lg:left-[220px] xl:left-[280px] right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex justify-center z-[101] shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.08)]">
-                <button
-                    onClick={handleComplete}
-                    disabled={isCompleted || isSaving}
-                    className={`
-                        font-bold py-3 px-12 rounded-full shadow-lg transition-all flex items-center gap-2
-                        ${isCompleted
-                            ? 'bg-green-100 text-green-700 cursor-default'
-                            : 'bg-lime-600 text-white hover:bg-lime-700 hover:scale-105 active:scale-95'}
-                    `}
-                >
-                    {isCompleted ? (
-                        <>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                            학습 완료 ✓
-                        </>
-                    ) : isSaving ? (
-                        <>
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            저장 중...
-                        </>
-                    ) : '✅ 학습 완료'}
-                </button>
+            {/* Sticky Footer — Premium Complete Bar */}
+            <div className="fixed bottom-0 left-0 lg:left-[220px] xl:left-[280px] right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 z-[101] shadow-[0_-8px_32px_-4px_rgba(0,0,0,0.10)]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+                {/* Progress glow line at very top */}
+                <div className={`h-[2px] w-full transition-all duration-700 ${isCompleted ? 'bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500' : 'bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700'}`} />
+
+                <div className="max-w-[1400px] mx-auto px-5 py-3 flex items-center gap-5">
+                    {/* Left: Label */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-500 ${isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/40' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                            {isCompleted ? (
+                                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+                            ) : (
+                                <svg className="w-4.5 h-4.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className={`text-[13px] font-bold leading-tight transition-colors ${isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                {isCompleted ? '학습 완료됨' : '본문분석 학습'}
+                            </p>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5 hidden sm:block">
+                                {isCompleted ? '분석이 저장되었습니다' : '학습을 완료하면 기록이 저장됩니다'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Center: Completion status indicator (desktop only) */}
+                    <div className="hidden lg:flex items-center gap-2 text-[12px] text-slate-400 dark:text-slate-500">
+                        <div className={`w-2 h-2 rounded-full transition-colors ${isCompleted ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                        {isCompleted ? '완료' : '미완료'}
+                    </div>
+
+                    {/* Right: Action Button */}
+                    <button
+                        onClick={handleComplete}
+                        disabled={isCompleted || isSaving}
+                        className={`
+                            font-bold py-2.5 px-7 rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 text-[14px] flex-shrink-0
+                            ${isCompleted
+                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 cursor-default shadow-none'
+                                : 'bg-gradient-to-r from-lime-600 to-emerald-600 text-white hover:from-lime-500 hover:to-emerald-500 hover:shadow-lg hover:shadow-lime-500/20 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md'}
+                        `}
+                    >
+                        {isCompleted ? (
+                            <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+                                학습 완료
+                            </>
+                        ) : isSaving ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                저장 중...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                학습 완료하기
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );
