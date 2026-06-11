@@ -75,6 +75,7 @@ export const generateVariantRequestSchema = z.object({
     autoCount: z.number().int().positive().optional(),
     targetGrade: targetGradeSchema,
     isSpecialLevel: z.boolean().optional(),
+    singleType: z.string().optional(), // 개별 문제 재생성용
 });
 
 /** POST /api/generate-subjective-problems — 주관식 생성 */

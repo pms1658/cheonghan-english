@@ -42,6 +42,7 @@ export default function TransformAssignmentForm({
     // Status
     const [isGenerating, setIsGenerating] = useState(false);
     const [isPdfParsing, setIsPdfParsing] = useState(false);
+    const [regeneratingIdx, setRegeneratingIdx] = useState<number | null>(null);
 
     // PDF
     const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
@@ -209,6 +210,38 @@ export default function TransformAssignmentForm({
             toast.error("Error: ${error.message}");
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const handleRegenerateProblem = async (idx: number) => {
+        const problem = generatedProblems[idx];
+        if (!problem || !passage.trim()) return;
+        setRegeneratingIdx(idx);
+        try {
+            const res = await fetch('/api/generate-variant-problems', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    passage: passage.trim(),
+                    singleType: problem.type,
+                    targetGrade,
+                }),
+            });
+            if (!res.ok) throw new Error('재생성 실패');
+            const data = await res.json();
+            if (data.problem) {
+                setGeneratedProblems(prev => {
+                    const next = [...prev];
+                    // 기존 points 유지
+                    next[idx] = { ...data.problem, points: prev[idx].points };
+                    return next;
+                });
+                toast.success(`#${idx + 1} 문제가 재생성되었습니다`);
+            }
+        } catch (err: any) {
+            toast.error(`재생성 실패: ${err.message}`);
+        } finally {
+            setRegeneratingIdx(null);
         }
     };
 
@@ -521,10 +554,28 @@ export default function TransformAssignmentForm({
                         </div>
 
                         {generatedProblems.map((problem, idx) => (
-                            <div key={idx} className="bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-black/[0.02] overflow-hidden">
+                            <div key={problem.id || idx} className="bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-black/[0.02] overflow-hidden">
                                 {/* Problem Header */}
                                 <div className="bg-[#f5f5f7] border-b border-black/[0.04] px-5 py-3 flex justify-between items-center">
                                     <span className="text-[13px] font-semibold text-[#1d1d1f]">#{idx + 1} {problemTypes.find(t => t.value === problem.type)?.label}</span>
+                                    <button
+                                        onClick={() => handleRegenerateProblem(idx)}
+                                        disabled={regeneratingIdx !== null}
+                                        title="이 문제만 재생성"
+                                        className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all border disabled:opacity-40 disabled:cursor-not-allowed bg-white border-slate-200 text-slate-500 hover:border-[#1e3a5f] hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/5"
+                                    >
+                                        {regeneratingIdx === idx ? (
+                                            <>
+                                                <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                                                재생성 중...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                재생성
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
 
                                 <div className="p-5 md:p-6">

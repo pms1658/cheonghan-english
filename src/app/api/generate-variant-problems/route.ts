@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         validateRequest(generateVariantRequestSchema, body, 'generate-variant-problems');
-        let { passage: rawPassage, problemTypes, autoGenerate, autoCount, targetGrade = '3', isSpecialLevel = false } = body;
+        let { passage: rawPassage, problemTypes, autoGenerate, autoCount, targetGrade = '3', isSpecialLevel = false, singleType } = body;
         let passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) {
@@ -50,6 +50,38 @@ export async function POST(req: Request) {
         }
 
         const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+
+        // ★ SINGLE TYPE MODE: 개별 문제 재생성
+        if (singleType) {
+            try {
+                const prompt = getVariantPrompt(singleType, targetGrade, passage);
+                const result = await model.generateContent({
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.8, maxOutputTokens: 8192 },
+                    safetySettings,
+                });
+                const responseText = result.response.text();
+                const problemData = extractJSON(responseText);
+                if (!problemData.question || !Array.isArray(problemData.choices)) {
+                    throw new Error('Invalid Format');
+                }
+                while (problemData.choices.length < 5) problemData.choices.push('-');
+                const problem = {
+                    id: `prob_${Date.now()}_regen_${Math.random().toString(36).substr(2, 5)}`,
+                    type: singleType,
+                    question: singleType === 'summary'
+                        ? sanitizeSummaryBlanks(sanitizeAIQuestionText(problemData.question), problemData.choices)
+                        : sanitizeAIQuestionText(problemData.question),
+                    choices: problemData.choices.slice(0, 5).map((c: string) => sanitizeChoiceText(c)),
+                    correctAnswer: problemData.correctAnswer ?? 0,
+                    explanation: (problemData.explanation || '').trim(),
+                    choiceExplanations: (problemData.choiceExplanations || []).map((e: string) => (e || '').trim()),
+                };
+                return NextResponse.json({ problem });
+            } catch (err) {
+                return createErrorResponse(err, '개별 문제 재생성 실패');
+            }
+        }
 
         // ★ SL MODE: Rewrite passage first, then generate problems from rewritten version
         let rewrittenPassage: string | null = null;
