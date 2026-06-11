@@ -18,7 +18,7 @@ export const AnalysisSentenceRenderer: React.FC<AnalysisSentenceRendererProps> =
 
     // Parse [TAG]content[/TAG], (content), <content>, and plain text
     const parts: { type: string; content: string }[] = [];
-    const tagRegex = /\[([A-Za-z]+)\](.*?)\[\/\1\]|\(([^)]*)\)|<([^>]*)>/gs;
+    const tagRegex = /\[([A-Za-z]+)\]([\s\S]*?)\[\/\1\]|\(([^)]*)\)|<([^>]*)>/g;
     let lastIndex = 0;
     let match: RegExpExecArray | null;
 
