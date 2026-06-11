@@ -16,6 +16,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isXl, setIsXl] = useState(false);
     const pathname = usePathname();
 
     // Persist sidebar collapsed state across sessions
@@ -23,6 +24,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
         const saved = localStorage.getItem('cheonghan_sidebar_collapsed');
         if (saved === 'true') setIsSidebarCollapsed(true);
     }, []);
+
+    // Track xl breakpoint for sidebar width
+    useEffect(() => {
+        const mq = window.matchMedia('(min-width: 1280px)');
+        setIsXl(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsXl(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    // Sidebar open width: lg=176px, xl=224px — matches SideBar.tsx breakpoints
+    const sidebarOpenWidth = isXl ? '224px' : '176px';
 
     const toggleSidebar = () => {
         setIsSidebarCollapsed(prev => {
@@ -33,7 +46,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
     };
 
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen font-sans selection:bg-blue-500/30 text-slate-800 dark:text-slate-100 overflow-hidden relative transition-colors">
+        <div
+            className="flex bg-slate-50 dark:bg-slate-950 min-h-screen font-sans selection:bg-blue-500/30 text-slate-800 dark:text-slate-100 overflow-hidden relative transition-colors"
+            // Inject sidebar width as a CSS variable so ALL fixed children (headers, bottom bars)
+            // can reference it via left: var(--sidebar-w) — auto-transitions on collapse/expand.
+            // --sidebar-w-open is the real sidebar width (matches SideBar's lg:w-[176px] xl:w-[224px]).
+            style={{
+                '--sidebar-w-open': sidebarOpenWidth,
+                '--sidebar-w': isSidebarCollapsed ? '0px' : sidebarOpenWidth,
+            } as React.CSSProperties}
+        >
             <CommandPalette />
 
             {/* Persistent mini-logo expand button — just the logo badge floating, no outer box */}
@@ -78,10 +100,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     />
                 )}
 
-                {/* Fixed navy strip — covers only status bar area on assignment pages */}
+                {/* Fixed navy strip — covers only status bar area on assignment pages.
+                    Uses --sidebar-w so it stays flush with the sidebar edge. */}
                 {pathname?.includes('/assignment/') && (
-                    <div className="fixed top-0 left-0 right-0 bg-[#0A0E27] z-[45]"
-                         style={{ height: 'env(safe-area-inset-top, 0px)' }} />
+                    <div
+                        className="fixed top-0 bg-[#0A0E27] z-[45]"
+                        style={{
+                            left: 'var(--sidebar-w)',
+                            right: 0,
+                            height: 'env(safe-area-inset-top, 0px)',
+                            transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)',
+                        }}
+                    />
                 )}
 
                 {/* Page Content — On assignment pages, transform is intentionally omitted so that

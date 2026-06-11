@@ -77,7 +77,7 @@ export default function DesktopAssignment({
         // Structure reading: show grading UI when assignment is loaded (AI scoring in progress)
         if (assignment) {
             return (
-                <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center">
+                <div className="fixed top-0 bottom-0 right-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                     <div className="w-20 h-20 bg-[#083973] rounded-[1.2rem] flex items-center justify-center p-2 shadow-2xl shadow-blue-900/30 overflow-hidden animate-pulse mb-6 text-white">
                         <Logo className="w-full h-full" />
                     </div>
@@ -107,7 +107,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <VocabularyAssignment
                         assignment={assignment as any}
@@ -132,7 +132,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <ListeningSetAssignment
                         assignment={assignment as any}
@@ -153,7 +153,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <SentenceOrderAssignment
                         assignment={assignment as any}
@@ -176,7 +176,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <TransformAssignment
                         assignment={assignment as any}
@@ -199,7 +199,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <SubjectiveAssignment
                         assignment={assignment as any}
@@ -222,7 +222,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <SubjectiveAssignment
                         assignment={assignment as any}
@@ -245,7 +245,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <MockExamAssignment
                         assignment={assignment as any}
@@ -290,7 +290,7 @@ export default function DesktopAssignment({
         };
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <AnalysisAssignment
                         assignmentId={assignment.id}
@@ -312,7 +312,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <WorkbookAssignmentView
                         assignment={assignment as any}
@@ -334,7 +334,7 @@ export default function DesktopAssignment({
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
         return (
-            <motion.div className="fixed inset-0 z-[100] bg-slate-50 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
+            <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
                     <WritingAssignment
                         assignment={assignment as any}
@@ -792,7 +792,13 @@ export default function DesktopAssignment({
                 </motion.div>
                 </AnimatePresence>
 
-                <div className="fixed bottom-6 left-1/2 lg:left-[calc(50%+110px)] xl:left-[calc(50%+140px)] transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between whitespace-nowrap overflow-hidden">
+                <div
+                    className="fixed bottom-6 transform -translate-x-1/2 flex items-center gap-4 p-2 pl-3 pr-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-40 min-w-[360px] justify-between whitespace-nowrap overflow-hidden"
+                    style={{
+                        left: 'calc((var(--sidebar-w, 0px) + 100%) / 2)',
+                        transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)',
+                    }}
+                >
                     <button
                         onClick={() => setCurrentTargetIndexPtr(Math.max(0, currentTargetIndexPtr - 1))}
                         disabled={isFirst}

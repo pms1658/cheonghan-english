@@ -134,7 +134,7 @@ export default function FlashcardStudy({ words = [], onFinish, onExit }: Flashca
             </div>
 
             {/* Controls */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))] bg-white border-t border-slate-100 z-[101] flex justify-between items-center max-w-4xl mx-auto w-full">
+            <div className="fixed bottom-0 right-0 p-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))] bg-white border-t border-slate-100 z-[101] flex justify-between items-center" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                 <button
                     onClick={handlePrev}
                     disabled={currentIndex === 0}

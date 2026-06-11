@@ -30,7 +30,7 @@ export default function RootLayout({
             <body className="antialiased min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <Toaster
-                        position="top-right"
+                        position="bottom-center"
                         richColors
                         toastOptions={{
                             duration: 3000,

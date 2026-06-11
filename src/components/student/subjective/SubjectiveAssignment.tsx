@@ -388,7 +388,7 @@ export default function SubjectiveAssignment({
                 </div>
 
                 {/* Bottom Action Bar — FIX: max-w to avoid sidebar overlap */}
-                <div className="fixed bottom-0 left-0 lg:left-[220px] xl:left-[280px] right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40">
+                <div className="fixed bottom-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                     <div className="max-w-3xl mx-auto flex gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                         {wrongCount > 0 && (
                             <button
@@ -740,7 +740,7 @@ export default function SubjectiveAssignment({
             </div>
 
             {/* Bottom Navigation — FIX: max-w to avoid sidebar overlap */}
-            <div className="fixed bottom-0 left-0 lg:left-[220px] xl:left-[280px] right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 shadow-lg z-40">
+            <div className="fixed bottom-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 shadow-lg z-40" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                 <div className="max-w-4xl mx-auto flex gap-3 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                     <button
                         onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}

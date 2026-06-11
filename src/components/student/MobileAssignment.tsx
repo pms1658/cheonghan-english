@@ -537,7 +537,7 @@ export default function MobileAssignment({
                     )}
                 </div>
 
-                <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl p-4 border-t border-slate-200/50 flex gap-3 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                <div className="fixed bottom-0 right-0 bg-white/80 backdrop-blur-xl p-4 border-t border-slate-200/50 flex gap-3 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                     <button
                         onClick={handleRetry}
                         className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl text-sm shadow-sm hover:bg-slate-50 transition-all"
@@ -564,7 +564,7 @@ export default function MobileAssignment({
 
     return (
         <div className="h-[100dvh] bg-slate-50 font-sans flex flex-col overflow-hidden">
-            <header className="fixed top-0 left-0 w-full bg-[#0A0E27] z-50 px-4 py-3 flex items-center justify-between shadow-md" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
+            <header className="fixed top-0 right-0 bg-[#0A0E27] z-50 px-4 py-3 flex items-center justify-between shadow-md" style={{ left: 'var(--sidebar-w, 0px)', paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                 <button
                     onClick={() => {
                         const finalClassId = queryClassId || student?.classId || (assignment?.classIds && assignment.classIds[0]) || '';
@@ -724,7 +724,7 @@ export default function MobileAssignment({
                 </AnimatePresence>
             </main>
 
-            <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex gap-3 z-[101]">
+            <div className="fixed bottom-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex gap-3 z-[101]" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
                 <button
                     onClick={() => setCurrentTargetIndexPtr(Math.max(0, currentTargetIndexPtr - 1))}
                     disabled={isFirst}
