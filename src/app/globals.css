@@ -433,6 +433,53 @@ a[class*="rounded"]:not(:disabled):active:not(:has(:active)) {
   border-radius: 4px;
 }
 
+
+/* ─────────────────────────────────────────
+   PREMIUM MINIMAL ANIMATIONS (CSS-only, no JS)
+   원칙: 인터랙션 반응 & 첫 렌더 fade만.
+   stagger/page-transition은 없음 — 속도가 프리미엄.
+───────────────────────────────────────── */
+
+/* 1. 페이지 콘텐츠 진입 fade — main 스크롤 영역에 자동 적용
+      duration 150ms: 눈에 띄지 않을 만큼 짧지만 "팍" 튀어나오는 느낌은 제거 */
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+main[role="main"] > * {
+  animation: pageFadeIn 0.15s ease-out both;
+}
+
+/* 2. 모달 등장 — scale 0.96 → 1 + fade
+      인터랙션(버튼 클릭) 후 나타나므로 느린 느낌 없음 */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.modal-enter {
+  animation: modalEnter 0.18s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+/* 모달 배경 dim fade */
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal-backdrop-enter {
+  animation: backdropFade 0.15s ease-out both;
+}
+
+/* 3. 다크모드 전환 부드럽게 — background/color만 transition, layout은 안 건드림 */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 /* Respect reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,
