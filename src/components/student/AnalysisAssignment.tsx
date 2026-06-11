@@ -690,7 +690,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
             </div>
 
             {/* Sticky Footer — Premium Complete Bar */}
-            <div className="fixed bottom-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 z-[101] shadow-[0_-8px_32px_-4px_rgba(0,0,0,0.10)]" style={{ left: 'var(--sidebar-w, 0px)', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 z-[101] shadow-[0_-8px_32px_-4px_rgba(0,0,0,0.10)]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
                 {/* Progress glow line at very top */}
                 <div className={`h-[2px] w-full transition-all duration-700 ${isCompleted ? 'bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500' : 'bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700'}`} />
 

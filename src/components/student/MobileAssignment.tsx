@@ -537,22 +537,26 @@ export default function MobileAssignment({
                     )}
                 </div>
 
-                <div className="fixed bottom-0 right-0 bg-white/80 backdrop-blur-xl p-4 border-t border-slate-200/50 flex gap-3 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
-                    <button
-                        onClick={handleRetry}
-                        className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl text-sm shadow-sm hover:bg-slate-50 transition-all"
-                    >
-                        오답 학습 ({submissionResult.details ? submissionResult.details.filter(d => d && d.score < 80).length : 0})
-                    </button>
-                    <button
-                        onClick={() => {
-                            const finalClassId = queryClassId || student?.classId || (assignment?.classIds && assignment.classIds[0]) || '';
-                            router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
-                        }}
-                        className="flex-1 py-3.5 bg-gradient-to-br from-[#0A0E27] to-[#1e2548] text-white font-bold rounded-2xl text-sm shadow-lg shadow-blue-900/20"
-                    >
-                        나가기
-                    </button>
+                <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-[#0A0E27]/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-white/10 shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.12)] z-40"
+                    style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+                >
+                    <div className="flex gap-3 px-4 pt-3">
+                        <button
+                            onClick={handleRetry}
+                            className="flex-1 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-sm shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+                        >
+                            오답 학습 ({submissionResult.details ? submissionResult.details.filter(d => d && d.score < 80).length : 0})
+                        </button>
+                        <button
+                            onClick={() => {
+                                const finalClassId = queryClassId || student?.classId || (assignment?.classIds && assignment.classIds[0]) || '';
+                                router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
+                            }}
+                            className="flex-1 py-3.5 bg-gradient-to-br from-[#0A0E27] to-[#1e2548] text-white font-bold rounded-2xl text-sm shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+                        >
+                            나가기
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -724,7 +728,7 @@ export default function MobileAssignment({
                 </AnimatePresence>
             </main>
 
-            <div className="fixed bottom-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex gap-3 z-[101]" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#0A0E27]/95 backdrop-blur-md border-t border-slate-200 dark:border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex gap-3 z-[101]">
                 <button
                     onClick={() => setCurrentTargetIndexPtr(Math.max(0, currentTargetIndexPtr - 1))}
                     disabled={isFirst}

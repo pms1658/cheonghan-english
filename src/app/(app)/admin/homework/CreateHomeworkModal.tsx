@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService, Student, Class } from '@/services/db';
 import { Homework, Assignment } from '@/types';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 // ─── Helpers (shared with page) ───
@@ -180,19 +179,12 @@ export default function CreateHomeworkModal({
     }, [title, parsedItems, linkedAssignments]);
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
             onClick={onClose}
         >
-            <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            <div
+                className="modal-enter bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Modal Header */}
@@ -434,7 +426,7 @@ export default function CreateHomeworkModal({
                         {isEditing ? '수정' : '등록'}
                     </button>
                 </div>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     );
 }

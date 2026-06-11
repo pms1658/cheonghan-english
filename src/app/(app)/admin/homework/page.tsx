@@ -5,9 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { dbService, dbSubscriptions, Student, Class } from '@/services/db';
 import { Homework, HomeworkStatus, Assignment } from '@/types';
-import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import CreateHomeworkModal from './CreateHomeworkModal';
+import ModalPortal from '@/components/common/ModalPortal';
 
 // ─── Helpers ───
 function formatDateTitle(dateStr: string): string {
@@ -312,11 +312,7 @@ function AdminHomeworkInner() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-full pb-24 lg:pb-12">
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-12"
-            >
+            <div className="mb-12">
                 <div className="flex items-center gap-3 mb-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                     <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Homework Manager</span>
@@ -338,7 +334,7 @@ function AdminHomeworkInner() {
                         과제 부과
                     </button>
                 </div>
-            </motion.div>
+            </div>
 
             {/* Filter + Search */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -439,16 +435,9 @@ function AdminHomeworkInner() {
                                 </div>
 
                                 {/* ─── Student Detail Panel ─── */}
-                                <AnimatePresence>
-                                    {isSelected && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="overflow-hidden"
-                                        >
-                                            <div className="mt-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                                {isSelected && (
+                                    <div className="overflow-hidden">
+                                        <div className="mt-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
                                                 <div className="flex items-center justify-between mb-4">
                                                     <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
                                                         {selectedStudent?.name}의 과제
@@ -603,9 +592,8 @@ function AdminHomeworkInner() {
                                                     </div>
                                                 )}
                                             </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                    </div>
+                                )}
                             </div>
                         );
                     })
@@ -706,8 +694,7 @@ function AdminHomeworkInner() {
                         </div>
 
                         {/* Selected Date Detail */}
-                        <AnimatePresence>
-                            {selectedCalDate && (() => {
+                        {selectedCalDate && (() => {
                                 const relevantHws = selectedStudentId
                                     ? homeworks.filter(hw => hw.studentIds?.includes(selectedStudentId) && hw.date === selectedCalDate)
                                     : homeworks.filter(hw => hw.date === selectedCalDate);
@@ -716,10 +703,7 @@ function AdminHomeworkInner() {
                                 const weekdays = ['일','월','화','수','목','금','토'];
                                 const dateLabel = `${dateD.getMonth()+1}/${dateD.getDate()} (${weekdays[dateD.getDay()]})`;
                                 return (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
+                                    <div
                                         className="mt-3 border-t border-slate-100 dark:border-slate-800 pt-3 overflow-hidden"
                                     >
                                         <div className="flex items-center justify-between mb-2">
@@ -766,10 +750,9 @@ function AdminHomeworkInner() {
                                                 {hw.memo && <p className="text-[10px] text-slate-400 mt-1 italic">📝 {hw.memo}</p>}
                                             </div>
                                         ))}
-                                    </motion.div>
+                                    </div>
                                 );
                             })()}
-                        </AnimatePresence>
 
                         {/* Legend */}
                         <div className="mt-3 flex items-center gap-3 text-[9px] text-slate-400">
@@ -788,9 +771,8 @@ function AdminHomeworkInner() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
             </button>
 
-            {/* ═══ CREATE/EDIT HOMEWORK MODAL ═══ */}
-            <AnimatePresence>
-                {showCreateModal && (
+            {showCreateModal && (
+                <ModalPortal>
                     <CreateHomeworkModal
                         students={students}
                         classes={classes}
@@ -804,15 +786,14 @@ function AdminHomeworkInner() {
                             setEditingHomework(null);
                             const updated = await dbService.getHomeworks();
                             setHomeworks(updated);
-                            // Refresh selected student detail
                             if (selectedStudentId) {
                                 handleSelectStudent(selectedStudentId);
                             }
                             toast.success(editingHomework ? '과제가 수정되었습니다' : '과제가 등록되었습니다');
                         }}
                     />
-                )}
-            </AnimatePresence>
+                </ModalPortal>
+            )}
         </div>
     );
 }

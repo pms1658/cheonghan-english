@@ -442,7 +442,7 @@ export default function SentenceOrderAssignment({
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="fixed bottom-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex gap-3 justify-center z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
+                <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-[#0A0E27]/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex gap-3 justify-center z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
                     <button
                         onClick={handleRetry}
                         className="px-8 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl shadow-sm hover:bg-slate-50 transition-all"
@@ -540,7 +540,7 @@ export default function SentenceOrderAssignment({
             </div>
 
             {/* Bottom Submit Bar */}
-            <div className="fixed bottom-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }}>
+            <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-[#0A0E27]/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
                 <div className="max-w-2xl mx-auto flex items-center justify-center">
                     <button
                         onClick={handleSubmit}
