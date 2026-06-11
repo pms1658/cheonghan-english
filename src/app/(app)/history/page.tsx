@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { dbService } from '@/services/db';
 import { useAuth } from '@/context/AuthContext';
 import ResultHistoryModal from '@/components/student/ResultHistoryModal';
@@ -10,6 +9,7 @@ import AnalysisPrintModal from '@/components/student/AnalysisPrintModal';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { SkeletonHistoryList } from '@/components/common/Skeleton';
 import StudentAccordion, { SubmissionWithMeta, StudentGroup } from './StudentAccordion';
+import ModalPortal from '@/components/common/ModalPortal';
 import { toast } from 'sonner';
 
 // Types imported from StudentAccordion
@@ -376,11 +376,7 @@ export default function HistoryPage() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-full">
-            <motion.header
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 sm:gap-8 mb-8 sm:mb-12"
-            >
+            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 sm:gap-8 mb-8 sm:mb-12">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -442,7 +438,7 @@ export default function HistoryPage() {
                         </div>
                     )}
                 </div>
-            </motion.header>
+            </div>
 
             {/* Group Filter */}
             {(user as any)?.role === 'admin' && (() => {
@@ -480,11 +476,8 @@ export default function HistoryPage() {
                                 return (student?.groupName || '') === groupFilter;
                             })
                             .map((studentGroup, idx) => (
-                            <motion.div
+                            <div
                                 key={studentGroup.studentId}
-                                initial={{ opacity: 0, y: 24 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ type: 'tween', delay: 0.1 + idx * 0.07, duration: 0.45, ease: [0.25, 0.4, 0.45, 1] }}
                             >
                             <StudentAccordion
                                 group={studentGroup}
@@ -513,7 +506,7 @@ export default function HistoryPage() {
                                 userRole={(user as any)?.role || 'student'}
                                 assignments={allAssignments}
                             />
-                            </motion.div>
+                            </div>
                         ))}
 
                         {groupedHistory.length === 0 && (
@@ -527,37 +520,42 @@ export default function HistoryPage() {
 
             {/* Detail Modal */}
             {selectedSubmission && (
-                <ResultHistoryModal
-                    onClose={() => setSelectedSubmission(null)}
-                    assignmentId={selectedSubmission.assignmentId}
-                    studentId={selectedSubmission.studentId}
-                    assignmentTitle={selectedSubmission.assignmentTitle || ''}
-                    assignmentType={selectedSubmission.type || 'structure'}
-                    onViewDetail={() => { }}
-                    onRefresh={() => setTick(prev => prev + 1)}
-                />
+                <ModalPortal>
+                    <ResultHistoryModal
+                        onClose={() => setSelectedSubmission(null)}
+                        assignmentId={selectedSubmission.assignmentId}
+                        studentId={selectedSubmission.studentId}
+                        assignmentTitle={selectedSubmission.assignmentTitle || ''}
+                        assignmentType={selectedSubmission.type || 'structure'}
+                        onViewDetail={() => { }}
+                        onRefresh={() => setTick(prev => prev + 1)}
+                    />
+                </ModalPortal>
             )}
 
             {/* Structure Print Modal */}
             {isStructurePrintOpen && (
-                <StructurePrintModal
-                    studentId={structurePrintStudentId}
-                    studentName={structurePrintStudentName}
-                    assignments={allAssignments}
-                    onClose={() => setIsStructurePrintOpen(false)}
-                    isAdmin={(user as any)?.role === 'admin'}
-                />
+                <ModalPortal>
+                    <StructurePrintModal
+                        studentId={structurePrintStudentId}
+                        studentName={structurePrintStudentName}
+                        assignments={allAssignments}
+                        onClose={() => setIsStructurePrintOpen(false)}
+                        isAdmin={(user as any)?.role === 'admin'}
+                    />
+                </ModalPortal>
             )}
 
-            {/* Analysis Print Modal */}
             {isAnalysisPrintOpen && (
-                <AnalysisPrintModal
-                    studentId={analysisPrintStudentId}
-                    studentName={analysisPrintStudentName}
-                    assignments={allAssignments}
-                    onClose={() => setIsAnalysisPrintOpen(false)}
-                    isAdmin={(user as any)?.role === 'admin'}
-                />
+                <ModalPortal>
+                    <AnalysisPrintModal
+                        studentId={analysisPrintStudentId}
+                        studentName={analysisPrintStudentName}
+                        assignments={allAssignments}
+                        onClose={() => setIsAnalysisPrintOpen(false)}
+                        isAdmin={(user as any)?.role === 'admin'}
+                    />
+                </ModalPortal>
             )}
         </div>
     );
