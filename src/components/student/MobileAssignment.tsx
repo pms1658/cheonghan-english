@@ -537,7 +537,7 @@ export default function MobileAssignment({
                     )}
                 </div>
 
-                <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl p-4 border-t border-slate-200/50 flex gap-3 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40 px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+3.5rem))]">
+                <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl p-4 border-t border-slate-200/50 flex gap-3 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] z-40 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
                     <button
                         onClick={handleRetry}
                         className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl text-sm shadow-sm hover:bg-slate-50 transition-all"

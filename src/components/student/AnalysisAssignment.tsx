@@ -690,7 +690,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
             </div>
 
             {/* Sticky Footer — Complete Button */}
-            <div className="fixed bottom-0 left-0 lg:left-[220px] xl:left-[280px] right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+3.5rem))] flex justify-center z-[101] shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.08)]">
+            <div className="fixed bottom-0 left-0 lg:left-[220px] xl:left-[280px] right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex justify-center z-[101] shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.08)]">
                 <button
                     onClick={handleComplete}
                     disabled={isCompleted || isSaving}
