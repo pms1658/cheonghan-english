@@ -44,7 +44,7 @@ export default function ClassRoomPage() {
         loadData, handleCreateClick, handleEditClick, handleDeleteClick, handleResetClick,
         handleExecuteReset, toggleResetStudentSelection, handleAddSelectedStudents, toggleStudentSelection,
         handleSortChange, handleDragEnd, handleSaveOrder, handleToggleReorder,
-        handleUpdateClass, handleDeleteClass, handleMoveAssignment,
+        handleUpdateClass, handleDeleteClass, handleMoveAssignment, handleCopyAssignment,
         handleApproveSubmission, handleApproveWithSplit, handleRejectSubmission, handleConvertAssignmentType,
         handleToggleGuidance, handleManualPass, handlePrint, handleDirectPrint,
     } = state;
@@ -172,6 +172,19 @@ export default function ClassRoomPage() {
                                     <span className="hidden sm:inline">학생 관리</span>
                                 </button>
 
+                                {selectedAssignments.size >= 1 && (
+                                    <button
+                                        onClick={() => {
+                                            const ids = Array.from(selectedAssignments);
+                                            const titles = assignments.filter(a => selectedAssignments.has(a.id)).map(a => a.title);
+                                            const label = titles.length === 1 ? titles[0] : `${titles[0]} 외 ${titles.length - 1}개`;
+                                            setMoveAssignmentModal({ assignmentIds: ids, title: label });
+                                        }}
+                                        className="px-5 py-3 bg-amber-100 text-amber-700 font-bold rounded-2xl hover:bg-amber-200 transition-all shadow-sm flex items-center gap-2 mr-1"
+                                    >
+                                        ✂️ 이동/복사 ({selectedAssignments.size})
+                                    </button>
+                                )}
                                 {selectedAssignments.size >= 2 && (() => {
                                     const selTypes = assignments.filter(a => selectedAssignments.has(a.id)).map(a => a.type);
                                     const allVocab = selTypes.every(t => t === 'vocabulary' || t === 'selection');
@@ -668,29 +681,40 @@ export default function ClassRoomPage() {
                 handleRejectSubmission={handleRejectSubmission}
             />
 
-            {/* Move Assignment Modal */}
+            {/* Move/Copy Assignment Modal */}
             {moveAssignmentModal && (
                 <ModalPortal>
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
-                        <h3 className="text-lg font-bold text-slate-800 mb-1">과제 이동</h3>
-                        <p className="text-sm text-slate-500 mb-4">
-                            <span className="font-bold text-blue-600">{moveAssignmentModal.title}</span>을(를) 다른 과제방으로 이동합니다.
+                        <h3 className="text-lg font-bold text-slate-800 mb-1">과제 이동 / 복사</h3>
+                        <p className="text-sm text-slate-500 mb-1">
+                            <span className="font-bold text-blue-600">{moveAssignmentModal.title}</span>
                         </p>
-                        <p className="text-[11px] text-slate-400 mb-3">※ 학생/제출 기록은 이동되지 않습니다.</p>
+                        <p className="text-[11px] text-slate-400 mb-4">※ 학생/제출 기록은 이동되지 않습니다.</p>
 
                         <div className="space-y-1 max-h-60 overflow-y-auto mb-4 border border-slate-100 rounded-xl p-2">
                             {allClasses
                                 .filter(c => c.id !== classId)
                                 .map(c => (
-                                    <button
-                                        key={c.id}
-                                        onClick={() => handleMoveAssignment(moveAssignmentModal.assignmentId, c.id)}
-                                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 text-sm font-medium text-slate-600 transition-colors flex items-center gap-2"
-                                    >
-                                        <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        <span className="truncate">{c.name}</span>
-                                    </button>
+                                    <div key={c.id} className="flex items-center gap-1 rounded-lg hover:bg-slate-50 transition-colors px-2 py-1.5">
+                                        <span className="flex-1 text-sm font-medium text-slate-700 truncate">{c.name}</span>
+                                        <button
+                                            onClick={() => handleMoveAssignment(moveAssignmentModal.assignmentIds, c.id)}
+                                            className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors flex items-center gap-1"
+                                            title="이 과제방으로 이동 (원본 삭제)"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                            이동
+                                        </button>
+                                        <button
+                                            onClick={() => handleCopyAssignment(moveAssignmentModal.assignmentIds, c.id)}
+                                            className="px-3 py-1 rounded-lg text-xs font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors flex items-center gap-1"
+                                            title="이 과제방으로 복사 (원본 유지)"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                            복사
+                                        </button>
+                                    </div>
                                 ))}
                             {allClasses.filter(c => c.id !== classId).length === 0 && (
                                 <p className="text-sm text-slate-400 text-center py-4">이동 가능한 과제방이 없습니다.</p>

@@ -63,7 +63,7 @@ interface AssignmentItemProps {
     setIsStructurePrintOpen?: (v: boolean) => void;
     classId?: string;
     onConvertType?: (assignment: Assignment) => void;
-    setMoveAssignmentModal?: (v: { assignmentId: string; title: string } | null) => void;
+    setMoveAssignmentModal?: (v: { assignmentIds: string[]; title: string } | null) => void;
 }
 
 export const AssignmentItem = ({
@@ -336,12 +336,24 @@ export const AssignmentItem = ({
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setMenuOpen(false);
-                                        setMoveAssignmentModal?.({ assignmentId: assignment.id, title: assignment.title });
+                                        setMoveAssignmentModal?.({ assignmentIds: [assignment.id], title: assignment.title });
                                     }}
                                     className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 transition-colors"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                                     다른 과제방으로 이동
+                                </button>
+                                {/* Copy to another class */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMenuOpen(false);
+                                        setMoveAssignmentModal?.({ assignmentIds: [assignment.id], title: `${assignment.title} 복사` });
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-700 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    다른 과제방으로 복사
                                 </button>
                                 <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
                                 <button

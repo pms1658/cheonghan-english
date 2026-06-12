@@ -94,8 +94,8 @@ export function useClassRoom() {
     const [structurePrintStudentName, setStructurePrintStudentName] = useState<string>('');
     const [writingDetailTarget, setWritingDetailTarget] = useState<{ studentName: string; submissions: any[] } | null>(null);
 
-    // Move Assignment Modal
-    const [moveAssignmentModal, setMoveAssignmentModal] = useState<{ assignmentId: string; title: string } | null>(null);
+    // Move/Copy Assignment Modal
+    const [moveAssignmentModal, setMoveAssignmentModal] = useState<{ assignmentIds: string[]; title: string } | null>(null);
 
     // Selection Approval Modal States
     const [approvalModal, setApprovalModal] = useState<{
@@ -614,17 +614,31 @@ export function useClassRoom() {
         }
     };
 
-    // --- Move Assignment to Another Class ---
-    const handleMoveAssignment = async (assignmentId: string, targetClassId: string) => {
+    // --- Move/Copy Assignment to Another Class ---
+    const handleMoveAssignment = async (assignmentIds: string[], targetClassId: string) => {
         try {
-            await dbService.moveAssignmentToClass(assignmentId, classId, targetClassId);
+            await Promise.all(assignmentIds.map(id => dbService.moveAssignmentToClass(id, classId, targetClassId)));
             const targetClass = allClasses.find(c => c.id === targetClassId);
-            toast.success(`과제가 '${targetClass?.name || '대상 과제방'}'으로 이동했습니다.`);
+            toast.success(`${assignmentIds.length}개 과제가 '​${targetClass?.name || '대상 과제방'}'으로 이동했습니다.`);
             setMoveAssignmentModal(null);
+            setSelectedAssignments(new Set());
             loadData();
         } catch (e) {
             console.error(e);
-            toast.error("이동 중 오류가 발생했습니다.");
+            toast.error('이동 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleCopyAssignment = async (assignmentIds: string[], targetClassId: string) => {
+        try {
+            await Promise.all(assignmentIds.map(id => dbService.copyAssignmentToClass(id, targetClassId)));
+            const targetClass = allClasses.find(c => c.id === targetClassId);
+            toast.success(`${assignmentIds.length}개 과제가 '​${targetClass?.name || '대상 과제방'}'에 복사되었습니다.`);
+            setMoveAssignmentModal(null);
+            setSelectedAssignments(new Set());
+        } catch (e) {
+            console.error(e);
+            toast.error('복사 중 오류가 발생했습니다.');
         }
     };
 
@@ -678,7 +692,7 @@ export function useClassRoom() {
         loadData, handleCreateClick, handleEditClick, handleDeleteClick, handleResetClick,
         handleExecuteReset, toggleResetStudentSelection, handleAddSelectedStudents, toggleStudentSelection,
         handleSortChange, handleDragEnd, handleSaveOrder, handleToggleReorder,
-        handleUpdateClass, handleDeleteClass, handleMoveAssignment,
+        handleUpdateClass, handleDeleteClass, handleMoveAssignment, handleCopyAssignment,
         handleApproveSubmission, handleApproveWithSplit, handleRejectSubmission, handleConvertAssignmentType,
         handleToggleGuidance, handleManualPass, handlePrint, handleDirectPrint,
     };

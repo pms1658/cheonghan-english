@@ -305,6 +305,34 @@ export const dbService = {
         }
     },
 
+    /** 과제를 다른 과제방으로 복사 (원본 유지, 복사본 생성) */
+    copyAssignmentToClass: async (assignmentId: string, targetClassId: string) => {
+        try {
+            const assignmentDoc = await getDoc(doc(db, 'assignments', assignmentId));
+            if (!assignmentDoc.exists()) throw new Error('Assignment not found');
+            const data = assignmentDoc.data();
+
+            const copy: Record<string, any> = {
+                ...data,
+                classIds: [targetClassId],
+                classId: targetClassId,
+                createdAt: Date.now(),
+                // 학생/제출 관련 필드 초기화
+                studentIds: [],
+                parentAssignmentId: undefined,
+                parentStudentId: undefined,
+            };
+            // Firestore는 undefined를 허용하지 않음
+            Object.keys(copy).forEach(key => { if (copy[key] === undefined) delete copy[key]; });
+
+            await addDoc(collection(db, 'assignments'), copy);
+            return true;
+        } catch (e) {
+            console.error('Error copying assignment:', e);
+            throw e;
+        }
+    },
+
     // --- Assignments ---
     getAssignments: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
