@@ -474,30 +474,104 @@ export default function TransformAssignment({
         return questionMap[type] || '다음 글을 읽고 물음에 답하시오.';
     };
 
-    // order 유형 선지에서 AI가 첫 번째 레이블을 누락했을 때 자동 복원
-    // 예) [" - (C) - (B)", "- (A) - (C)", ...] → ["(A) - (C) - (B)", "(B) - (A) - (C)", ...]
+    // 수능 표준 순서 유형 선지 (고정)
+    const ORDER_CHOICES_STANDARD = [
+        '(A) - (B) - (C)',
+        '(A) - (C) - (B)',
+        '(B) - (A) - (C)',
+        '(B) - (C) - (A)',
+        '(C) - (A) - (B)',
+    ];
+
+    // order 유형 선지를 표준 5개 순열로 정규화
+    // - AI가 선지를 중복 생성하거나 형식을 어긴 경우 표준 선지로 강제 대체
+    // - 이미 올바른 형태인 경우 그대로 유지
     const normalizeOrderChoices = (choices: string[], type: string): string[] => {
         if (type !== 'order') return choices;
-        // 선지가 "- (X) - (Y)" 패턴으로 시작하면 앞에 알파벳이 빠진 것
-        // "(A)"~"(C)" 레이블의 가능한 순열 목록
-        const allPerms = [
-            ['(A)','(B)','(C)'], ['(A)','(C)','(B)'],
-            ['(B)','(A)','(C)'], ['(B)','(C)','(A)'],
-            ['(C)','(A)','(B)'], ['(C)','(B)','(A)'],
-        ];
-        return choices.map((choice, idx) => {
-            const trimmed = choice.trim();
-            // 선지가 " - (X)" 또는 "- (X)" 로 시작하면 첫 레이블 누락
-            if (/^-?\s*\([A-C]\)/.test(trimmed)) {
-                // 해당 인덱스의 순열을 앞에 붙여줌
-                const perm = allPerms[idx] || allPerms[0];
-                const rest = trimmed.replace(/^-?\s*/, '');
-                // 이미 "(A) - (C)" 처럼 올바른 형태면 건드리지 않음
-                if (/^\([A-C]\)\s*-/.test(trimmed)) return choice;
-                return `${perm[0]} - ${rest}`;
+
+        // 표준 정규화: "(A) - (B) - (C)" 형태로 통일
+        const normalize = (c: string) =>
+            c.trim()
+                .replace(/\s*–\s*/g, ' - ')   // em-dash → hyphen
+                .replace(/\s*-\s*/g, ' - ')   // 공백 정리
+                .replace(/\s+/g, ' ')
+                .trim();
+
+        const normalized = choices.map(normalize);
+
+        // 중복 여부 확인
+        const unique = new Set(normalized);
+        const hasDuplicates = unique.size < normalized.length;
+
+        // 표준 선지와 일치하는지 확인 (순서 무관)
+        const matchesStandard = ORDER_CHOICES_STANDARD.every(s =>
+            normalized.some(n => n === s)
+        );
+
+        // 이미 표준 5개와 정확히 일치하면 그대로 반환
+        if (!hasDuplicates && matchesStandard && normalized.length === 5) {
+            return normalized;
+        }
+
+        // 중복/오류가 있으면 표준 선지로 강제 대체
+        // (correctAnswer는 그대로 유지 — AI가 지정한 정답 인덱스 기준)
+        return ORDER_CHOICES_STANDARD;
+    };
+
+    // summary 유형 선지 정규화
+    // AI가 "(A) word - (B) word" 대신 "(A) word" / "(B) word" 처럼 분리하거나
+    // 레이블을 생략("word1 / word2")한 경우를 교정
+    const normalizeSummaryChoices = (choices: string[], type: string): string[] => {
+        if (type !== 'summary') return choices;
+
+        // 이미 "(A) ... - (B) ..." 패턴을 가진 선지 개수 세기
+        const correctPattern = /^\(A\)\s+\S+.*-\s*\(B\)\s+\S+/;
+        const alreadyCorrect = choices.filter(c => correctPattern.test(c.trim())).length;
+
+        // 5개 모두 올바른 형태면 그대로 반환
+        if (alreadyCorrect === choices.length && choices.length === 5) {
+            return choices;
+        }
+
+        // 선지 5개가 "(A) xxx" / "(A) yyy" ... 또는 "(B) xxx" 패턴으로 분리된 경우:
+        // "(A) word" 형태와 "(B) word" 형태를 교차 묶어 "(A) word - (B) word"로 복원
+        const aChoices = choices.filter(c => /^\(A\)/.test(c.trim()));
+        const bChoices = choices.filter(c => /^\(B\)/.test(c.trim()));
+
+        if (aChoices.length > 0 && bChoices.length > 0) {
+            // (A)와 (B)가 번갈아가며 분리된 케이스: 쌍으로 묶기
+            // 예: ["(A) w1", "(B) w1", "(A) w2", "(B) w2", "(A) w3", "(B) w3"]
+            // → ["(A) w1 - (B) w1", "(A) w2 - (B) w2", "(A) w3 - (B) w3", ...]
+            const paired: string[] = [];
+            for (let i = 0; i < Math.min(aChoices.length, bChoices.length, 5); i++) {
+                const aWord = aChoices[i].trim().replace(/^\(A\)\s*/, '').trim();
+                const bWord = bChoices[i].trim().replace(/^\(B\)\s*/, '').trim();
+                paired.push(`(A) ${aWord} - (B) ${bWord}`);
             }
-            return choice;
+            // 5개에 못 미치면 그대로 반환 (불완전한 쌍)
+            if (paired.length >= 5) return paired.slice(0, 5);
+        }
+
+        // "word1 / word2" 또는 "word1 - word2" 형태인 경우 레이블 추가
+        const reformatted = choices.map(c => {
+            const t = c.trim();
+            if (correctPattern.test(t)) return t;
+            // "word / word2" 또는 "word - word2" 패턴
+            const sepMatch = t.match(/^(.+?)\s*[\/\-]\s*(.+)$/);
+            if (sepMatch && !/^\(A\)/.test(t) && !/^\(B\)/.test(t)) {
+                return `(A) ${sepMatch[1].trim()} - (B) ${sepMatch[2].trim()}`;
+            }
+            return t;
         });
+
+        return reformatted;
+    };
+
+    // 유형별 선지 정규화 통합 함수
+    const normalizeChoices = (choices: string[], type: string): string[] => {
+        if (type === 'order') return normalizeOrderChoices(choices, type);
+        if (type === 'summary') return normalizeSummaryChoices(choices, type);
+        return choices;
     };
 
     // AI가 question에 이미 넣은 한글 질문 패턴 제거 (우리가 위에서 별도로 표시하므로)
@@ -628,7 +702,7 @@ export default function TransformAssignment({
 
                                     {/* Choice Grid - Compact & Interactive */}
                                     <div className="grid grid-cols-1 gap-2.5">
-                                        {normalizeOrderChoices(currentProblem.choices, currentProblem.type).map((choice, idx) => (
+                                        {normalizeChoices(currentProblem.choices, currentProblem.type).map((choice, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => handleAnswerChange(actualProblemIdx, idx)}
@@ -786,7 +860,7 @@ export default function TransformAssignment({
                                             />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                                                {normalizeOrderChoices(prob.choices, prob.type).map((choice, cIdx) => {
+                                                {normalizeChoices(prob.choices, prob.type).map((choice, cIdx) => {
                                                     const isAnswer = cIdx === prob.correctAnswer;
                                                     const isStudentPick = cIdx === currentSession?.answers[idx];
                                                     const choiceExp = (prob as any).choiceExplanations?.[cIdx];

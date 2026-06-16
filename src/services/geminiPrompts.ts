@@ -56,6 +56,17 @@ const CONSTRUCTION_RULES: Record<string, string> = {
       - Wrap the starting box content in \`[[BOX]]...[[/BOX]]\`.
       - Label sections as (A) ..., (B) ..., (C) ... using a single newline between them.
     - **Logic**: Ensure there is a clear logical flow.
+    - **★★★ CHOICES — FIXED SET (CRITICAL) ★★★**:
+      - The "choices" array MUST be EXACTLY these 5 items in this EXACT order (수능 표준 선지):
+        1. "(A) - (B) - (C)"
+        2. "(A) - (C) - (B)"
+        3. "(B) - (A) - (C)"
+        4. "(B) - (C) - (A)"
+        5. "(C) - (A) - (B)"
+      - DO NOT change, reorder, or duplicate these choices.
+      - Set "correctAnswer" to the 0-based index (0~4) of the choice that matches the correct reading order.
+      - ✅ CORRECT: "choices": ["(A) - (B) - (C)", "(A) - (C) - (B)", "(B) - (A) - (C)", "(B) - (C) - (A)", "(C) - (A) - (B)"]
+      - ❌ WRONG: Creating your own choices or duplicating any choice.
   `,
   insertion: `
     - **Structure**: Separate the Target Sentence from the Passage.
@@ -84,7 +95,12 @@ const CONSTRUCTION_RULES: Record<string, string> = {
     - **★★★ CRITICAL — BLANKS MUST BE EMPTY ★★★**: (A) and (B) MUST be followed by a blank marker \`__________\`, NOT the actual answer word. The answer words go ONLY in the choices.
       - ✅ CORRECT: "The passage explains that (A) __________ is essential for (B) __________."
       - ❌ WRONG: "The passage explains that (A) cooperation is essential for (B) success." ← 정답 단어가 직접 노출됨! 절대 금지!
-    - **Choices**: Provide word pairs for (A) and (B). The correct pair fills the blanks.
+    - **★★★ CHOICES FORMAT — CRITICAL ★★★**: Each of the 5 choices MUST contain BOTH (A) and (B) word pairs in a SINGLE string.
+      - ✅ CORRECT format: "(A) cooperation - (B) success"
+      - ✅ CORRECT format: "(A) adaptation - (B) environment"
+      - ❌ WRONG: Splitting into separate choices like "(A) cooperation" and "(B) success" — each choice MUST have BOTH.
+      - ❌ WRONG: Omitting the (A)/(B) label, e.g. "cooperation / success" — labels are REQUIRED.
+      - Each choice string must follow the exact pattern: "(A) [word] - (B) [word]"
   `,
   mismatch: `
     - **유형**: 내신 대비용 내용 일치/불일치 (수능 26~28번, 45번 스타일을 내신용으로 변환)
