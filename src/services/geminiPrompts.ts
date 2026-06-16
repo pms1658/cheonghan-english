@@ -744,73 +744,46 @@ Provide ONLY a valid JSON object:
 export const getSubjectiveProblemsPrompt = (passage: string, grade: string, problemTypes?: string[], source?: string, autoCount?: number) => {
   const gradeLabel = GRADE_LABELS[grade] || GRADE_LABELS['2'];
   
-  // Build type descriptions based on mode
   const allTypes = {
-      "eng_composition": "### TYPE: eng_composition (\uc601\uc791)\\n- Select ONE sentence from the passage. Prefer SHORT sentences (under 20 words).\\n- Provide the BEGINNING of the sentence in English (the easy part).\\n- Provide ONLY the key clause/phrase in Korean for the student to complete.\\n- Provide 3-5 key hint words and a grammar condition.\\n- Add an \\\"englishStart\\\" field with the given English beginning.",
-      "sentence_interpretation": "### TYPE: sentence_interpretation (\ud574\uc11d/\uc758\ubbf8 \uc11c\uc220)\\n- Select ONE figurative or abstract sentence from the passage.\\n- The student writes a Korean interpretation explaining what it means.\\n- Provide a model answer (2-3 sentences in Korean).",
-      "grammar_correction": "### TYPE: grammar_correction (\uc5b4\ubc95 \uad50\uc815)\\n- Select 6 grammar-relevant parts, label (a)-(f).\\n- Make EXACTLY 3 incorrect, keep 3 correct.\\n- Use [[UL:(label)]]word[[/UL]] markers.\\n- For each: label, underlinedText, isCorrect, correctForm, explanation.",
-      "blank_fill": "### TYPE: blank_fill (\ube48\uce78 \uc11c\uc220)\\n- Select a KEY position in the passage.\\n- Remove 1-3 words, replace with __________.\\n- Student writes the missing word(s). Provide correct answer.",
-      "pronoun_reference": "### TYPE: pronoun_reference (\uc9c0\uce6d \ucd94\ub860)\\n- Find a pronoun (it, they, this, etc.) referring to a specific concept.\\n- Student writes in Korean what it refers to.",
-      "summary_completion": "### TYPE: summary_completion (\uc694\uc57d\ubb38 \uc644\uc131)\\n- Write 1-2 sentence English summary with 2 blanks (A) and (B).\\n- Student fills blanks with appropriate English words.",
-      "sentence_transform": "### TYPE: sentence_transform (\ubb38\uc7a5 \uc804\ud658)\\n- Select ONE transformable sentence.\\n- Condition: Active\u2194Passive, \ubd84\uc0ac\uad6c\ubb38\u2194\uc808, Direct\u2194Indirect speech, etc.\\n- Provide the model transformed sentence.",
-      "korean_summary": "### TYPE: korean_summary (\ud55c\uad6d\uc5b4 \uc694\uc57d)\\n- The student must summarize the ENTIRE passage in Korean (2-3 sentences).\\n- Provide a model answer (\ud55c\uad6d\uc5b4 \ubaa8\ubc94\ub2f5\uc548, 2-3 sentences).\\n- The model answer should capture the main idea, key arguments, and conclusion.",
-      "english_answer": "### TYPE: english_answer (\uc601\uc5b4\ub85c \ub2f5\ud558\uae30)\\n- Ask ONE comprehension question about the passage content in English.\\n- The student must answer IN ENGLISH (1-2 sentences).\\n- The question should test understanding of key details or implications.\\n- Provide a model answer in English."
+      "eng_composition": "### TYPE: eng_composition (영작)\\n- Select ONE sentence from the passage. Prefer SHORT sentences (under 20 words).\\n- Provide the BEGINNING of the sentence in English (the easy part).\\n- Provide ONLY the key clause/phrase in Korean for the student to complete.\\n- Provide 3-5 key hint words and a grammar condition.\\n- Add an \"englishStart\" field with the given English beginning.",
+      "sentence_interpretation": "### TYPE: sentence_interpretation (해석/의미 서술)\\n- Select ONE figurative or abstract sentence from the passage.\\n- The student writes a Korean interpretation explaining what it means.\\n- Provide a model answer (2-3 sentences in Korean).",
+      "grammar_correction": "### TYPE: grammar_correction (어법 교정)\\n- Select 6 grammar-relevant parts, label (a)-(f).\\n- Make EXACTLY 3 incorrect, keep 3 correct.\\n- Use [[UL:(label)]]word[[/UL]] markers.\\n- For each: label, underlinedText, isCorrect, correctForm, explanation.",
+      "blank_fill": "### TYPE: blank_fill (빈칸 서술)\\n- Create a blank in the passage (replace with __________ ).\\n- Provide the answer and context.\\n- Focus on key vocabulary or logical transitions.",
+      "pronoun_reference": "### TYPE: pronoun_reference (지칭 추론)\\n- Select a pronoun that refers to an important preceding noun phrase.\\n- Ask what it refers to in Korean.",
+      "summary_completion": "### TYPE: summary_completion (요약문 완성)\\n- Provide a summary of the passage with two blanks (A) and (B).\\n- Students must provide the words for blanks.",
+      "sentence_transform": "### TYPE: sentence_transform (문장 전환)\\n- Select a complex sentence.\\n- Require transformation (e.g., Active to Passive, Participle construction, etc.).",
+      "korean_summary": "### TYPE: korean_summary (한국어 요약)\\n- Ask the student to summarize the main point in 2-3 Korean sentences.",
+      "english_answer": "### TYPE: english_answer (영어로 답하기)\\n- Ask a comprehension question that requires a short English answer."
   };
-  
-  let typeInstruction: string;
-  let typeBlock: string;
-  
-  if (problemTypes && problemTypes.length > 0) {
-    typeInstruction = 'Generate problems ONLY for these ' + problemTypes.length + ' types: ' + problemTypes.join(', ') + '. Do NOT generate any other types.';
-    typeBlock = problemTypes.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
-  } else if (source === 'external') {
-    // 외부지문 auto: 9개 전체 유형 (autoCount로 제한 가능)
-    const externalTypes = Object.keys(allTypes);
-    const limit = autoCount && autoCount > 0 ? Math.min(autoCount, externalTypes.length) : externalTypes.length;
-    const selectedExternal = externalTypes.slice(0, limit);
-    typeInstruction = `Generate ${limit} types of problems (one problem per type): ` + selectedExternal.join(', ') + '. Do NOT skip any of the listed types.';
-    typeBlock = selectedExternal.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
-  } else {
-    // 변형주관식 auto: 7개 핵심 유형만 (autoCount로 제한 가능)
-    const coreTypes = ['eng_composition', 'sentence_interpretation', 'grammar_correction', 'blank_fill', 'pronoun_reference', 'summary_completion', 'sentence_transform'];
-    const limit = autoCount && autoCount > 0 ? Math.min(autoCount, coreTypes.length) : coreTypes.length;
-    const selectedCore = coreTypes.slice(0, limit);
-    typeInstruction = `Generate ${limit} types of problems (one problem per type): ` + selectedCore.join(', ') + '. Do NOT generate any other types.';
-    typeBlock = selectedCore.map(t => allTypes[t as keyof typeof allTypes] || '').filter(Boolean).join('\n\n');
-  }
 
-  return `You are an expert Korean high school English teacher creating **서술형 (subjective/written-answer) exam problems** for Korean students.
+  const selectedTypes = problemTypes ? problemTypes.map(t => allTypes[t as keyof typeof allTypes]).join('\n\n') : Object.values(allTypes).join('\n\n');
 
-Target Grade: ${gradeLabel}
+  return `You are an expert English teacher creating high-quality, exam-style subjective questions (서술형 문제) for Korean students (Level: ${gradeLabel}).
 
-### INPUT PASSAGE:
+### TASK
+Create ${autoCount || 5} subjective questions based on the passage.
+
+### SELECTED TYPES:
+${selectedTypes}
+
+### ORIGINAL PASSAGE:
 """
 ${passage}
 """
 
-### TASK
-${typeInstruction}
-
-Create the following types of problems from the passage above. Each problem should be challenging but fair for the target grade level.
-
----
-
-${typeBlock}
-
----
-
-### OUTPUT FORMAT (JSON Only)
+### OUTPUT FORMAT (JSON Only):
 {
   "problems": [
     {
+      "id": 1,
       "type": "eng_composition",
-      "instruction": "다음 영어 문장의 이어지는 부분을 우리말 뜻에 맞게 주어진 조건으로 영작하시오.",
-      "englishStart": "The beginning of the sentence in English...",
-      "koreanMeaning": "학생이 영작해야 할 부분의 한글 뜻",
-      "hintWords": ["word1", "word2", "word3"],
-      "grammarCondition": "관계대명사 which를 사용하시오",
+      "instruction": "다음 문장을 주어진 조건에 맞게 영어로 완성하시오.",
       "originalSentence": "The full original English sentence",
-      "modelAnswer": "The part the student should write"
+      "englishStart": "The beginning...",
+      "koreanMeaning": "한국어 내용",
+      "hintWords": ["word1", "word2"],
+      "grammarCondition": "Use a relative clause",
+      "modelAnswer": "The full sentence"
     },
     {
       "type": "sentence_interpretation",
@@ -950,22 +923,23 @@ ${JSON.stringify(problemsWithAnswers, null, 2)}
 ### GRADING INSTRUCTIONS:
 For each problem, grade the student's answer on a scale of 0-100.
 
-**Scoring Guidelines:**
-- **eng_composition**: Check grammar accuracy (40%), correct vocabulary usage (30%), and adherence to grammar condition (30%). Accept synonyms and minor variations. Deduct partially for small errors.
-- **sentence_interpretation**: Check if the student captured the core meaning (50%), context understanding (30%), and expression quality (20%).
-- **grammar_correction**: Check if all incorrect items were identified (50%) and corrections are accurate (50%). Partial credit for partial identification.
-- **blank_fill**: Accept exact matches and reasonable synonyms. Score 100 for correct, 0 for wrong. Accept minor spelling variations.
-- **pronoun_reference**: Check if the student correctly identified the referent. Score 100 for correct, 50 for partially correct, 0 for wrong.
-- **summary_completion**: Check each blank separately. Accept synonyms and minor variations.
-- **sentence_transform**: Check if the transformation follows the condition (50%) and is grammatically correct (50%).
-- **korean_summary**: Check if the summary captures the main idea (40%), includes key details (30%), and is well-written in Korean (30%). Accept reasonable variations in expression.
-- **english_answer**: Check if the answer is factually correct based on the passage (50%), grammatically correct (30%), and complete (20%). Accept valid synonyms and alternative phrasings.
+**★★★ CORE GRADING PHILOSOPHY ★★★**
+- **Be GENEROUS**: When in doubt, give the HIGHER score.
+- **Partial credit**: Award 50-80% for partial understanding, even with form/grammar errors.
+- **Do NOT penalize**: minor typos, spacing, punctuation, or stylistic differences.
+- **Korean answers**: Clear understanding expressed differently = full or near-full credit. Paraphrasing is FINE.
+- **Score 0 only for**: completely empty or completely off-topic responses.
 
-**Important:**
-- Be generous with minor spelling errors that don't affect meaning
-- Accept valid synonyms and alternative phrasings
-- For Korean answers, accept reasonable variations in expression
-- Empty or blank answers should receive 0
+**Scoring by Type:**
+- **eng_composition**: Meaning correct = 70+. Minor grammar errors = max 20pt deduction. Accept synonyms freely.
+- **sentence_interpretation**: Core meaning in Korean = 70-90pts. NO word-for-word translation required. Deduct heavily ONLY for complete misunderstanding.
+- **grammar_correction**: 2/3 correct = ~65pts, 1/3 = ~35pts. Korean explanations without formal terms = accepted.
+- **blank_fill**: Semantically correct with spelling issues = 80+. Close in meaning = 50-60. NEVER give 0 for a relevant attempt.
+- **pronoun_reference**: Correct = 100, Partially correct = 70, Related but wrong = 40, Wrong = 0.
+- **summary_completion**: Each blank = 50% of score. Synonyms and equivalent words accepted generously.
+- **sentence_transform**: Correct in spirit with minor errors = 60-75pts. Understood type but made errors = 40-50pts.
+- **korean_summary**: Captures main theme = 70+ even if details missing. Only deduct heavily for completely different topic.
+- **english_answer**: Factually correct with grammar issues = 70+. Short correct answers fully accepted.
 
 ### OUTPUT FORMAT (JSON Only):
 {
@@ -973,7 +947,7 @@ For each problem, grade the student's answer on a scale of 0-100.
     {
       "problemId": "problem_id_here",
       "score": 85,
-      "feedback": "한국어로 피드백 (잘한 점, 개선할 점, 정답과의 비교)",
+      "feedback": "한국어로 피드백 — 잘한 점 위주로 칭찬하고, 개선할 점은 한두 가지만 간결하게",
       "modelAnswer": "모범 답안",
       "detailedScores": {
         "accuracy": 90,

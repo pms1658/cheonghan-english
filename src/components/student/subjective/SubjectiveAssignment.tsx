@@ -561,9 +561,15 @@ export default function SubjectiveAssignment({
                                 {/* TYPE 2: 해석 서술 */}
                                 {currentProblem.type === 'sentence_interpretation' && (
                                     <div className="space-y-3">
-                                        <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600">
-                                            <p className="text-[15px] leading-relaxed italic text-slate-800 dark:text-slate-200">{currentProblem.targetSentence}</p>
-                                        </div>
+                                        {currentProblem.targetSentence ? (
+                                            <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600">
+                                                <p className="text-[15px] leading-relaxed italic text-slate-800 dark:text-slate-200">{currentProblem.targetSentence}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200 dark:border-amber-700">
+                                                <p className="text-xs text-amber-700 dark:text-amber-300">📖 위 지문에서 밑줄 친 문장을 찾아 해석하세요.</p>
+                                            </div>
+                                        )}
                                         <textarea
                                             value={currentAnswer?.textAnswer || ''}
                                             onChange={e => updateTextAnswer(currentIdx, e.target.value)}
@@ -576,11 +582,17 @@ export default function SubjectiveAssignment({
                                 {/* TYPE 3: 어법 교정 */}
                                 {currentProblem.type === 'grammar_correction' && (
                                     <div className="space-y-4">
-                                        {/* Passage with underlines */}
-                                        <div
-                                            className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600 text-sm leading-[1.8] text-slate-800 dark:text-slate-200"
-                                            dangerouslySetInnerHTML={{ __html: renderGrammarPassage(currentProblem.passageWithUnderlines || '') }}
-                                        />
+                                        {/* Passage with underlines — fallback to 안내 메시지 */}
+                                        {(currentProblem.passageWithUnderlines || '').trim() ? (
+                                            <div
+                                                className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600 text-sm leading-[1.8] text-slate-800 dark:text-slate-200"
+                                                dangerouslySetInnerHTML={{ __html: renderGrammarPassage(currentProblem.passageWithUnderlines || '') }}
+                                            />
+                                        ) : (
+                                            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200 dark:border-amber-700">
+                                                <p className="text-xs text-amber-700 dark:text-amber-300">📖 위 지문에서 밑줄 친 (a)~(f) 부분을 확인하세요.</p>
+                                            </div>
+                                        )}
 
                                         {/* 3 Answer Slots */}
                                         <div className="space-y-3">
@@ -636,18 +648,28 @@ export default function SubjectiveAssignment({
                                 {currentProblem.type === 'pronoun_reference' && (
                                     <div className="space-y-3">
                                         <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600">
-                                            <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
-                                                {currentProblem.pronounSentence?.split(currentProblem.underlinedPronoun || '').map((part, i, arr) => (
-                                                    <span key={i}>
-                                                        {part}
-                                                        {i < arr.length - 1 && (
-                                                            <u className="font-bold text-[#1e3a5f] dark:text-blue-400 underline-offset-2">{currentProblem.underlinedPronoun}</u>
-                                                        )}
-                                                    </span>
-                                                ))}
-                                            </p>
+                                            {currentProblem.pronounSentence && currentProblem.underlinedPronoun ? (
+                                                <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+                                                    {currentProblem.pronounSentence.split(currentProblem.underlinedPronoun).map((part: string, i: number, arr: string[]) => (
+                                                        <span key={i}>
+                                                            {part}
+                                                            {i < arr.length - 1 && (
+                                                                <u className="font-bold text-[#1e3a5f] dark:text-blue-400 underline-offset-2">{currentProblem.underlinedPronoun}</u>
+                                                            )}
+                                                        </span>
+                                                    ))}
+                                                </p>
+                                            ) : currentProblem.underlinedPronoun ? (
+                                                <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+                                                    📖 위 지문에서 <u className="font-bold text-[#1e3a5f] dark:text-blue-400">{currentProblem.underlinedPronoun}</u>이(가) 가리키는 대상을 찾으세요.
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-amber-700 dark:text-amber-300">📖 위 지문에서 밑줄 친 대명사가 가리키는 대상을 찾으세요.</p>
+                                            )}
                                         </div>
-                                        <div className="text-xs text-slate-500">밑줄 친 <strong className="text-[#1e3a5f]">{currentProblem.underlinedPronoun}</strong>이(가) 가리키는 대상을 한국어로 쓰세요.</div>
+                                        {currentProblem.underlinedPronoun && (
+                                            <div className="text-xs text-slate-500">밑줄 친 <strong className="text-[#1e3a5f]">{currentProblem.underlinedPronoun}</strong>이(가) 가리키는 대상을 한국어로 쓰세요.</div>
+                                        )}
                                         <input
                                             type="text"
                                             value={currentAnswer?.textAnswer || ''}
