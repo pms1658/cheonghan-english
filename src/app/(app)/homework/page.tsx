@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { dbService, dbSubscriptions } from '@/services/db';
@@ -46,6 +46,33 @@ export default function StudentHomeworkPage() {
     const isAdmin = (user as any)?.role === 'admin';
     const studentId = (user as any)?.id || (user as any)?.uid;
 
+    // homework 목록을 ref로 유지 (submissions 구독 콜백에서 최신 목록 접근용)
+    const homeworksRef = useRef<Homework[]>([]);
+
+    // linked assignment 상태를 재계산하는 함수 (submissions 변화 시 호출)
+    const refreshLinkedStatuses = useCallback(async (mine: Homework[], sid: string) => {
+        if (!mine || mine.length === 0) return;
+        const linkedCompletedMap: Record<string, string[]> = {};
+        const linkedStatusesMap: Record<string, Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'>> = {};
+        await Promise.all(mine.map(async (hw) => {
+            if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
+                const ids = hw.linkedAssignments.map(la => la.assignmentId);
+                const result = await dbService.checkLinkedAssignmentStatuses(sid, ids, hw.createdAt);
+                if (result.completedIds.length > 0) linkedCompletedMap[hw.id] = result.completedIds;
+                if (Object.keys(result.statuses).length > 0) linkedStatusesMap[hw.id] = result.statuses;
+            }
+        }));
+        setStatusMap(prev => {
+            const next = { ...prev };
+            for (const hwId of Object.keys({ ...linkedCompletedMap, ...linkedStatusesMap })) {
+                if (!next[hwId]) next[hwId] = { id: `${hwId}_${sid}`, homeworkId: hwId, studentId: sid, studentName: '', completed: false };
+                if (linkedCompletedMap[hwId]) next[hwId].completedAssignments = linkedCompletedMap[hwId];
+                if (linkedStatusesMap[hwId]) next[hwId].assignmentStatuses = { ...next[hwId].assignmentStatuses, ...linkedStatusesMap[hwId] };
+            }
+            return next;
+        });
+    }, []);
+
     useEffect(() => {
         if (authLoading) return;
         if (!user) return;
@@ -61,27 +88,9 @@ export default function StudentHomeworkPage() {
             // Student: subscribe to homework list + statuses simultaneously
             const unsub1 = dbSubscriptions.onStudentHomeworks(studentId, undefined, async (mine) => {
                 setHomeworks(mine);
+                homeworksRef.current = mine;
                 // Check linked assignment completions (v2.1: with detailed statuses)
-                const linkedCompletedMap: Record<string, string[]> = {};
-                const linkedStatusesMap: Record<string, Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'>> = {};
-                await Promise.all(mine.map(async (hw) => {
-                    if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
-                        const ids = hw.linkedAssignments.map(la => la.assignmentId);
-                        const result = await dbService.checkLinkedAssignmentStatuses(studentId, ids, hw.createdAt);
-                        if (result.completedIds.length > 0) linkedCompletedMap[hw.id] = result.completedIds;
-                        if (Object.keys(result.statuses).length > 0) linkedStatusesMap[hw.id] = result.statuses;
-                    }
-                }));
-                // Merge linked statuses into statusMap
-                setStatusMap(prev => {
-                    const next = { ...prev };
-                    for (const hwId of Object.keys({ ...linkedCompletedMap, ...linkedStatusesMap })) {
-                        if (!next[hwId]) next[hwId] = { id: `${hwId}_${studentId}`, homeworkId: hwId, studentId, studentName: '', completed: false };
-                        if (linkedCompletedMap[hwId]) next[hwId].completedAssignments = linkedCompletedMap[hwId];
-                        if (linkedStatusesMap[hwId]) next[hwId].assignmentStatuses = { ...next[hwId].assignmentStatuses, ...linkedStatusesMap[hwId] };
-                    }
-                    return next;
-                });
+                await refreshLinkedStatuses(mine, studentId);
                 setLoading(false);
             });
 
@@ -101,9 +110,14 @@ export default function StudentHomeworkPage() {
                 });
             });
 
-            return () => { unsub1(); unsub2(); };
+            // submissions 실시간 구독: 학습완료 시 즉시 linked 상태 재계산
+            const unsub3 = dbSubscriptions.onStudentSubmissions(studentId, async () => {
+                await refreshLinkedStatuses(homeworksRef.current, studentId);
+            });
+
+            return () => { unsub1(); unsub2(); unsub3(); };
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, refreshLinkedStatuses]);
 
     // v2: Total items count (offline + linked)
     const getTotalItems = (hw: Homework): number => {

@@ -377,4 +377,11 @@ export const homeworkSubscriptions = {
             callback(statuses);
         });
     },
+    /** 학생의 submissions 변화 실시간 구독 (과제방 linked assignment 상태 즉시 반영용) */
+    onStudentSubmissions: (studentId: string, callback: () => void) => {
+        const q = query(collection(db, 'submissions'), where('studentId', '==', studentId));
+        return onSnapshot(q, () => {
+            callback();
+        });
+    },
 };

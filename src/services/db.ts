@@ -746,6 +746,7 @@ export const dbSubscriptions = {
     onStudentHomeworks: homeworkSubscriptions.onStudentHomeworks,
     onStudentStatuses: homeworkSubscriptions.onStudentStatuses,
     onHomeworkStatuses: homeworkSubscriptions.onHomeworkStatuses,
+    onStudentSubmissions: homeworkSubscriptions.onStudentSubmissions,
 };
 
 // Re-export Tenant type

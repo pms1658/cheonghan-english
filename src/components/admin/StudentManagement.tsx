@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, Student } from '@/services/db';
 import { toast } from 'sonner';
 
 export default function StudentManagement() {
+    const router = useRouter();
     const [students, setStudents] = useState<Student[]>([]);
     const [classes, setClasses] = useState<{ id: string, name: string }[]>([]);
     const [showModal, setShowModal] = useState(false);
@@ -93,14 +95,39 @@ export default function StudentManagement() {
     };
 
     const handleEditStudent = (student: Student) => {
+        // 수정 모달 열 때 고아 classId 자동 필터링
+        const validClassIds = (student.classIds || []).filter(cid => classes.find(c => c.id === cid));
         setNewStudent({
             id: student.id,
             name: student.name,
-            classIds: student.classIds || [],
+            classIds: validClassIds,
             groupName: student.groupName || ''
         });
         setEditingDocId(student.docId || null);
         setShowModal(true);
+    };
+
+    // 고아 classId가 있는 모든 학생 데이터 일괄 정리
+    const handleCleanupOrphanClassIds = async () => {
+        const studentsWithOrphans = students.filter(s =>
+            s.classIds && s.classIds.some(cid => !classes.find(c => c.id === cid))
+        );
+        if (studentsWithOrphans.length === 0) {
+            toast.info('정리할 데이터가 없습니다.');
+            return;
+        }
+        if (!confirm(`${studentsWithOrphans.length}명 학생의 삭제된 과제방 정보를 정리하시겠습니까?`)) return;
+
+        let count = 0;
+        for (const student of studentsWithOrphans) {
+            const validClassIds = student.classIds.filter(cid => classes.find(c => c.id === cid));
+            if (student.docId) {
+                await dbService.updateStudent(student.docId, { classIds: validClassIds });
+                count++;
+            }
+        }
+        await loadStudents();
+        toast.success(`${count}명 학생의 고아 데이터가 정리되었습니다.`);
     };
 
     const handleSaveStudent = async () => {
@@ -209,6 +236,17 @@ export default function StudentManagement() {
                     총 <span className="text-blue-600 dark:text-blue-400">{displayStudents.length}</span>명                     {selectedClass !== 'all' && ` (필터됨)`}
                     {searchTerm && ` · "${searchTerm}" 검색`}
                 </span>
+                {/* 고아 데이터 정리 버튼 */}
+                {students.some(s => s.classIds && s.classIds.some(cid => !classes.find(c => c.id === cid))) && (
+                    <button
+                        onClick={handleCleanupOrphanClassIds}
+                        className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-500/20 transition-all"
+                        title="DB에서 삭제된 과제방이 학생 정보에 남아 있습니다."
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        고아 데이터 정리
+                    </button>
+                )}
             </div>
 
             {/* Student List */}
@@ -252,11 +290,29 @@ export default function StudentManagement() {
                                             {student.groupName}
                                         </span>
                                     )}
-                                    {student.classIds.map(cid => (
-                                        <span key={cid} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
-                                            {classes.find(c => c.id === cid)?.name || cid}
+                                    {student.classIds.map(cid => {
+                                        const cls = classes.find(c => c.id === cid);
+                                        if (!cls) return null; // 존재하지 않는 과제방 배지는 숨김
+                                        return (
+                                            <button
+                                                key={cid}
+                                                onClick={() => router.push(`/class/${cid}`)}
+                                                title={`${cls.name} 과제방으로 이동`}
+                                                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20 hover:border-blue-300 transition-colors cursor-pointer"
+                                            >
+                                                {cls.name}
+                                            </button>
+                                        );
+                                    })}
+                                    {/* 존재하지 않는 classId 경고 배지 (고아 데이터) */}
+                                    {student.classIds.some(cid => !classes.find(c => c.id === cid)) && (
+                                        <span
+                                            className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20 cursor-help"
+                                            title={`삭제된 과제방: ${student.classIds.filter(cid => !classes.find(c => c.id === cid)).join(', ')}`}
+                                        >
+                                            ⚠ 삭제된 방 {student.classIds.filter(cid => !classes.find(c => c.id === cid)).length}개
                                         </span>
-                                    ))}
+                                    )}
                                     {student.classIds.length === 0 && !student.groupName && (
                                         <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600">미배정</span>
                                     )}
@@ -323,11 +379,28 @@ export default function StudentManagement() {
                                         {student.groupName}
                                     </span>
                                 )}
-                                {student.classIds.map(cid => (
-                                    <span key={cid} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
-                                        {classes.find(c => c.id === cid)?.name || cid}
+                                {student.classIds.map(cid => {
+                                    const cls = classes.find(c => c.id === cid);
+                                    if (!cls) return null;
+                                    return (
+                                        <button
+                                            key={cid}
+                                            onClick={() => router.push(`/class/${cid}`)}
+                                            title={`${cls.name} 과제방으로 이동`}
+                                            className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 hover:bg-blue-100 hover:border-blue-300 transition-colors cursor-pointer"
+                                        >
+                                            {cls.name}
+                                        </button>
+                                    );
+                                })}
+                                {student.classIds.some(cid => !classes.find(c => c.id === cid)) && (
+                                    <span
+                                        className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-500 border border-amber-100 cursor-help"
+                                        title={`삭제된 과제방: ${student.classIds.filter(cid => !classes.find(c => c.id === cid)).join(', ')}`}
+                                    >
+                                        ⚠ 삭제된 방 {student.classIds.filter(cid => !classes.find(c => c.id === cid)).length}개
                                     </span>
-                                ))}
+                                )}
                                 {student.classIds.length === 0 && !student.groupName && (
                                     <span className="text-[10px] font-medium text-slate-300 dark:text-slate-600">미배정</span>
                                 )}
