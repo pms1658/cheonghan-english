@@ -43,6 +43,35 @@ export default function PrintModal({
         let vocabContent = '';
         let answerKeyContent = '';
 
+        // 수능 표준 순서 선지 (인쇄용)
+        const ORDER_CHOICES_STANDARD = [
+            '(A) - (B) - (C)',
+            '(A) - (C) - (B)',
+            '(B) - (A) - (C)',
+            '(B) - (C) - (A)',
+            '(C) - (A) - (B)',
+        ];
+
+        // order 유형 선지+정답 정규화 (PrintModal 내부용)
+        const normalizePrintOrderProblem = (p: any): { choices: string[]; correctAnswer: number } => {
+            if (p.type !== 'order') return { choices: p.choices, correctAnswer: p.correctAnswer };
+            const normalize = (c: string) =>
+                c.trim().replace(/\s*–\s*/g, ' - ').replace(/\s*-\s*/g, ' - ').replace(/\s+/g, ' ').trim();
+            const normalized = (p.choices as string[]).map(normalize);
+            const hasDuplicates = new Set(normalized).size < normalized.length;
+            const matchesStandard = ORDER_CHOICES_STANDARD.every(s => normalized.some(n => n === s));
+            if (!hasDuplicates && matchesStandard && normalized.length === 5) {
+                const isInOrder = normalized.every((n, i) => n === ORDER_CHOICES_STANDARD[i]);
+                if (isInOrder) return { choices: normalized, correctAnswer: p.correctAnswer };
+                const correctText = normalized[p.correctAnswer];
+                const idx = ORDER_CHOICES_STANDARD.indexOf(correctText);
+                return { choices: ORDER_CHOICES_STANDARD, correctAnswer: idx >= 0 ? idx : p.correctAnswer };
+            }
+            const originalText = normalized[p.correctAnswer] ?? '';
+            const idx = ORDER_CHOICES_STANDARD.indexOf(originalText);
+            return { choices: ORDER_CHOICES_STANDARD, correctAnswer: idx >= 0 ? idx : p.correctAnswer };
+        };
+
         // --- Transform Problems (grouped by assignment) ---
         const transformAssignments = selAssignments.filter(a => a.type === 'transform');
         if (transformAssignments.length > 0) {
@@ -59,7 +88,8 @@ export default function PrintModal({
                 allSectionsHtml += `<div class="assignment-section"><div class="assignment-title">${a.title}</div>`;
                 allSectionsHtml += probs.map((p: any, idx: number) => {
                     const typeLabel = p.type ? `<span class="type-badge">${p.type}</span>` : '';
-                    return `<div class="problem"><div class="problem-header">${idx + 1}. ${typeLabel}</div><div class="problem-question">${formatQ(p.question)}</div><div class="problem-choices">${p.choices.map((c: string, ci: number) => `<div class="choice">${circled[ci]} ${c}</div>`).join('')}</div></div>`;
+                    const normP = normalizePrintOrderProblem(p);
+                    return `<div class="problem"><div class="problem-header">${idx + 1}. ${typeLabel}</div><div class="problem-question">${formatQ(p.question)}</div><div class="problem-choices">${normP.choices.map((c: string, ci: number) => `<div class="choice">${circled[ci]} ${c}</div>`).join('')}</div></div>`;
                 }).join('');
                 allSectionsHtml += '</div>';
             });
@@ -69,11 +99,15 @@ export default function PrintModal({
             transformAssignments.forEach(a => {
                 const probs = a.variantProblems || [];
                 if (probs.length === 0) return;
-                const boxHtml = '<div class="answer-box"><div class="answer-box-title">' + a.title + ' \u2014 \uc815\ub2f5</div><div class="answer-grid">' + probs.map((p: any, idx: number) => '<span>' + (idx + 1) + '. ' + circled[p.correctAnswer] + '</span>').join('') + '</div></div>';
+                const boxHtml = '<div class="answer-box"><div class="answer-box-title">' + a.title + ' \u2014 \uc815\ub2f5</div><div class="answer-grid">' + probs.map((p: any, idx: number) => {
+                    const normP = normalizePrintOrderProblem(p);
+                    return '<span>' + (idx + 1) + '. ' + circled[normP.correctAnswer] + '</span>';
+                }).join('') + '</div></div>';
                 const detailHtml = probs.map((p: any, idx: number) => {
+                    const normP = normalizePrintOrderProblem(p);
                     const tl = p.type ? ' [' + p.type + ']' : '';
                     const expl = p.explanation || '';
-                    return '<div class="answer-detail"><div class="detail-header">' + (idx + 1) + '\ubc88' + tl + ' \u2014 \uc815\ub2f5: ' + circled[p.correctAnswer] + '</div>' + (expl ? '<div class="explanation">' + expl + '</div>' : '') + '</div>';
+                    return '<div class="answer-detail"><div class="detail-header">' + (idx + 1) + '\ubc88' + tl + ' \u2014 \uc815\ub2f5: ' + circled[normP.correctAnswer] + '</div>' + (expl ? '<div class="explanation">' + expl + '</div>' : '') + '</div>';
                 }).join('');
                 allAnswerHtml += boxHtml + '<div class="detail-section">' + detailHtml + '</div>';
             });

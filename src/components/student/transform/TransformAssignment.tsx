@@ -195,7 +195,11 @@ export default function TransformAssignment({
     const calculateScore = (answers: number[]) => {
         let score = 0;
         problems.forEach((problem, idx) => {
-            if (answers[idx] === problem.correctAnswer) {
+            // order 유형은 정규화된 correctAnswer로 채점
+            const normalizedCorrect = problem.type === 'order'
+                ? normalizeOrderProblem(problem.choices, problem.correctAnswer, 'order').correctAnswer
+                : problem.correctAnswer;
+            if (answers[idx] === normalizedCorrect) {
                 score += problem.points;
             }
         });
@@ -205,7 +209,11 @@ export default function TransformAssignment({
     const getIncorrectProblems = (answers: number[]) => {
         const incorrect: number[] = [];
         problems.forEach((problem, idx) => {
-            if (answers[idx] !== problem.correctAnswer) {
+            // order 유형은 정규화된 correctAnswer로 비교
+            const normalizedCorrect = problem.type === 'order'
+                ? normalizeOrderProblem(problem.choices, problem.correctAnswer, 'order').correctAnswer
+                : problem.correctAnswer;
+            if (answers[idx] !== normalizedCorrect) {
                 incorrect.push(idx);
             }
         });
@@ -483,39 +491,48 @@ export default function TransformAssignment({
         '(C) - (A) - (B)',
     ];
 
-    // order 유형 선지를 표준 5개 순열로 정규화
-    // - AI가 선지를 중복 생성하거나 형식을 어긴 경우 표준 선지로 강제 대체
-    // - 이미 올바른 형태인 경우 그대로 유지
-    const normalizeOrderChoices = (choices: string[], type: string): string[] => {
-        if (type !== 'order') return choices;
+    // order 유형 선지 + correctAnswer 동시 정규화
+    // ★ 핵심 수정: 선지를 표준으로 교체할 때 correctAnswer 인덱스도 함께 재계산
+    // - AI가 준 정답 텍스트를 먼저 기억 → 표준 선지에서 그 위치를 찾아 correctAnswer 재설정
+    const normalizeOrderProblem = (choices: string[], correctAnswer: number, type: string): { choices: string[]; correctAnswer: number } => {
+        if (type !== 'order') return { choices, correctAnswer };
 
-        // 표준 정규화: "(A) - (B) - (C)" 형태로 통일
         const normalize = (c: string) =>
             c.trim()
-                .replace(/\s*–\s*/g, ' - ')   // em-dash → hyphen
-                .replace(/\s*-\s*/g, ' - ')   // 공백 정리
+                .replace(/\s*–\s*/g, ' - ')
+                .replace(/\s*-\s*/g, ' - ')
                 .replace(/\s+/g, ' ')
                 .trim();
 
         const normalized = choices.map(normalize);
+        const hasDuplicates = new Set(normalized).size < normalized.length;
+        const matchesStandard = ORDER_CHOICES_STANDARD.every(s => normalized.some(n => n === s));
 
-        // 중복 여부 확인
-        const unique = new Set(normalized);
-        const hasDuplicates = unique.size < normalized.length;
-
-        // 표준 선지와 일치하는지 확인 (순서 무관)
-        const matchesStandard = ORDER_CHOICES_STANDARD.every(s =>
-            normalized.some(n => n === s)
-        );
-
-        // 이미 표준 5개와 정확히 일치하면 그대로 반환
+        // 이미 표준 5개와 정확히 일치하면 정규화된 형태로만 반환 (correctAnswer 유지)
         if (!hasDuplicates && matchesStandard && normalized.length === 5) {
-            return normalized;
+            // 표준과 순서가 같으면 그대로, 다르면 correctAnswer 재계산
+            const isInStandardOrder = normalized.every((n, i) => n === ORDER_CHOICES_STANDARD[i]);
+            if (isInStandardOrder) {
+                return { choices: normalized, correctAnswer };
+            }
+            // 순서가 다른 경우: 기존 정답 텍스트를 기억하고 표준 선지에서 위치 찾기
+            const correctText = normalized[correctAnswer];
+            const newCorrectAnswer = ORDER_CHOICES_STANDARD.indexOf(correctText);
+            return {
+                choices: ORDER_CHOICES_STANDARD,
+                correctAnswer: newCorrectAnswer >= 0 ? newCorrectAnswer : correctAnswer,
+            };
         }
 
-        // 중복/오류가 있으면 표준 선지로 강제 대체
-        // (correctAnswer는 그대로 유지 — AI가 지정한 정답 인덱스 기준)
-        return ORDER_CHOICES_STANDARD;
+        // 중복/오류 있음 → 표준 선지로 교체
+        // AI가 준 correctAnswer 인덱스의 텍스트를 정답 텍스트로 간주
+        const originalCorrectText = normalized[correctAnswer] ?? '';
+        const newCorrectAnswer = ORDER_CHOICES_STANDARD.indexOf(originalCorrectText);
+        return {
+            choices: ORDER_CHOICES_STANDARD,
+            // 표준 선지에서 찾지 못하면 AI가 준 인덱스 그대로 유지
+            correctAnswer: newCorrectAnswer >= 0 ? newCorrectAnswer : correctAnswer,
+        };
     };
 
     // summary 유형 선지 정규화
@@ -568,10 +585,22 @@ export default function TransformAssignment({
     };
 
     // 유형별 선지 정규화 통합 함수
+    // order 타입은 correctAnswer도 함께 반환하는 normalizeOrderProblem을 사용
     const normalizeChoices = (choices: string[], type: string): string[] => {
-        if (type === 'order') return normalizeOrderChoices(choices, type);
+        if (type === 'order') return normalizeOrderProblem(choices, 0, type).choices;
         if (type === 'summary') return normalizeSummaryChoices(choices, type);
         return choices;
+    };
+
+    // order 유형: 선지 + 정답 인덱스 동시 정규화
+    const getNormalizedProblem = (prob: VariantProblem): { choices: string[]; correctAnswer: number } => {
+        if (prob.type === 'order') {
+            return normalizeOrderProblem(prob.choices, prob.correctAnswer, prob.type);
+        }
+        return {
+            choices: normalizeSummaryChoices(prob.choices, prob.type),
+            correctAnswer: prob.correctAnswer,
+        };
     };
 
     // AI가 question에 이미 넣은 한글 질문 패턴 제거 (우리가 위에서 별도로 표시하므로)
@@ -838,7 +867,10 @@ export default function TransformAssignment({
                         {showExplanations && (
                             <div className="space-y-4 animate-in slide-in-from-top-4 duration-500 pb-12">
                                 {problems.map((prob, idx) => {
-                                    const isCorrect = currentSession?.answers[idx] === prob.correctAnswer;
+                                    // ★ order 유형은 선지와 correctAnswer를 동시에 정규화
+                                    const normalized = getNormalizedProblem(prob);
+                                    const normalizedCorrectAnswer = normalized.correctAnswer;
+                                    const isCorrect = currentSession?.answers[idx] === normalizedCorrectAnswer;
                                     return (
                                         <div key={prob.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-200/30 dark:border-white/10">
                                             <div className="flex justify-between items-center mb-4">
@@ -860,8 +892,8 @@ export default function TransformAssignment({
                                             />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                                                {normalizeChoices(prob.choices, prob.type).map((choice, cIdx) => {
-                                                    const isAnswer = cIdx === prob.correctAnswer;
+                                                {normalized.choices.map((choice, cIdx) => {
+                                                    const isAnswer = cIdx === normalizedCorrectAnswer;
                                                     const isStudentPick = cIdx === currentSession?.answers[idx];
                                                     const choiceExp = (prob as any).choiceExplanations?.[cIdx];
                                                     return (
