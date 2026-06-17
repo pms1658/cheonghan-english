@@ -89,52 +89,45 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
     // VIEW: Type Selection Cards
     // ============================
     if (creationStep === 'type_select') {
-        const TypeCard = ({ type, color, icon, title, desc, newBadge }: any) => (
+        const TypeCard = ({ type, color, icon, title, desc, newBadge, onClick }: any) => (
             <div
-                onClick={() => {
-                    setAssignmentType(type);
-                    setCreationStep('form');
-                }}
-                className={`group cursor-pointer bg-white border-2 border-slate-100 hover:border-${color}-500 rounded-3xl p-6 text-center transition-all hover:bg-${color}-50/30 hover:shadow-xl hover:-translate-y-1 relative overflow-hidden`}
+                onClick={onClick ?? (() => { setAssignmentType(type); setCreationStep('form'); })}
+                className={`group cursor-pointer bg-white border-2 border-slate-100 hover:border-${color}-500 rounded-2xl p-4 text-center transition-all hover:bg-${color}-50/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden`}
             >
-                <div className={`w-16 h-16 bg-${color}-100 rounded-2xl mx-auto flex items-center justify-center mb-4 group-hover:bg-${color}-500 transition-colors shadow-inner`}>
+                <div className={`w-11 h-11 bg-${color}-100 rounded-xl mx-auto flex items-center justify-center mb-2.5 group-hover:bg-${color}-500 transition-colors shadow-inner`}>
                     {icon}
                 </div>
                 {newBadge && (
-                    <div className={`absolute top-4 right-4 bg-${color}-100 text-${color}-700 text-[10px] px-2 py-0.5 rounded-full font-bold`}>New</div>
+                    <div className={`absolute top-2.5 right-2.5 bg-${color}-100 text-${color}-700 text-[9px] px-1.5 py-0.5 rounded-full font-bold`}>New</div>
                 )}
-                <h3 className={`text-lg font-bold text-slate-800 mb-2 group-hover:text-${color}-600`}>{title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
+                <h3 className={`text-[13px] font-bold text-slate-800 mb-1 group-hover:text-${color}-600 leading-tight`}>{title}</h3>
+                <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{desc}</p>
             </div>
         );
 
         return (
-            <div className="p-8 h-full overflow-y-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-2xl font-bold text-slate-800">새 과제 만들기</h2>
+            <div className="p-6 h-full overflow-y-auto">
+                <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-bold text-slate-800">새 과제 만들기</h2>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setIsImportModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm text-sm">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
                             과제 불러오기
                         </button>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                    {/* Row 1: 단어학습, 구조독해, 본문분석 */}
+                <div className="grid grid-cols-3 gap-3 max-w-3xl mx-auto">
+                    {/* Row 1: 단어학습 / 구조독해 / 구조작문 */}
                     <TypeCard type="vocabulary" color="green"
-                        title="단어학습" desc="선생님이 지정한 단어로 AI 뜻/예문 생성 및 학습을 진행합니다. 단어선택 모드로 전환 가능합니다."
+                        title="단어학습" desc="단어장·단어선택·플래시카드 학습"
                         icon={
-                            <svg className="w-8 h-8" viewBox="0 0 32 32" fill="none">
-                                <defs>
-                                    <clipPath id="diagClip">
-                                        <rect width="32" height="32" />
-                                    </clipPath>
-                                </defs>
+                            <svg className="w-6 h-6" viewBox="0 0 32 32" fill="none">
+                                <defs><clipPath id="diagClip"><rect width="32" height="32" /></clipPath></defs>
                                 <g clipPath="url(#diagClip)">
                                     <polygon points="0,0 32,0 0,32" className="fill-green-500 group-hover:fill-white transition-colors" />
                                     <polygon points="32,0 32,32 0,32" className="fill-yellow-400 group-hover:fill-white/80 transition-colors" />
@@ -145,56 +138,50 @@ export default function AssignmentEditor({ initialClassId, classes, allStudents,
                             </svg>
                         } />
                     <TypeCard type="structure" color="blue"
-                        title="구조독해" desc="영어 문장을 구조적으로 분석하고 해석 능력을 기르는 정통 학습입니다."
-                        icon={<svg className="w-8 h-8 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>} />
-                    <TypeCard type="analysis" color="sky"
-                        title="본문분석" desc="AI가 지문을 문장별로 분석하여 학습 자료로 배포합니다."
-                        icon={<svg className="w-8 h-8 text-sky-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>}
-                        newBadge={true} />
-
-                    {/* Row 2: 변형문제 객관식, 변형문제 주관식, 구조작문 */}
-                    <TypeCard type="transform" color="violet"
-                        title="변형문제 객관식" desc="AI가 지문을 분석하여 다양한 유형의 수능 스타일 객관식 문제를 자동 생성합니다."
-                        icon={<svg className="w-8 h-8 text-violet-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>} />
-                    <TypeCard type="transform_subjective" color="slate"
-                        title="변형문제 주관식" desc="AI가 7가지 유형의 서술형 문제를 생성하고, AI가 채점합니다."
-                        icon={<span className="text-3xl group-hover:grayscale-0">✏️</span>} />
+                        title="구조독해" desc="문장 구조 분석 및 해석 학습"
+                        icon={<svg className="w-6 h-6 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>} />
                     <TypeCard type="writing" color="pink"
-                        title="구조작문" desc="26가지 영문법 구문을 AI가 실시간 문제 생성 및 채점하여 영작 실력을 키웁니다."
-                        icon={<span className="text-3xl">✍️</span>} />
+                        title="구조작문" desc="26가지 구문 AI 영작 실시간 채점"
+                        icon={<span className="text-2xl">✍️</span>} />
 
-                    {/* Row 3: 워크북, 듣기세트 */}
-                    <TypeCard type="workbook" color="purple"
-                        title="워크북" desc="지문 하나로 어휘/어법/Mastery 3단계를 한 번에 자동 생성합니다."
-                        icon={<span className="text-3xl">📚</span>} />
-                    <TypeCard type="listening_set" color="teal"
-                        title="듣기세트" desc="수능 듣기평가 17문제 + 독해 10문제를 AI로 생성하고, 실제 시험처럼 TTS로 진행합니다."
-                        icon={<span className="text-3xl">🎧</span>}
+                    {/* Row 2: 본문분석 / 세부순서 / 워크북 */}
+                    <TypeCard type="analysis" color="sky"
+                        title="본문분석" desc="AI 지문 문장별 심층 분석 배포"
+                        icon={<svg className="w-6 h-6 text-sky-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>}
                         newBadge={true} />
                     <TypeCard type="sentence_order" color="amber"
-                        title="세부순서" desc="지문을 문장 단위로 분리하여 드래그로 순서를 맞추는 학습입니다."
-                        icon={<span className="text-3xl">🔀</span>}
+                        title="세부순서" desc="드래그로 문장 순서 맞추기"
+                        icon={<span className="text-2xl">🔀</span>}
                         newBadge={true} />
+                    <TypeCard type="workbook" color="purple"
+                        title="워크북" desc="어휘·어법·Mastery 3단계 자동 생성"
+                        icon={<span className="text-2xl">📚</span>} />
+
+                    {/* Row 3: 변형문제 객관식 / 변형문제 주관식 / 내신대비 일괄생성 */}
+                    <TypeCard type="transform" color="violet"
+                        title="변형문제 객관식" desc="수능 스타일 객관식 AI 자동 생성"
+                        icon={<svg className="w-6 h-6 text-violet-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>} />
+                    <TypeCard type="transform_subjective" color="slate"
+                        title="변형문제 주관식" desc="7가지 서술형 문제 AI 출제·채점"
+                        icon={<span className="text-2xl">✏️</span>} />
+                    <TypeCard type="inaesin_batch" color="rose"
+                        title="내신대비 일괄생성" desc="본문분석·구조독해·변형문제 일괄 생성"
+                        icon={<span className="text-2xl">⚡</span>}
+                        onClick={() => { setAssignmentType('inaesin_batch'); setCreationStep('form'); }} />
+
+                    {/* Row 4: 외부지문 서술형 / 내신모의고사 / 듣기세트 */}
                     <TypeCard type="external_subjective" color="purple"
-                        title="외부지문 서술형" desc="외부 지문으로 내신 서술형 대비 문제를 AI가 출제하고 채점합니다."
-                        icon={<span className="text-3xl">📝</span>}
+                        title="외부지문 서술형" desc="외부 지문 내신 서술형 AI 출제·채점"
+                        icon={<span className="text-2xl">📝</span>}
                         newBadge={true} />
                     <TypeCard type="mock_exam" color="rose"
-                        title="내신모의고사" desc="학교별 출제 패턴을 분석하여 실전과 동일한 형태의 모의고사를 AI가 생성합니다."
-                        icon={<span className="text-3xl">🏫</span>}
+                        title="내신모의고사" desc="학교별 출제패턴 실전 모의고사 생성"
+                        icon={<span className="text-2xl">🏫</span>}
                         newBadge={true} />
-                    {/* 내신대비 일괄출제 - 최하단, 테두리만 */}
-                    <div
-                        onClick={() => { setAssignmentType('inaesin_batch'); setCreationStep('form'); }}
-                        className="group cursor-pointer bg-white border-2 border-dashed border-rose-300 hover:border-rose-500 rounded-3xl p-6 text-center transition-all hover:shadow-xl hover:-translate-y-1 hover:bg-rose-50/30 col-span-1 md:col-span-2 lg:col-span-3"
-                    >
-                        <h3 className="text-lg font-bold text-rose-600 mb-1 flex items-center justify-center gap-2 group-hover:text-rose-700">
-                            ⚡ 내신대비 일괄출제
-                        </h3>
-                        <p className="text-sm text-slate-400">
-                            지문 하나로 본문분석 · 구조독해 · 세부순서 · 변형문제(객관+주관)를 한 번에 생성합니다.
-                        </p>
-                    </div>
+                    <TypeCard type="listening_set" color="teal"
+                        title="듣기세트" desc="수능 듣기 17문제 + 독해 10문제 TTS"
+                        icon={<span className="text-2xl">🎧</span>}
+                        newBadge={true} />
                 </div>
 
                 {isImportModalOpen && (
