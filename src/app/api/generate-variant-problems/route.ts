@@ -78,7 +78,7 @@ export async function POST(req: Request) {
                     choiceExplanations: (problemData.choiceExplanations || []).map((e: string) => (e || '').trim()),
                 };
                 // order 유형 선지 강제 정규화 (재생성 시에도 동일하게 적용)
-                const ORDER_STD = ['(A) - (B) - (C)','(A) - (C) - (B)','(B) - (A) - (C)','(B) - (C) - (A)','(C) - (A) - (B)'];
+                const ORDER_STD = ['(A) - (C) - (B)','(B) - (A) - (C)','(B) - (C) - (A)','(C) - (A) - (B)','(C) - (B) - (A)'];
                 function normOrd(p: any) {
                     if (p.type !== 'order') return p;
                     const n = (c: string) => c.trim().replace(/\s*[–—]\s*/g,' - ').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim();
@@ -162,13 +162,13 @@ export async function POST(req: Request) {
         const fallbackPool = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion', 'title', 'claim', 'flow', 'summary', 'meaning', 'mismatch']
             .filter(t => !problemTypes.includes(t));
 
-        // ★ order 유형 선지 서버측 강제 정규화
+        // ★ order 유형 선지 서버측 강제 정규화 (수능 실제 5개 고정)
         const ORDER_CHOICES_STANDARD = [
-            '(A) - (B) - (C)',
             '(A) - (C) - (B)',
             '(B) - (A) - (C)',
             '(B) - (C) - (A)',
             '(C) - (A) - (B)',
+            '(C) - (B) - (A)',
         ];
         function normalizeOrderProblemServer(prob: any): any {
             if (prob.type !== 'order') return prob;

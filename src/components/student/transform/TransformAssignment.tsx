@@ -483,12 +483,13 @@ export default function TransformAssignment({
     };
 
     // 수능 표준 순서 유형 선지 (고정)
+    // 수능 표준 순서 유형 선지 5개 (수능 실제 출제 형식)
     const ORDER_CHOICES_STANDARD = [
-        '(A) - (B) - (C)',
         '(A) - (C) - (B)',
         '(B) - (A) - (C)',
         '(B) - (C) - (A)',
         '(C) - (A) - (B)',
+        '(C) - (B) - (A)',
     ];
 
     // order 유형 선지 + correctAnswer 동시 정규화

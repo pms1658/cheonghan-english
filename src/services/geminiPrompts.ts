@@ -51,22 +51,33 @@ const CONSTRUCTION_RULES: Record<string, string> = {
   `,
   blank: 'Insert a blank `__________` at a critical point (conclusion or key logic).',
   order: `
-    - **Structure**: Break the passage into a [Box] and (A), (B), (C) sections.
+    - **★★★ PASSAGE PRESERVATION (CRITICAL) ★★★**:
+      - Use the EXACT original sentences verbatim. Do NOT rewrite or paraphrase.
+      - BOX = first 1-3 sentences of the passage (the intro/context that provides orientation).
+      - (A), (B), (C) = the REMAINING sentences, split into 3 groups but assigned labels in SCRAMBLED order (NOT the original reading order).
     - **Formatting**:
-      - Wrap the starting box content in \`[[BOX]]...[[/BOX]]\`.
-      - Label sections as (A) ..., (B) ..., (C) ... using a single newline between them.
-    - **Logic**: Ensure there is a clear logical flow.
-    - **★★★ CHOICES — FIXED SET (CRITICAL) ★★★**:
-      - The "choices" array MUST be EXACTLY these 5 items in this EXACT order (수능 표준 선지):
-        1. "(A) - (B) - (C)"
-        2. "(A) - (C) - (B)"
-        3. "(B) - (A) - (C)"
-        4. "(B) - (C) - (A)"
-        5. "(C) - (A) - (B)"
-      - DO NOT change, reorder, or duplicate these choices.
-      - Set "correctAnswer" to the 0-based index (0~4) of the choice that matches the correct reading order.
-      - ✅ CORRECT: "choices": ["(A) - (B) - (C)", "(A) - (C) - (B)", "(B) - (A) - (C)", "(B) - (C) - (A)", "(C) - (A) - (B)"]
-      - ❌ WRONG: Creating your own choices or duplicating any choice.
+      - Wrap the box content in \`[[BOX]]...[[/BOX]]\`.
+      - Label sections as (A) ..., (B) ..., (C) ... with a newline between each.
+    - **★★★ DETERMINING correctAnswer — MANDATORY ★★★**:
+      After creating (A)(B)(C), determine the correct answer by these steps:
+      1. Which label (A/B/C) appears FIRST in the original passage after the BOX?
+      2. Which appears SECOND?
+      3. Which appears LAST?
+      4. Construct: "(FIRST) - (SECOND) - (LAST)" and find its 0-based index in the 5 choices below.
+      5. Set correctAnswer = that index.
+      
+      VERIFY before outputting: if (A) contains the text that appears earliest in the original passage, then (A) must be first in your correctAnswer sequence.
+    - **★★★ CHOICES — FIXED (DO NOT CHANGE) ★★★**:
+      - The "choices" array MUST be EXACTLY these 5 items in EXACTLY this order:
+        1. "(A) - (C) - (B)"
+        2. "(B) - (A) - (C)"
+        3. "(B) - (C) - (A)"
+        4. "(C) - (A) - (B)"
+        5. "(C) - (B) - (A)"
+      - DO NOT use "(A) - (B) - (C)" — it is NOT in the standard CSAT choices.
+      - ✅ CORRECT: ["(A) - (C) - (B)", "(B) - (A) - (C)", "(B) - (C) - (A)", "(C) - (A) - (B)", "(C) - (B) - (A)"]
+      - ❌ WRONG: "(A) - (B) - (C)" or any other sequence not in the list above.
+      - correctAnswer is 0-based (0 = choice 1, ..., 4 = choice 5).
   `,
   insertion: `
     - **Structure**: Separate the Target Sentence from the Passage.

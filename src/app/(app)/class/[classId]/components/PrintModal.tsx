@@ -45,11 +45,11 @@ export default function PrintModal({
 
         // 수능 표준 순서 선지 (인쇄용)
         const ORDER_CHOICES_STANDARD = [
-            '(A) - (B) - (C)',
             '(A) - (C) - (B)',
             '(B) - (A) - (C)',
             '(B) - (C) - (A)',
             '(C) - (A) - (B)',
+            '(C) - (B) - (A)',
         ];
 
         // order 유형 선지+정답 정규화 (PrintModal 내부용)
