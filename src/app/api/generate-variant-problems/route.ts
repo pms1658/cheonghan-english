@@ -86,23 +86,33 @@ export async function POST(req: Request) {
                     const ct = nc[p.correctAnswer] ?? '';
                     const remapped = ORDER_STD.indexOf(ct);
                     let r = { ...p, choices: ORDER_STD, correctAnswer: remapped >= 0 ? remapped : 0 };
-                    // 원문 위치 추적으로 correctAnswer 검증
+                    // split 방식으로 (A)(B)(C) 섹션 추출 후 원문 위치로 정답 검증
                     try {
                         const q = p.question || '';
-                        const snap = (label: string) => {
-                            const m = q.match(new RegExp(`\\(${label}\\)\\s*([\\s\\S]{5,100}?)(?=\\n\\s*\\([A-C]\\)|\\n\\n|$)`));
-                            return m ? m[1].replace(/\[\[.*?\]\]/g,'').replace(/\s+/g,' ').trim().substring(0,40) : '';
-                        };
-                        const sA = snap('A'), sB = snap('B'), sC = snap('C');
+                        const noBox = q.replace(/\[\[BOX\]\][\s\S]*?\[\[\/BOX\]\]/gi,'').replace(/\[\[\/BOX\]\]/gi,'').trim();
+                        const parts = noBox.split(/\(([A-C])\)/);
+                        const secs: Record<string,string> = {};
+                        for (let i=1; i<parts.length; i+=2) {
+                            const lbl=parts[i], cnt=(parts[i+1]||'').replace(/\[\[.*?\]\]/g,'').replace(/\s+/g,' ').trim();
+                            if (lbl && cnt.length>=5) secs[lbl]=cnt.substring(0,50);
+                        }
+                        const sA=secs['A']||'', sB=secs['B']||'', sC=secs['C']||'';
                         if (sA && sB && sC) {
                             const pf = passage.replace(/\s+/g,' ');
-                            const fp = (s: string) => { for(let l=Math.min(s.length,35);l>=8;l-=5){ const i=pf.indexOf(s.substring(0,l)); if(i>=0) return i; } return -1; };
+                            const fp = (s:string)=>{ for(let l=Math.min(s.length,45);l>=10;l-=5){ const i=pf.indexOf(s.substring(0,l)); if(i>=0) return i; } return -1; };
                             const pA=fp(sA), pB=fp(sB), pC=fp(sC);
                             if (pA>=0 && pB>=0 && pC>=0) {
                                 const sorted=[{l:'A',p:pA},{l:'B',p:pB},{l:'C',p:pC}].sort((a,b)=>a.p-b.p);
                                 const seq=`(${sorted[0].l}) - (${sorted[1].l}) - (${sorted[2].l})`;
                                 const vi=ORDER_STD.indexOf(seq);
-                                if (vi>=0) r={ ...r, correctAnswer: vi };
+                                if (vi>=0) { r={...r,correctAnswer:vi}; }
+                                else {
+                                    // 표준에 없는 순서 (AI가 레이블 미스크램블) → 가장 가까운 표준 선지 매핑
+                                    const maps:Record<string,string>={'A-B-C':'(A) - (C) - (B)','A-C-B':'(A) - (C) - (B)','B-A-C':'(B) - (A) - (C)','B-C-A':'(B) - (C) - (A)','C-A-B':'(C) - (A) - (B)','C-B-A':'(C) - (B) - (A)'};
+                                    const key=`${sorted[0].l}-${sorted[1].l}-${sorted[2].l}`;
+                                    const fi=ORDER_STD.indexOf(maps[key]??'');
+                                    if (fi>=0) r={...r,correctAnswer:fi};
+                                }
                             }
                         }
                     } catch(_) {}
@@ -207,27 +217,42 @@ export async function POST(req: Request) {
             let result = { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: remappedAnswer };
 
             // Step 2: 원문 위치 추적으로 correctAnswer 자동 검증·교정
-            // AI가 해설에는 맞는 정답을 썼지만 correctAnswer 인덱스를 틀리게 설정하는 경우를 잡아냄
+            // split 방식으로 (A)(B)(C) 섹션 추출 → 훨씬 더 신뢰성 있음
             try {
                 const q = prob.question || '';
-                // (A) / (B) / (C) 섹션의 첫 문장 추출
-                const extractSnippet = (label: string): string => {
-                    const regex = new RegExp(
-                        `\\(${label}\\)\\s*([\\s\\S]{5,150}?)(?=\\n\\s*\\([A-C]\\)|\\n\\n|$)`
-                    );
-                    const m = q.match(regex);
-                    if (!m) return '';
-                    // 마커 태그 제거 후 앞 40자
-                    return m[1].replace(/\[\[.*?\]\]/g, '').replace(/\s+/g, ' ').trim().substring(0, 40);
-                };
-                const snipA = extractSnippet('A');
-                const snipB = extractSnippet('B');
-                const snipC = extractSnippet('C');
+
+                // [[BOX]]...[[/BOX]] 제거 후, (A)/(B)/(C) 레이블로 split
+                const noBox = q
+                    .replace(/\[\[BOX\]\][\s\S]*?\[\[\/BOX\]\]/gi, '')
+                    .replace(/\[\[\/BOX\]\]/gi, '') // 혹시 닫힘 태그만 남은 경우
+                    .trim();
+
+                // "(A)", "(B)", "(C)" 로 나눠 각 섹션 텍스트 추출
+                const sectionParts = noBox.split(/\(([A-C])\)/);
+                // sectionParts = [before, 'A', A_content, 'B', B_content, 'C', C_content]
+                const sections: Record<string, string> = {};
+                for (let i = 1; i < sectionParts.length; i += 2) {
+                    const lbl = sectionParts[i];
+                    const content = (sectionParts[i + 1] || '')
+                        .replace(/\[\[.*?\]\]/g, '')  // 마커 제거
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    if (lbl && content.length >= 5) {
+                        sections[lbl] = content.substring(0, 50);
+                    }
+                }
+
+                const snipA = sections['A'] || '';
+                const snipB = sections['B'] || '';
+                const snipC = sections['C'] || '';
+
+                console.log('[API] Order snippets:', { A: snipA.substring(0,25), B: snipB.substring(0,25), C: snipC.substring(0,25) });
 
                 if (snipA && snipB && snipC) {
                     const passageFlat = passage.replace(/\s+/g, ' ');
                     const findPos = (snippet: string): number => {
-                        for (let len = Math.min(snippet.length, 35); len >= 8; len -= 5) {
+                        // 길이를 줄여가며 검색
+                        for (let len = Math.min(snippet.length, 45); len >= 10; len -= 5) {
                             const p = passageFlat.indexOf(snippet.substring(0, len));
                             if (p >= 0) return p;
                         }
@@ -244,14 +269,36 @@ export async function POST(req: Request) {
                             .sort((a, b) => a.p - b.p);
                         const correctSeq = `(${sorted[0].l}) - (${sorted[1].l}) - (${sorted[2].l})`;
                         const verifiedIdx = ORDER_CHOICES_STANDARD.indexOf(correctSeq);
+
                         if (verifiedIdx >= 0) {
+                            // 표준 선지에 있는 순서 → 그대로 사용
                             if (verifiedIdx !== result.correctAnswer) {
                                 console.log(`[API] Order correctAnswer verified: ${result.correctAnswer}→${verifiedIdx} ("${correctSeq}")`);
                             }
                             result = { ...result, correctAnswer: verifiedIdx };
                         } else {
-                            // 계산된 순서가 표준 선지에 없음 (AI가 레이블을 스크램블하지 않은 경우)
-                            console.log(`[API] Order verify: "${correctSeq}" not in standard choices — keeping remapped answer`);
+                            // "(A)-(B)-(C)" 처럼 표준에 없는 순서 → AI가 레이블을 스크램블하지 않음
+                            // 이 경우 (A)가 첫 번째이므로, 두 번째(sorted[1])와 세 번째(sorted[2])를 찾아
+                            // 가능한 표준 선지로 매핑
+                            console.log(`[API] Order verify: "${correctSeq}" not in standard choices — labels not scrambled`);
+                            // 첫 번째가 A임을 알 때: "(A)-(x)-(y)"는 표준에서 "(A)-(C)-(B)"만 존재
+                            // 두 번째가 B임을 알 때: "(x)-(B)-(y)"는 표준에서 "(C)-(B)-(A)"만 존재
+                            const first = sorted[0].l, second = sorted[1].l, third = sorted[2].l;
+                            const mappings: Record<string, string> = {
+                                'A-B-C': '(A) - (C) - (B)', // A가 첫 번째, B가 두 번째면 C가 세 번째 → 선지는 (A)-(C)-(B)나 (A)-(x)-(y) 중 유일한 것
+                                'A-C-B': '(A) - (C) - (B)',
+                                'B-A-C': '(B) - (A) - (C)',
+                                'B-C-A': '(B) - (C) - (A)',
+                                'C-A-B': '(C) - (A) - (B)',
+                                'C-B-A': '(C) - (B) - (A)',
+                            };
+                            const key = `${first}-${second}-${third}`;
+                            const fallbackSeq = mappings[key];
+                            const fallbackIdx = fallbackSeq ? ORDER_CHOICES_STANDARD.indexOf(fallbackSeq) : -1;
+                            if (fallbackIdx >= 0) {
+                                console.log(`[API] Order correctAnswer fallback: ${result.correctAnswer}→${fallbackIdx} ("${fallbackSeq}")`);
+                                result = { ...result, correctAnswer: fallbackIdx };
+                            }
                         }
                     }
                 }
