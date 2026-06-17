@@ -83,11 +83,30 @@ export async function POST(req: Request) {
                     if (p.type !== 'order') return p;
                     const n = (c: string) => c.trim().replace(/\s*[–—]\s*/g,' - ').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim();
                     const nc = p.choices.map(n);
-                    const ok = nc.length===5 && nc.every((x: string,i: number)=>x===ORDER_STD[i]);
-                    if (ok) return p;
-                    const ct = nc[p.correctAnswer]??'';
-                    const idx = ORDER_STD.indexOf(ct);
-                    return { ...p, choices: ORDER_STD, correctAnswer: idx>=0?idx:0 };
+                    const ct = nc[p.correctAnswer] ?? '';
+                    const remapped = ORDER_STD.indexOf(ct);
+                    let r = { ...p, choices: ORDER_STD, correctAnswer: remapped >= 0 ? remapped : 0 };
+                    // 원문 위치 추적으로 correctAnswer 검증
+                    try {
+                        const q = p.question || '';
+                        const snap = (label: string) => {
+                            const m = q.match(new RegExp(`\\(${label}\\)\\s*([\\s\\S]{5,100}?)(?=\\n\\s*\\([A-C]\\)|\\n\\n|$)`));
+                            return m ? m[1].replace(/\[\[.*?\]\]/g,'').replace(/\s+/g,' ').trim().substring(0,40) : '';
+                        };
+                        const sA = snap('A'), sB = snap('B'), sC = snap('C');
+                        if (sA && sB && sC) {
+                            const pf = passage.replace(/\s+/g,' ');
+                            const fp = (s: string) => { for(let l=Math.min(s.length,35);l>=8;l-=5){ const i=pf.indexOf(s.substring(0,l)); if(i>=0) return i; } return -1; };
+                            const pA=fp(sA), pB=fp(sB), pC=fp(sC);
+                            if (pA>=0 && pB>=0 && pC>=0) {
+                                const sorted=[{l:'A',p:pA},{l:'B',p:pB},{l:'C',p:pC}].sort((a,b)=>a.p-b.p);
+                                const seq=`(${sorted[0].l}) - (${sorted[1].l}) - (${sorted[2].l})`;
+                                const vi=ORDER_STD.indexOf(seq);
+                                if (vi>=0) r={ ...r, correctAnswer: vi };
+                            }
+                        }
+                    } catch(_) {}
+                    return r;
                 }
                 const problem = normOrd(rawProblem);
                 return NextResponse.json({ problem });
@@ -172,23 +191,75 @@ export async function POST(req: Request) {
         ];
         function normalizeOrderProblemServer(prob: any): any {
             if (prob.type !== 'order') return prob;
+
             const norm = (c: string) =>
                 c.trim().replace(/\s*[–—]\s*/g, ' - ').replace(/\s*-\s*/g, ' - ').replace(/\s+/g, ' ').trim();
             const normalized = (prob.choices as string[]).map(norm);
-            const alreadyCorrect = normalized.length === 5 &&
-                normalized.every((n, i) => n === ORDER_CHOICES_STANDARD[i]);
-            if (alreadyCorrect) return prob;
-            // AI가 올바른 선지를 주었지만 순서가 다른 경우 → correctAnswer 재매핑
+
+            // Step 1: 선지를 표준 5개로 교체 + correctAnswer 텍스트 기반 재매핑
             const correctText = normalized[prob.correctAnswer] ?? '';
-            const matchesStandard = ORDER_CHOICES_STANDARD.every(s => normalized.some(n => n === s));
-            const hasDuplicates = new Set(normalized).size < normalized.length;
-            if (!hasDuplicates && matchesStandard && normalized.length === 5) {
+            const alreadyExact = normalized.length === 5 && normalized.every((n, i) => n === ORDER_CHOICES_STANDARD[i]);
+            let remappedAnswer = prob.correctAnswer;
+            if (!alreadyExact) {
                 const idx = ORDER_CHOICES_STANDARD.indexOf(correctText);
-                return { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: idx >= 0 ? idx : prob.correctAnswer };
+                remappedAnswer = idx >= 0 ? idx : 0;
             }
-            // AI가 잘못된 선지를 줬을 경우 → 정답 텍스트로 매핑 시도, 실패시 0
-            const idx = ORDER_CHOICES_STANDARD.indexOf(correctText);
-            return { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: idx >= 0 ? idx : 0 };
+            let result = { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: remappedAnswer };
+
+            // Step 2: 원문 위치 추적으로 correctAnswer 자동 검증·교정
+            // AI가 해설에는 맞는 정답을 썼지만 correctAnswer 인덱스를 틀리게 설정하는 경우를 잡아냄
+            try {
+                const q = prob.question || '';
+                // (A) / (B) / (C) 섹션의 첫 문장 추출
+                const extractSnippet = (label: string): string => {
+                    const regex = new RegExp(
+                        `\\(${label}\\)\\s*([\\s\\S]{5,150}?)(?=\\n\\s*\\([A-C]\\)|\\n\\n|$)`
+                    );
+                    const m = q.match(regex);
+                    if (!m) return '';
+                    // 마커 태그 제거 후 앞 40자
+                    return m[1].replace(/\[\[.*?\]\]/g, '').replace(/\s+/g, ' ').trim().substring(0, 40);
+                };
+                const snipA = extractSnippet('A');
+                const snipB = extractSnippet('B');
+                const snipC = extractSnippet('C');
+
+                if (snipA && snipB && snipC) {
+                    const passageFlat = passage.replace(/\s+/g, ' ');
+                    const findPos = (snippet: string): number => {
+                        for (let len = Math.min(snippet.length, 35); len >= 8; len -= 5) {
+                            const p = passageFlat.indexOf(snippet.substring(0, len));
+                            if (p >= 0) return p;
+                        }
+                        return -1;
+                    };
+                    const posA = findPos(snipA);
+                    const posB = findPos(snipB);
+                    const posC = findPos(snipC);
+
+                    console.log(`[API] Order passage positions: A=${posA} B=${posB} C=${posC}`);
+
+                    if (posA >= 0 && posB >= 0 && posC >= 0) {
+                        const sorted = [{ l: 'A', p: posA }, { l: 'B', p: posB }, { l: 'C', p: posC }]
+                            .sort((a, b) => a.p - b.p);
+                        const correctSeq = `(${sorted[0].l}) - (${sorted[1].l}) - (${sorted[2].l})`;
+                        const verifiedIdx = ORDER_CHOICES_STANDARD.indexOf(correctSeq);
+                        if (verifiedIdx >= 0) {
+                            if (verifiedIdx !== result.correctAnswer) {
+                                console.log(`[API] Order correctAnswer verified: ${result.correctAnswer}→${verifiedIdx} ("${correctSeq}")`);
+                            }
+                            result = { ...result, correctAnswer: verifiedIdx };
+                        } else {
+                            // 계산된 순서가 표준 선지에 없음 (AI가 레이블을 스크램블하지 않은 경우)
+                            console.log(`[API] Order verify: "${correctSeq}" not in standard choices — keeping remapped answer`);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[API] Order passage verification failed, using remapped answer:', e);
+            }
+
+            return result;
         }
 
         async function attemptGeneration(type: string, index: number, retryCount = 0): Promise<any> {
