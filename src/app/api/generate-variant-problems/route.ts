@@ -66,7 +66,7 @@ export async function POST(req: Request) {
                     throw new Error('Invalid Format');
                 }
                 while (problemData.choices.length < 5) problemData.choices.push('-');
-                const problem = {
+                const rawProblem = {
                     id: `prob_${Date.now()}_regen_${Math.random().toString(36).substr(2, 5)}`,
                     type: singleType,
                     question: singleType === 'summary'
@@ -77,6 +77,19 @@ export async function POST(req: Request) {
                     explanation: (problemData.explanation || '').trim(),
                     choiceExplanations: (problemData.choiceExplanations || []).map((e: string) => (e || '').trim()),
                 };
+                // order 유형 선지 강제 정규화 (재생성 시에도 동일하게 적용)
+                const ORDER_STD = ['(A) - (B) - (C)','(A) - (C) - (B)','(B) - (A) - (C)','(B) - (C) - (A)','(C) - (A) - (B)'];
+                function normOrd(p: any) {
+                    if (p.type !== 'order') return p;
+                    const n = (c: string) => c.trim().replace(/\s*[–—]\s*/g,' - ').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim();
+                    const nc = p.choices.map(n);
+                    const ok = nc.length===5 && nc.every((x: string,i: number)=>x===ORDER_STD[i]);
+                    if (ok) return p;
+                    const ct = nc[p.correctAnswer]??'';
+                    const idx = ORDER_STD.indexOf(ct);
+                    return { ...p, choices: ORDER_STD, correctAnswer: idx>=0?idx:0 };
+                }
+                const problem = normOrd(rawProblem);
                 return NextResponse.json({ problem });
             } catch (err) {
                 return createErrorResponse(err, '개별 문제 재생성 실패');
@@ -149,6 +162,35 @@ export async function POST(req: Request) {
         const fallbackPool = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion', 'title', 'claim', 'flow', 'summary', 'meaning', 'mismatch']
             .filter(t => !problemTypes.includes(t));
 
+        // ★ order 유형 선지 서버측 강제 정규화
+        const ORDER_CHOICES_STANDARD = [
+            '(A) - (B) - (C)',
+            '(A) - (C) - (B)',
+            '(B) - (A) - (C)',
+            '(B) - (C) - (A)',
+            '(C) - (A) - (B)',
+        ];
+        function normalizeOrderProblemServer(prob: any): any {
+            if (prob.type !== 'order') return prob;
+            const norm = (c: string) =>
+                c.trim().replace(/\s*[–—]\s*/g, ' - ').replace(/\s*-\s*/g, ' - ').replace(/\s+/g, ' ').trim();
+            const normalized = (prob.choices as string[]).map(norm);
+            const alreadyCorrect = normalized.length === 5 &&
+                normalized.every((n, i) => n === ORDER_CHOICES_STANDARD[i]);
+            if (alreadyCorrect) return prob;
+            // AI가 올바른 선지를 주었지만 순서가 다른 경우 → correctAnswer 재매핑
+            const correctText = normalized[prob.correctAnswer] ?? '';
+            const matchesStandard = ORDER_CHOICES_STANDARD.every(s => normalized.some(n => n === s));
+            const hasDuplicates = new Set(normalized).size < normalized.length;
+            if (!hasDuplicates && matchesStandard && normalized.length === 5) {
+                const idx = ORDER_CHOICES_STANDARD.indexOf(correctText);
+                return { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: idx >= 0 ? idx : prob.correctAnswer };
+            }
+            // AI가 잘못된 선지를 줬을 경우 → 정답 텍스트로 매핑 시도, 실패시 0
+            const idx = ORDER_CHOICES_STANDARD.indexOf(correctText);
+            return { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: idx >= 0 ? idx : 0 };
+        }
+
         async function attemptGeneration(type: string, index: number, retryCount = 0): Promise<any> {
             const prompt = getVariantPrompt(type, targetGrade, passage);
             const tokenLimit = retryCount > 0 ? 16384 : 8192;
@@ -217,13 +259,14 @@ export async function POST(req: Request) {
             }
         });
 
-        // Points calculation
+        // Points calculation (order 유형 선지 정규화 포함)
         const pointsPerProblem = Math.floor(100 / finalProblems.length);
         let remainingPoints = 100;
         const problemsWithPoints = finalProblems.map((p, i) => {
+            const normalized = normalizeOrderProblemServer(p);
             const points = (i === finalProblems.length - 1) ? remainingPoints : pointsPerProblem;
             remainingPoints -= points;
-            return { ...p, points };
+            return { ...normalized, points };
         });
 
         return NextResponse.json({ 
