@@ -153,7 +153,8 @@ export function sanitizeSummaryBlanks(questionText: string, choices: string[]): 
 
 /**
  * Sanitize AI-generated choice text.
- * - Remove leading numbered markers (①, 1., 1), etc.)
+ * - Strip HTML tags (AI sometimes generates <b>, <i>, <strong> etc. in choices)
+ * - Remove leading/embedded numbered markers (①, 1., 1), etc.)
  * - Strip markdown bold/italic
  * - Trim whitespace
  */
@@ -161,6 +162,9 @@ export function sanitizeChoiceText(choice: string): string {
     if (!choice) return '';
 
     let cleaned = choice.trim();
+
+    // Strip HTML tags (e.g. <b>③ reported</b> → ③ reported)
+    cleaned = cleaned.replace(/<[^>]+>/g, '');
 
     // Remove leading circled numbers or numbered markers
     cleaned = cleaned.replace(/^[①②③④⑤❶❷❸❹❺]\s*/, '');
@@ -178,6 +182,9 @@ export function sanitizeChoiceText(choice: string): string {
 
     // Remove markdown italic
     cleaned = cleaned.replace(/(?<!\w)\*([^*\n]+)\*(?!\w)/g, '$1');
+
+    // Remove any remaining embedded circled numbers (e.g. "③ reported" → "reported")
+    cleaned = cleaned.replace(/[①②③④⑤❶❷❸❹❺]\s*/g, '');
 
     return cleaned.trim();
 }

@@ -587,13 +587,20 @@ export default function TransformAssignmentForm({
 
                                     {/* Choices */}
                                     <div className="space-y-2 mb-6">
-                                        {problem.choices.map((c, cIdx) => (
+                                        {problem.choices.map((c, cIdx) => {
+                                            const cleanChoice = c
+                                                .replace(/<[^>]+>/g, '')
+                                                .replace(/[①②③④⑤❶❷❸❹❺]\s*/g, '')
+                                                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                                                .trim();
+                                            return (
                                             <div key={cIdx} className={`flex gap-3 text-[14px] ${cIdx === problem.correctAnswer ? 'font-semibold text-[#1e3a5f]' : 'text-[#1d1d1f]'}`}>
                                                 <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold ${cIdx === problem.correctAnswer ? 'bg-[#1e3a5f] text-white' : 'bg-[#e5e5ea] text-[#86868b]'}`}>{cIdx + 1}</span>
-                                                <span className="flex-1">{c}</span>
+                                                <span className="flex-1">{cleanChoice}</span>
                                                 {cIdx === problem.correctAnswer && <span className="text-[10px] bg-[#1e3a5f]/10 text-[#1e3a5f] px-1.5 py-0.5 rounded font-bold self-start mt-0.5">Correct</span>}
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Explanation Box */}

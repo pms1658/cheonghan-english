@@ -590,7 +590,14 @@ export default function TransformAssignment({
     const normalizeChoices = (choices: string[], type: string): string[] => {
         if (type === 'order') return normalizeOrderProblem(choices, 0, type).choices;
         if (type === 'summary') return normalizeSummaryChoices(choices, type);
-        return choices;
+        // 일반 선지: HTML 태그 및 embedded circled numbers 제거 (이미 저장된 오염 데이터 방어)
+        return choices.map(c =>
+            c.replace(/<[^>]+>/g, '')             // <b>③ reported</b> → ③ reported
+             .replace(/[①②③④⑤❶❷❸❹❺]\s*/g, '')  // ③ reported → reported
+             .replace(/\*\*([^*]+)\*\*/g, '$1')   // **text** → text
+             .replace(/(?<!\w)\*([^*\n]+)\*(?!\w)/g, '$1') // *text* → text
+             .trim()
+        );
     };
 
     // order 유형: 선지 + 정답 인덱스 동시 정규화
