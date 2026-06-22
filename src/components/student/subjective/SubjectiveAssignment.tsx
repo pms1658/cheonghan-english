@@ -25,6 +25,9 @@ const TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
     sentence_transform: { label: '문장 전환', emoji: '🔄' },
     korean_summary: { label: '한국어 요약', emoji: '🇰🇷' },
     english_answer: { label: '영어로 답하기', emoji: '🇬🇧' },
+    conditional_blank_writing: { label: '조건부 빈칸 영작', emoji: '✏️' },
+    passage_comprehension_fill: { label: '빈칸 완성', emoji: '🔲' },
+    relative_clause_completion: { label: '관계사 문장 완성', emoji: '🔗' },
 };
 
 const GRAMMAR_LABELS = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)'];
@@ -54,7 +57,7 @@ export default function SubjectiveAssignment({
                 if (p.type === 'grammar_correction') {
                     base.selectedWrong = ['', '', ''];
                     base.reasons = {};
-                } else if (p.type === 'summary_completion') {
+                } else if (p.type === 'summary_completion' || p.type === 'passage_comprehension_fill') {
                     base.blankAnswers = {};
                 } else {
                     base.textAnswer = '';
@@ -132,7 +135,7 @@ export default function SubjectiveAssignment({
         if (a.type === 'grammar_correction') {
             return (a.selectedWrong || []).some(s => s !== '') || Object.values(a.reasons || {}).some(r => r.trim() !== '');
         }
-        if (a.type === 'summary_completion') {
+        if (a.type === 'summary_completion' || a.type === 'passage_comprehension_fill') {
             return Object.values(a.blankAnswers || {}).some(v => v.trim() !== '');
         }
         return (a.textAnswer || '').trim() !== '';
@@ -211,7 +214,7 @@ export default function SubjectiveAssignment({
             if (a.type === 'grammar_correction') {
                 base.selectedWrong = ['', '', ''];
                 base.reasons = {};
-            } else if (a.type === 'summary_completion') {
+            } else if (a.type === 'summary_completion' || a.type === 'passage_comprehension_fill') {
                 base.blankAnswers = {};
             } else {
                 base.textAnswer = '';
@@ -355,7 +358,7 @@ export default function SubjectiveAssignment({
                                                     </div>
                                                 ))}
                                             </div>
-                                        ) : problem.type === 'summary_completion' ? (
+                                        ) : (problem.type === 'summary_completion' || problem.type === 'passage_comprehension_fill') ? (
                                             <div className="text-xs text-slate-700">
                                                 {Object.entries(answer?.blankAnswers || {}).map(([k, v]) => (
                                                     <span key={k} className="mr-3">({k}): <strong>{v || '미입력'}</strong></span>
@@ -706,13 +709,32 @@ export default function SubjectiveAssignment({
                                 {/* TYPE 7: 문장 전환 */}
                                 {currentProblem.type === 'sentence_transform' && (
                                     <div className="space-y-3">
+                                        {/* 원문 + 한국어 해석 */}
                                         <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600">
-                                            <p className="text-[15px] leading-relaxed italic text-slate-800 dark:text-slate-200">{currentProblem.originalForTransform || (currentProblem as any).originalSentence}</p>
+                                            {currentProblem.koreanMeaning && (
+                                                <div className="mb-3 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700">
+                                                    <div className="text-[10px] font-bold text-amber-600 uppercase mb-1">한국어 해석 (영작할 내용)</div>
+                                                    <p className="text-sm font-medium text-amber-900 dark:text-amber-200 leading-relaxed">{currentProblem.koreanMeaning}</p>
+                                                </div>
+                                            )}
+                                            {(currentProblem as any).originalSentence && (
+                                                <p className="text-[14px] leading-relaxed italic text-slate-600 dark:text-slate-300">
+                                                    <span className="text-[10px] font-bold text-slate-400 not-italic mr-2">원문:</span>
+                                                    {(currentProblem as any).originalSentence}
+                                                </p>
+                                            )}
+                                            {!(currentProblem as any).originalSentence && !currentProblem.koreanMeaning && (
+                                                <p className="text-[15px] leading-relaxed italic text-slate-800 dark:text-slate-200">{(currentProblem as any).originalForTransform}</p>
+                                            )}
                                         </div>
                                         {currentProblem.transformCondition && (
-                                            <div className="flex items-start gap-2 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-700">
-                                                <span className="text-purple-500 text-xs mt-0.5">📌</span>
-                                                <span className="text-xs font-bold text-purple-800 dark:text-purple-300">조건: {currentProblem.transformCondition}</span>
+                                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-xl border border-yellow-200 dark:border-yellow-700">
+                                                <div className="text-[10px] font-bold text-yellow-600 uppercase mb-1.5">&lt;조건&gt;</div>
+                                                {currentProblem.transformCondition.split('/').map((cond: string, ci: number) => (
+                                                    <p key={ci} className="text-xs font-bold text-yellow-800 dark:text-yellow-300 leading-relaxed">
+                                                        {ci + 1}. {cond.trim()}
+                                                    </p>
+                                                ))}
                                             </div>
                                         )}
                                         <textarea
@@ -752,6 +774,104 @@ export default function SubjectiveAssignment({
                                             onChange={e => updateTextAnswer(currentIdx, e.target.value)}
                                             placeholder="Answer in English..."
                                             className="w-full h-28 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* TYPE 10: 조건부 빈칸 영작 (conditional_blank_writing) */}
+                                {currentProblem.type === 'conditional_blank_writing' && (
+                                    <div className="space-y-3">
+                                        {/* 지문 with blank */}
+                                        <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600 text-sm leading-[1.9] text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
+                                            {(currentProblem as any).passageWithBlank || '위 지문에서 빈칸을 확인하세요.'}
+                                        </div>
+                                        {/* 조건 박스 */}
+                                        {(currentProblem as any).conditions && (currentProblem as any).conditions.length > 0 && (
+                                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-xl border border-yellow-200 dark:border-yellow-700">
+                                                <div className="text-[10px] font-bold text-yellow-700 uppercase mb-1.5">&lt;조건&gt;</div>
+                                                {(currentProblem as any).conditions.map((cond: string, ci: number) => (
+                                                    <p key={ci} className="text-xs font-bold text-yellow-800 dark:text-yellow-300 leading-relaxed">
+                                                        {ci + 1}. {cond}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <textarea
+                                            value={currentAnswer?.textAnswer || ''}
+                                            onChange={e => updateTextAnswer(currentIdx, e.target.value)}
+                                            placeholder="빈칸에 들어갈 영어 표현을 쓰세요..."
+                                            className="w-full h-24 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-[#1e3a5f] outline-none resize-none"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* TYPE 11: 빈칸 완성 passage_comprehension_fill */}
+                                {currentProblem.type === 'passage_comprehension_fill' && (
+                                    <div className="space-y-3">
+                                        {/* 요약문 with (A)(B) blanks */}
+                                        {(currentProblem as any).summaryText ? (
+                                            <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600 text-sm leading-[1.9] text-slate-800 dark:text-slate-200">
+                                                {(currentProblem as any).summaryText}
+                                            </div>
+                                        ) : (
+                                            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200">
+                                                <p className="text-xs text-amber-700">📖 위 지문을 읽고 (A), (B)에 알맞은 영어 단어를 쓰세요.</p>
+                                            </div>
+                                        )}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {((currentProblem as any).blankAnswers || [{label:'A'},{label:'B'}]).map((blank: any) => (
+                                                <div key={blank.label} className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-[#1e3a5f] w-8 text-center">({blank.label})</span>
+                                                    <input
+                                                        type="text"
+                                                        value={currentAnswer?.blankAnswers?.[blank.label] || ''}
+                                                        onChange={e => updateBlankAnswer(currentIdx, blank.label, e.target.value)}
+                                                        placeholder={`(${blank.label})에 들어갈 단어`}
+                                                        className="flex-1 px-3 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-[#1e3a5f] outline-none"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* TYPE 12: 관계사 문장 완성 (relative_clause_completion) */}
+                                {currentProblem.type === 'relative_clause_completion' && (
+                                    <div className="space-y-3">
+                                        {/* 두 원본 문장 */}
+                                        {(currentProblem as any).sentence1 ? (
+                                            <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-600 space-y-2">
+                                                <div>
+                                                    <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">문장 1</div>
+                                                    <p className="text-sm italic text-slate-800 dark:text-slate-200 leading-relaxed">{(currentProblem as any).sentence1}</p>
+                                                    {(currentProblem as any).koreanMeaning1 && (
+                                                        <p className="text-xs text-slate-500 mt-1">{(currentProblem as any).koreanMeaning1}</p>
+                                                    )}
+                                                </div>
+                                                <div className="border-t border-slate-200 dark:border-slate-600 pt-2">
+                                                    <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">문장 2</div>
+                                                    <p className="text-sm italic text-slate-800 dark:text-slate-200 leading-relaxed">{(currentProblem as any).sentence2}</p>
+                                                    {(currentProblem as any).koreanMeaning2 && (
+                                                        <p className="text-xs text-slate-500 mt-1">{(currentProblem as any).koreanMeaning2}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200">
+                                                <p className="text-xs text-amber-700">📖 위 지문에서 두 문장을 찾아 관계사로 연결하세요.</p>
+                                            </div>
+                                        )}
+                                        {(currentProblem as any).relativeClauseType && (
+                                            <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-700">
+                                                <span className="text-blue-500 text-xs mt-0.5">📌</span>
+                                                <span className="text-xs font-bold text-blue-800 dark:text-blue-300">사용할 관계사: {(currentProblem as any).relativeClauseType}</span>
+                                            </div>
+                                        )}
+                                        <textarea
+                                            value={currentAnswer?.textAnswer || ''}
+                                            onChange={e => updateTextAnswer(currentIdx, e.target.value)}
+                                            placeholder="관계사를 이용하여 두 문장을 한 문장으로 완성하세요..."
+                                            className="w-full h-28 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-[#1e3a5f] outline-none resize-none"
                                         />
                                     </div>
                                 )}

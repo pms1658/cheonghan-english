@@ -21,6 +21,9 @@ const PROBLEM_TYPE_LABELS: { value: SubjectiveProblemType; label: string; desc: 
     { value: 'pronoun_reference', label: '지칭 추론', desc: '대명사 가리키는 대상 서술' },
     { value: 'summary_completion', label: '요약문 완성', desc: '요약문 빈칸 직접 작성' },
     { value: 'sentence_transform', label: '문장 전환', desc: '능동↔수동, 분사구문 등' },
+    { value: 'conditional_blank_writing', label: '조건부 빈칸 영작', desc: '조건 + 지문 빈칸 영작' },
+    { value: 'passage_comprehension_fill', label: '지문 빈칸 완성', desc: '(A)(B) 빈칸 제목' },
+    { value: 'relative_clause_completion', label: '관계사 문장 완성', desc: '두 문장 → 관계사로 합치기' },
 ];
 
 const ALL_GRADES = [
@@ -473,11 +476,49 @@ export default function SubjectiveAssignmentForm({
 
                                     {problem.type === 'sentence_transform' && (
                                         <div className="space-y-2">
-                                            <div className="bg-slate-50 p-3 rounded-xl text-sm leading-relaxed text-slate-800 italic">{problem.originalForTransform || (problem as any).originalSentence}</div>
+                                            {(problem as any).koreanMeaning && (
+                                                <div className="bg-amber-50 px-3 py-2 rounded-lg text-xs font-bold text-amber-700">한국어: {(problem as any).koreanMeaning}</div>
+                                            )}
+                                            <div className="bg-slate-50 p-3 rounded-xl text-sm leading-relaxed text-slate-800 italic">{(problem as any).originalForTransform || (problem as any).originalSentence}</div>
                                             {problem.transformCondition && (
                                                 <div className="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg">📌 조건: {problem.transformCondition}</div>
                                             )}
                                             <div className="text-xs text-slate-400">모범답안: {problem.transformedAnswer}</div>
+                                        </div>
+                                    )}
+
+                                    {(problem as any).type === 'conditional_blank_writing' && (
+                                        <div className="space-y-2">
+                                            <div className="bg-slate-50 p-3 rounded-xl text-sm leading-relaxed text-slate-800 whitespace-pre-wrap line-clamp-4">{(problem as any).passageWithBlank}</div>
+                                            {(problem as any).conditions?.length > 0 && (
+                                                <div className="bg-yellow-50 px-3 py-2 rounded-lg">
+                                                    {(problem as any).conditions.map((c: string, i: number) => (
+                                                        <div key={i} className="text-xs font-bold text-yellow-700">{i + 1}. {c}</div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div className="text-xs text-slate-400">모범답안: {(problem as any).modelAnswer}</div>
+                                        </div>
+                                    )}
+
+                                    {(problem as any).type === 'passage_comprehension_fill' && (
+                                        <div className="space-y-2">
+                                            <div className="bg-slate-50 p-3 rounded-xl text-sm leading-relaxed text-slate-800">{(problem as any).summaryText}</div>
+                                            <div className="text-xs text-slate-400">
+                                                {(problem as any).blankAnswers?.map((b: any) => `(${b.label}): ${b.answer}`).join(', ')}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {(problem as any).type === 'relative_clause_completion' && (
+                                        <div className="space-y-2">
+                                            <div className="bg-slate-50 p-3 rounded-xl text-sm text-slate-800 space-y-1">
+                                                <div className="italic">{(problem as any).sentence1}</div>
+                                                <div className="text-[11px] text-slate-500">{(problem as any).koreanMeaning1}</div>
+                                                <div className="border-t border-slate-200 pt-1 italic">{(problem as any).sentence2}</div>
+                                                <div className="text-[11px] text-slate-500">{(problem as any).koreanMeaning2}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-400">모범답안: {(problem as any).modelAnswer}</div>
                                         </div>
                                     )}
                                 </div>

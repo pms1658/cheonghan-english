@@ -511,6 +511,9 @@ export default function ResultHistoryModal({
             sentence_transform: { label: '문장 전환', emoji: '🔄' },
             korean_summary: { label: '한국어 요약', emoji: '🇰🇷' },
             english_answer: { label: '영어로 답하기', emoji: '🇬🇧' },
+            conditional_blank_writing: { label: '조건부 빈칸 영작', emoji: '✏️' },
+            passage_comprehension_fill: { label: '지문 빈칸 완성', emoji: '📄' },
+            relative_clause_completion: { label: '관계사 완성', emoji: '🔗' },
         };
 
         return (
@@ -569,7 +572,7 @@ export default function ResultHistoryModal({
                                                     </div>
                                                 ))}
                                             </div>
-                                        ) : prob.type === 'summary_completion' ? (
+                                        ) : (prob.type === 'summary_completion' || prob.type === 'passage_comprehension_fill') ? (
                                             <div className="text-[11px] text-slate-700 dark:text-slate-300">
                                                 {Object.entries(answer?.blankAnswers || {}).map(([k, v]) => (
                                                     <span key={k} className="mr-3">({k}): <strong>{(v as string) || '미입력'}</strong></span>

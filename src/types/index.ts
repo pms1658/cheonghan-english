@@ -278,15 +278,18 @@ export interface VariantConfig {
 // ══════════════════════════════════════════
 
 export type SubjectiveProblemType =
-    | 'eng_composition'         // 영작 (문법 조건 + 힌트)
-    | 'sentence_interpretation'  // 해석/의미 서술
-    | 'grammar_correction'       // 어법 교정 (6개중 3개 틀린것 + 이유)
-    | 'blank_fill'               // 빈칸 서술 (선택지 없이 직접 작성)
-    | 'pronoun_reference'        // 지칭 추론 (대명사 가리키는 대상)
-    | 'summary_completion'       // 요약문 완성 (빈칸 단어 직접 작성)
-    | 'sentence_transform'       // 문장 전환 (능동↔수동, 분사구문↔절 등)
-    | 'korean_summary'           // 한국어 요약 (지문 전체를 한국어로 요약 서술)
-    | 'english_answer';          // 영어로 답하기 (내용 이해 질문에 영어로 답변)
+    | 'eng_composition'             // 영작 (문법 조건 + 힌트)
+    | 'sentence_interpretation'     // 해석/의미 서술
+    | 'grammar_correction'          // 어법 교정 (6개중 3개 틀린것 + 이유)
+    | 'blank_fill'                  // 빈칸 서술 (선택지 없이 직접 작성)
+    | 'pronoun_reference'           // 지칭 추론 (대명사 가리키는 대상)
+    | 'summary_completion'          // 요약문 완성 (빈칸 단어 직접 작성)
+    | 'sentence_transform'          // 문장 전환 (능동↔수동, 분사구문↔절 등)
+    | 'korean_summary'              // 한국어 요약 (지문 전체를 한국어로 요약 서술)
+    | 'english_answer'              // 영어로 답하기 (내용 이해 질문에 영어로 답변)
+    | 'conditional_blank_writing'   // 조건부 빈칸 영작 (조건 + 지문 빈칸 영작)
+    | 'passage_comprehension_fill'  // 지문 빈칸 완성 (A)(B) 빈칸 완성
+    | 'relative_clause_completion'; // 관계사 문장 완성 (두 문장 → 관계사로 합치기)
 
 export interface GrammarItem {
     label: string;               // "(a)" ~ "(f)"
@@ -342,6 +345,19 @@ export interface SubjectiveProblem {
     // === 유형9: 영어로 답하기 ===
     comprehensionQuestion?: string;     // 내용 이해 질문 (영어)
     englishModelAnswer?: string;        // 영어 모범답안
+
+    // === 유형10: 조건부 빈칸 영작 ===
+    conditions?: string[];              // 조건 목록 (e.g., ["수동태를 사용할 것", "8단어 이내로 쓸 것"])
+    scoringCriteria?: string;           // 채점 기준
+
+    // === 유형11: 지문 빈칸 완성 (passage_comprehension_fill) ===
+    // summaryText, blankAnswers 필드 재활용 (유형6과 동일 구조)
+
+    // === 유형12: 관계사 문장 완성 ===
+    sentence1?: string;                 // 첫 번째 문장 (영어)
+    sentence2?: string;                 // 두 번째 문장 (영어)
+    koreanMeaning1?: string;            // 첫 번째 문장 한국어 뜻
+    koreanMeaning2?: string;            // 두 번째 문장 한국어 뜻
 }
 
 export interface SubjectiveConfig {

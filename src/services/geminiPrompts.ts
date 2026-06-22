@@ -57,7 +57,11 @@ const CONSTRUCTION_RULES: Record<string, string> = {
       - (A), (B), (C) = the REMAINING sentences, split into 3 groups but assigned labels in SCRAMBLED order (NOT the original reading order).
     - **Formatting**:
       - Wrap the box content in \`[[BOX]]...[[/BOX]]\`.
-      - Label sections as (A) ..., (B) ..., (C) ... with a newline between each.
+      - **★★★ CRITICAL — Each (A), (B), (C) section MUST be on its own line with a blank line between them ★★★**:
+        - ✅ CORRECT (newlines between sections):
+          [[BOX]]주어진 문장[[/BOX]]\n\n(A) 첫 번째 단락...\n\n(B) 두 번째 단락...\n\n(C) 세 번째 단락...
+        - ❌ WRONG (all in one line): [[BOX]]주어진 문장[[/BOX]] (A) 첫 번째... (B) 두 번째... (C) 세 번째...
+      - In JSON string, use \\n to represent each newline between sections.
     - **★★★ DETERMINING correctAnswer — MANDATORY ★★★**:
       After creating (A)(B)(C), determine the correct answer by these steps:
       1. Which label (A/B/C) appears FIRST in the original passage after the BOX?
@@ -762,9 +766,12 @@ export const getSubjectiveProblemsPrompt = (passage: string, grade: string, prob
       "blank_fill": "### TYPE: blank_fill (빈칸 서술)\\n- Create a blank in the passage (replace with __________ ).\\n- Provide the answer and context.\\n- Focus on key vocabulary or logical transitions.",
       "pronoun_reference": "### TYPE: pronoun_reference (지칭 추론)\\n- Select a pronoun that refers to an important preceding noun phrase.\\n- Ask what it refers to in Korean.",
       "summary_completion": "### TYPE: summary_completion (요약문 완성)\\n- Provide a summary of the passage with two blanks (A) and (B).\\n- Students must provide the words for blanks.",
-      "sentence_transform": "### TYPE: sentence_transform (문장 전환)\\n- Select a complex sentence.\\n- Require transformation (e.g., Active to Passive, Participle construction, etc.).",
+      "sentence_transform": "### TYPE: sentence_transform (문장 전환)\\n- Select a sentence from the passage.\\n- Require transformation (e.g., Active to Passive, using a participle, etc.).\\n- CRITICAL: You MUST include a \"koreanMeaning\" field with the Korean translation of the ORIGINAL sentence — this is what the student reads to know what to write.\\n- Also include \"originalSentence\" (the original English) and \"transformCondition\" (the condition in Korean, e.g., \"수동태를 사용할 것\", \"8단어 이내로 쓸 것\").",
       "korean_summary": "### TYPE: korean_summary (한국어 요약)\\n- Ask the student to summarize the main point in 2-3 Korean sentences.",
-      "english_answer": "### TYPE: english_answer (영어로 답하기)\\n- Ask a comprehension question that requires a short English answer."
+      "english_answer": "### TYPE: english_answer (영어로 답하기)\\n- Ask a comprehension question that requires a short English answer.",
+      "conditional_blank_writing": "### TYPE: conditional_blank_writing (조건부 빈칸 영작)\\n- Find a sentence in the passage with a key clause/phrase, and remove it to create a blank ( __________ ) in the passage.\\n- CRITICAL: The passage shown to students MUST contain the blank ( __________ ) where the answer goes.\\n- Provide 2-3 conditions in Korean (e.g., 수동태를 사용할 것, 특정 단어 포함, 단어 수 제한).\\n- Field \"passageWithBlank\": the FULL passage text with __________ at the blank position.\\n- Field \"conditions\": array of Korean condition strings.\\n- Field \"modelAnswer\": the English phrase/clause that fills the blank.\\n- Field \"scoringCriteria\": Korean description of how to score (e.g., 수동태 구조 2점, 단어 포함 1점, 단어 수 준수 1점).",
+      "passage_comprehension_fill": "### TYPE: passage_comprehension_fill (지문 이해 빈칸 완성)\\n- Based on the passage content, create a summary sentence or paragraph with TWO blanks: (A) __________ and (B) __________.\\n- CRITICAL: The summaryText field MUST literally contain \"(A) __________\" and \"(B) __________\" as visible text — do NOT fill in the answers.\\n- The student reads the passage and fills in (A) and (B) with the appropriate English words.\\n- Field \"summaryText\": the summary with (A) __________ and (B) __________ visible in the text.\\n- Field \"blankAnswers\": [{\"label\": \"A\", \"answer\": \"word_A\"}, {\"label\": \"B\", \"answer\": \"word_B\"}]\\n- Field \"scoringCriteria\": Korean scoring description.",
+      "relative_clause_completion": "### TYPE: relative_clause_completion (관계사 문장 완성)\\n- Select TWO sentences from the passage that can be combined using a relative clause (who, which, that, where, when, whose).\\n- CRITICAL: You MUST provide both original sentences so the student knows what to combine.\\n- Field \"sentence1\": the first original English sentence.\\n- Field \"sentence2\": the second original English sentence.\\n- Field \"koreanMeaning1\": Korean translation of sentence1.\\n- Field \"koreanMeaning2\": Korean translation of sentence2.\\n- Field \"relativeClauseType\": which relative pronoun/adverb to use (e.g., \"관계대명사 who\", \"관계부사 where\").\\n- Field \"modelAnswer\": the combined sentence using a relative clause.\\n- Field \"scoringCriteria\": Korean scoring description."
   };
 
   const selectedTypes = problemTypes ? problemTypes.map(t => allTypes[t as keyof typeof allTypes]).join('\n\n') : Object.values(allTypes).join('\n\n');
@@ -835,9 +842,10 @@ ${passage}
     },
     {
       "type": "sentence_transform",
-      "instruction": "다음 문장을 주어진 조건에 맞게 바꾸어 쓰시오.",
-      "originalSentence": "Original sentence",
-      "transformCondition": "능동태를 수동태로 바꾸시오",
+      "instruction": "다음 글을 읽고, 조건에 맞게 빈칸에 들어갈 말을 영어로 쓰시오.",
+      "originalSentence": "Original English sentence from passage",
+      "koreanMeaning": "원문 문장의 한국어 해석 — 학생이 이 해석을 보고 영작함",
+      "transformCondition": "수동태를 사용할 것 / 8단어 이내로 쓸 것",
       "transformedAnswer": "Model transformed sentence"
     },
     {
@@ -850,6 +858,35 @@ ${passage}
       "instruction": "다음 질문에 영어로 답하시오.",
       "comprehensionQuestion": "What is the main point the author is trying to make?",
       "englishModelAnswer": "English model answer (1-2 sentences)"
+    },
+    {
+      "type": "conditional_blank_writing",
+      "instruction": "다음 글을 읽고, 조건에 맞게 빈칸에 들어갈 말을 영어로 쓰시오.",
+      "passageWithBlank": "The full passage text... One might really fancy that __________.",
+      "conditions": ["수동태를 사용할 것", "different 또는 various를 포함할 것", "8단어 이내로 쓸 것"],
+      "modelAnswer": "one species was modified for different purposes",
+      "scoringCriteria": "수동태 구조(was modified) 2점, different/various 포함 1점, 문맥 적합성 1점, 단어 수 준수 1점"
+    },
+    {
+      "type": "passage_comprehension_fill",
+      "instruction": "다음 글을 읽고 빈칸 (A), (B)에 들어갈 알맞은 말을 영어로 쓰시오.",
+      "summaryText": "These sacred mountain temples are the tallest of all the (A) __________ temples, buildings that no man can build, and the world seems (B) __________.",
+      "blankAnswers": [
+        { "label": "A", "answer": "temples" },
+        { "label": "B", "answer": "perfect" }
+      ],
+      "scoringCriteria": "(A) temples (산을 신성한 사원으로 묘사) 3점, (B) perfect (완벽하다고 표현) 3점"
+    },
+    {
+      "type": "relative_clause_completion",
+      "instruction": "다음 두 문장을 관계사를 이용하여 한 문장으로 완성하시오.",
+      "sentence1": "First original English sentence from passage.",
+      "sentence2": "Second original English sentence from passage.",
+      "koreanMeaning1": "첫 번째 문장의 한국어 해석",
+      "koreanMeaning2": "두 번째 문장의 한국어 해석",
+      "relativeClauseType": "관계부사 where",
+      "modelAnswer": "The combined sentence using a relative clause.",
+      "scoringCriteria": "관계사 사용 2점, 문장 완성도 2점"
     }
   ],
   "modifiedPassage": ""
@@ -881,14 +918,14 @@ export const getSubjectiveGradingPrompt = (problems: any[], answers: any[], pass
         .filter((s: string) => s)
         .map((s: string) => `${s}: ${reasons[s] || '(이유 미입력)'}`)
         .join(' / ') || '(미응답)';
-    } else if (p.type === 'summary_completion') {
-      // 유형6: 빈칸별 답안
+    } else if (p.type === 'summary_completion' || p.type === 'passage_comprehension_fill') {
+      // 유형6/11: 빈칸별 답안
       const blanks = ans.blankAnswers || {};
       studentAnswer = Object.entries(blanks)
         .map(([k, v]) => `(${k}): ${v || '(미입력)'}`)
         .join(', ') || '(미응답)';
     } else {
-      // 유형1,2,4,5,7: 텍스트 답안
+      // 나머지 유형: 텍스트 답안
       studentAnswer = ans.textAnswer || '(미응답)';
     }
     
@@ -948,9 +985,12 @@ For each problem, grade the student's answer on a scale of 0-100.
 - **blank_fill**: Semantically correct with spelling issues = 80+. Close in meaning = 50-60. NEVER give 0 for a relevant attempt.
 - **pronoun_reference**: Correct = 100, Partially correct = 70, Related but wrong = 40, Wrong = 0.
 - **summary_completion**: Each blank = 50% of score. Synonyms and equivalent words accepted generously.
-- **sentence_transform**: Correct in spirit with minor errors = 60-75pts. Understood type but made errors = 40-50pts.
+- **sentence_transform**: Correct in spirit with minor errors = 60-75pts. Understood type but made errors = 40-50pts. Check koreanMeaning matches transformedAnswer.
 - **korean_summary**: Captures main theme = 70+ even if details missing. Only deduct heavily for completely different topic.
 - **english_answer**: Factually correct with grammar issues = 70+. Short correct answers fully accepted.
+- **conditional_blank_writing**: Check against modelAnswer and scoringCriteria. Each condition met = partial credit. Passive structure correct = major points. Semantically close = 60+.
+- **passage_comprehension_fill**: Each blank (A)/(B) = 50% each. Accept synonyms/paraphrases. Correct concept but different word form = 70+.
+- **relative_clause_completion**: Relative clause correctly used = 60pts base. Complete sentence = 40pts extra. Minor errors in non-relative parts = no deduction.
 
 ### OUTPUT FORMAT (JSON Only):
 {

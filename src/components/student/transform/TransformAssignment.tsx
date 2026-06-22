@@ -646,10 +646,15 @@ export default function TransformAssignment({
             .replace(/\[\[U\]\]/gi, "<u>")
             .replace(/\[\[\/U\]\]/gi, "</u>")
             .replace(/\[\[BR\]\]/gi, "<br/>")
-            // Add subtle spacing before (A), (B), (C) paragraph markers in order-type questions
-            .replace(/\n(\([A-C]\))/g, "<div style='margin-top:0.6em'></div>$1")
-            // Collapse excessive blank lines (3+ newlines → 2)
-            .replace(/\n{3,}/g, '\n\n');
+            // ★★★ ORDER TYPE FIX: (A)/(B)/(C) section line breaks ★★★
+            // Any newline(s) before (A),(B),(C) → double <br/> + bold label
+            .replace(/\n+\s*\((A|B|C)\)\s*/g, '<br/><br/><strong>($1)</strong>&nbsp;')
+            // (A)/(B)/(C) immediately after </div> (box closing tag)
+            .replace(/(<\/div>)\s*\((A|B|C)\)\s*/g, '$1<br/><br/><strong>($2)</strong>&nbsp;')
+            // Remaining \n → <br/>
+            .replace(/\n/g, '<br/>')
+            // Collapse 3+ consecutive <br/> to 2
+            .replace(/(<br\/>){3,}/g, '<br/><br/>');
     };
 
     return (
@@ -733,7 +738,7 @@ export default function TransformAssignment({
 
                                     {/* Passage Area - Optimized Reading Experience */}
                                     <div
-                                        className="text-[16px] md:text-[17px] leading-[1.6] md:leading-[1.7] font-sans text-slate-900 dark:text-slate-200 mb-8 whitespace-pre-wrap select-text tracking-[-0.015em]"
+                                        className="text-[16px] md:text-[17px] leading-[1.6] md:leading-[1.7] font-sans text-slate-900 dark:text-slate-200 mb-8 select-text tracking-[-0.015em]"
                                         dangerouslySetInnerHTML={{ __html: formatQuestionText(currentProblem.question) }}
                                     />
 
@@ -895,7 +900,7 @@ export default function TransformAssignment({
                                             <p className="text-[13px] font-bold text-slate-600 dark:text-slate-400 mb-3">{getKoreanQuestion(prob.type)}</p>
 
                                             <div
-                                                className="text-[15px] leading-relaxed text-slate-900 dark:text-slate-200 mb-4 bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200/30 dark:border-white/10 whitespace-pre-wrap"
+                                                className="text-[15px] leading-relaxed text-slate-900 dark:text-slate-200 mb-4 bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200/30 dark:border-white/10"
                                                 dangerouslySetInnerHTML={{ __html: formatQuestionText(prob.question) }}
                                             />
 
