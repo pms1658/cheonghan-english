@@ -244,6 +244,11 @@ export default function DesktopAssignment({
         const studentData = getStudentData(student);
         if (!studentData.id) return <div className="flex-1 flex items-center justify-center min-h-[40vh]">Student session not found. Please log in again.</div>;
 
+        const modeParam = searchParams.get('mode');
+        const wrongParam = searchParams.get('wrong');
+        const retryMode = (modeParam === 'continue' ? 'continue' : modeParam === 'wrong_only' ? 'wrong_only' : 'full') as 'full' | 'wrong_only' | 'continue';
+        const wrongMcqIndices = wrongParam ? wrongParam.split(',').map(Number).filter((n: number) => !isNaN(n)) : [];
+
         return (
             <motion.div className="fixed top-0 bottom-0 right-0 z-[100] bg-slate-50 overflow-y-auto" style={{ left: 'var(--sidebar-w, 0px)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.4, 0.45, 1] }}>
                 <ErrorBoundary>
@@ -252,6 +257,8 @@ export default function DesktopAssignment({
                         studentId={studentData.id}
                         studentName={studentData.name || 'Anonymous'}
                         classId={queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || ''}
+                        retryMode={retryMode}
+                        wrongMcqIndices={wrongMcqIndices}
                         onComplete={() => {
                             const finalClassId = queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || '';
                             router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');

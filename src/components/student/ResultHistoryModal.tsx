@@ -40,6 +40,10 @@ export default function ResultHistoryModal({
     const [transformProblems, setTransformProblems] = useState<any[]>([]);
     const [subjectiveDetailSub, setSubjectiveDetailSub] = useState<Submission | null>(null);
     const [subjectiveProblems, setSubjectiveProblems] = useState<any[]>([]);
+    // mock_exam 전용
+    const [mockExamDetailSub, setMockExamDetailSub] = useState<Submission | null>(null);
+    const [mockExamAssignment, setMockExamAssignment] = useState<any>(null);
+
 
     const loadData = async () => {
         const data = await dbService.getSubmissionHistory(studentId, assignmentId);
@@ -414,6 +418,124 @@ export default function ResultHistoryModal({
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Mock Exam 오답 상세 오버레이
+    if (mockExamDetailSub && mockExamAssignment) {
+        const details: any[] = (mockExamDetailSub as any).details || [];
+        const mcqDetails = details.filter((d: any) => d.type && !['conditional_blank_writing','word_box_fill','relative_clause_completion','passage_comprehension_fill','phrase_selection_fill'].includes(d.type));
+        const wrongDetails = mcqDetails.filter((d: any) => !d.isCorrect);
+        const wrongIndices = mcqDetails.map((d: any, i: number) => ({ i, isCorrect: d.isCorrect })).filter((x: any) => !x.isCorrect).map((x: any) => x.i);
+        const allMcq = (mockExamAssignment.mockExamProblems?.mcq || []);
+
+        // localStorage draft 유무 확인 (이어서 풀기 가능 여부)
+        let hasDraft = false;
+        try {
+            const draft = localStorage.getItem(`mock_draft_${assignmentId}_${studentId}`);
+            if (draft) {
+                const parsed = JSON.parse(draft);
+                hasDraft = !!parsed.savedAt && (Date.now() - parsed.savedAt < 7 * 24 * 60 * 60 * 1000); // 7일 이내
+            }
+        } catch {}
+
+        const typeLabels: Record<string, string> = {
+            blank: '빈칸추론', grammar: '어법', vocabulary: '어휘', topic: '주제/요지',
+            order: '순서배열', insertion: '문장삽입', content_match: '내용일치', long_passage: '장문',
+        };
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 dark:border-white/10 max-h-[90vh] flex flex-col">
+                    {/* Header */}
+                    <div className="bg-[#0A0E27] p-6 text-white flex justify-between items-center">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-lg font-bold">📝 내신모의고사 결과</h3>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
+                                    {mockExamDetailSub.attempt}차 · {mockExamDetailSub.score}점
+                                </span>
+                            </div>
+                            <p className="text-xs text-white/60">{assignmentTitle}</p>
+                        </div>
+                        <button onClick={() => { setMockExamDetailSub(null); setMockExamAssignment(null); }} className="text-white/60 hover:text-white">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    {/* 요약스코어 바 */}
+                    <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-white/10 flex items-center gap-4">
+                        <span className="text-xs font-bold text-emerald-600">✅ 정답 {mcqDetails.length - wrongDetails.length}문제</span>
+                        <span className="text-xs font-bold text-red-500">❌ 오답 {wrongDetails.length}문제</span>
+                        <span className="text-xs text-slate-400 ml-auto">객관식 싙 {mcqDetails.length}문제</span>
+                    </div>
+
+                    {/* 오답 목록 */}
+                    <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                        {wrongDetails.length === 0 ? (
+                            <div className="text-center py-8 text-emerald-600 font-bold">객관식 전문제 정답! 🎉</div>
+                        ) : wrongDetails.map((d: any, idx: number) => {
+                            const prob = allMcq.find((q: any) => q.number === d.number);
+                            const selectedChoice = prob?.choices?.[d.selected];
+                            const correctChoice = prob?.choices?.[d.correct];
+                            return (
+                                <div key={idx} className="p-3 rounded-xl border-l-4 border-red-400 bg-red-50 dark:bg-red-900/10">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="w-6 h-6 rounded-md bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{d.number}</span>
+                                        <span className="text-[10px] font-bold text-red-400 uppercase">{typeLabels[d.type] || d.type}</span>
+                                        <span className="ml-auto text-[10px] font-bold text-red-500">❌ {d.maxPoints}점 실점</span>
+                                    </div>
+                                    {prob?.koreanInstruction && (
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-1.5 line-clamp-2">{prob.koreanInstruction}</p>
+                                    )}
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div className="bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border border-red-200">
+                                            <span className="text-[9px] font-bold text-red-400 block mb-0.5">내 답</span>
+                                            <span className="text-slate-700 dark:text-slate-300">{d.selected === -1 ? '(미응답)' : `®{['①','②','③','④','⑤'][d.selected]} ${selectedChoice || ''}`}</span>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border border-emerald-200">
+                                            <span className="text-[9px] font-bold text-emerald-600 block mb-0.5">정답</span>
+                                            <span className="text-slate-700 dark:text-slate-300">{['①','②','③','④','⑤'][d.correct]} {correctChoice || ''}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* 재품기 버튼 */}
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-white/10 space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 text-center mb-3">품기 모드 선택</p>
+                        <div className="grid grid-cols-1 gap-2">
+                            {hasDraft && (
+                                <button
+                                    onClick={() => { window.open(`/student/assignment/${assignmentId}?mode=continue`, '_self'); }}
+                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    ▶️ 이어서 풀기 (저장된 답안 있음)
+                                </button>
+                            )}
+                            {wrongDetails.length > 0 && (
+                                <button
+                                    onClick={() => { window.open(`/student/assignment/${assignmentId}?mode=wrong_only&wrong=${wrongIndices.join(',')}`, '_self'); }}
+                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    ❌ 오답만 풀기 ({wrongDetails.length}문제)
+                                </button>
+                            )}
+                            <button
+                                onClick={() => { window.open(`/student/assignment/${assignmentId}`, '_self'); }}
+                                className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                📄 처음부터 풀기
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -808,6 +930,17 @@ export default function ResultHistoryModal({
                                     onClick={async () => {
                                         if (sub.status === 'pending_review' || sub.attempt === 0) {
                                             setSelectedSubmission(sub);
+                                        } else if (assignmentType === 'mock_exam') {
+                                            // mock_exam 오답 상세 보기
+                                            try {
+                                                const asgn = await dbService.getAssignmentById(assignmentId);
+                                                if (asgn) {
+                                                    setMockExamAssignment(asgn);
+                                                    setMockExamDetailSub(sub);
+                                                }
+                                            } catch (e) {
+                                                console.error('Failed to load mock exam assignment:', e);
+                                            }
                                         } else if (assignmentType === 'writing' || assignmentType === 'writing_session') {
                                             // Show writing detail inline
                                             setWritingDetailSub(sub);

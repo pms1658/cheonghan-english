@@ -240,6 +240,11 @@ export default function MobileAssignment({
         const studentData = getStudentData(student);
         if (!studentData.id) return <div className="min-h-screen flex items-center justify-center">Student session not found. Please log in again.</div>;
 
+        const modeParam = searchParams.get('mode');
+        const wrongParam = searchParams.get('wrong');
+        const retryMode = (modeParam === 'continue' ? 'continue' : modeParam === 'wrong_only' ? 'wrong_only' : 'full') as 'full' | 'wrong_only' | 'continue';
+        const wrongMcqIndices = wrongParam ? wrongParam.split(',').map(Number).filter((n: number) => !isNaN(n)) : [];
+
         return (
             <div className="min-h-screen bg-slate-50">
                 <ErrorBoundary>
@@ -248,6 +253,8 @@ export default function MobileAssignment({
                         studentId={studentData.id}
                         studentName={studentData.name || 'Anonymous'}
                         classId={queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || ''}
+                        retryMode={retryMode}
+                        wrongMcqIndices={wrongMcqIndices}
                         onComplete={() => {
                             const finalClassId = queryClassId || studentData.classId || (assignment?.classIds && assignment.classIds[0]) || '';
                             router.push(finalClassId ? `/class/${finalClassId}` : '/dashboard');
