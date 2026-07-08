@@ -282,24 +282,6 @@ export default function CreateHomeworkModal({
                             과제방 연동 <span className="normal-case text-slate-400 font-normal">(선택)</span>
                         </label>
 
-                        {/* Already linked */}
-                        {linkedAssignments.length > 0 && (
-                            <div className="space-y-1.5 mb-2">
-                                {linkedAssignments.map(la => (
-                                    <div key={la.assignmentId} className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-lg px-3 py-2">
-                                        <svg className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex-1">{la.title}</span>
-                                        <button
-                                            onClick={() => handleRemoveLinkedAssignment(la.assignmentId)}
-                                            className="p-0.5 text-indigo-400 hover:text-red-500 transition-colors"
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
                         {/* Add assignment button / picker */}
                         {!showAssignmentPicker ? (
                             <button
@@ -361,6 +343,24 @@ export default function CreateHomeworkModal({
                                         )}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Already linked (shown below picker to prevent scroll push) */}
+                        {linkedAssignments.length > 0 && (
+                            <div className="space-y-1.5 mt-2">
+                                {linkedAssignments.map(la => (
+                                    <div key={la.assignmentId} className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-lg px-3 py-2">
+                                        <svg className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex-1">{la.title}</span>
+                                        <button
+                                            onClick={() => handleRemoveLinkedAssignment(la.assignmentId)}
+                                            className="p-0.5 text-indigo-400 hover:text-red-500 transition-colors"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ModalPortal from '@/components/common/ModalPortal';
 import AssignmentEditor from '@/components/admin/AssignmentEditor';
 import StructurePrintModal from '@/components/student/StructurePrintModal';
@@ -12,6 +12,7 @@ import SplitAssignmentModal from './components/SplitAssignmentModal';
 import SelectionApprovalModal from './components/SelectionApprovalModal';
 import PrintModal from './components/PrintModal';
 import WritingDetailModal from './components/WritingDetailModal';
+import QuickHomeworkModal from '@/components/admin/QuickHomeworkModal';
 import { AssignmentItem, SortableItem } from './components/AssignmentItem';
 import { useClassRoom, AssignmentWithStats } from './useClassRoom';
 
@@ -85,6 +86,9 @@ export default function ClassRoomPage() {
             </div>
         );
     }
+
+    // ─── Quick Homework Modal State ───
+    const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
 
     // Calculate students for this class ONLY
     const currentClassStudents = allStudents.filter(s => (s.classIds || []).includes(classId));
@@ -172,6 +176,14 @@ export default function ClassRoomPage() {
                                     <span className="hidden sm:inline">학생 관리</span>
                                 </button>
 
+                                {selectedAssignments.size >= 1 && (
+                                    <button
+                                        onClick={() => setIsHomeworkModalOpen(true)}
+                                        className="px-5 py-3 bg-emerald-100 text-emerald-700 font-bold rounded-2xl hover:bg-emerald-200 transition-all shadow-sm flex items-center gap-2 mr-1"
+                                    >
+                                        📋 과제 부과 ({selectedAssignments.size})
+                                    </button>
+                                )}
                                 {selectedAssignments.size >= 1 && (
                                     <button
                                         onClick={() => {
@@ -729,6 +741,23 @@ export default function ClassRoomPage() {
                         </button>
                     </div>
                 </div>
+                </ModalPortal>
+            )}
+
+            {/* Quick Homework Modal */}
+            {isHomeworkModalOpen && (
+                <ModalPortal>
+                    <QuickHomeworkModal
+                        assignments={assignments.filter(a => selectedAssignments.has(a.id))}
+                        classStudents={currentClassStudents.map(s => ({ id: s.id, name: s.name }))}
+                        className={classData?.name || ''}
+                        user={user}
+                        onClose={() => setIsHomeworkModalOpen(false)}
+                        onCreated={() => {
+                            setIsHomeworkModalOpen(false);
+                            setSelectedAssignments(new Set());
+                        }}
+                    />
                 </ModalPortal>
             )}
         </div>
