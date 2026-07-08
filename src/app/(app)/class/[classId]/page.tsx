@@ -67,6 +67,9 @@ export default function ClassRoomPage() {
         }
     }, [loading, isEditorOpen, assignments]);
 
+    // ─── Quick Homework Modal State ───
+    const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
+
 
     if (!classData && !loading) {
         return (
@@ -86,9 +89,6 @@ export default function ClassRoomPage() {
             </div>
         );
     }
-
-    // ─── Quick Homework Modal State ───
-    const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
 
     // Calculate students for this class ONLY
     const currentClassStudents = allStudents.filter(s => (s.classIds || []).includes(classId));
