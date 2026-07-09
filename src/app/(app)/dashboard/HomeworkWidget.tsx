@@ -47,7 +47,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                     if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                         const laIds = hw.linkedAssignments.map(la => la.assignmentId);
                         await Promise.all((hw.studentIds || []).map(async sid => {
-                            const completedIds = await dbService.checkLinkedAssignmentCompletion(sid, laIds, hw.createdAt);
+                            const completedIds = await dbService.checkLinkedAssignmentCompletion(sid, laIds, hw.createdAt, hw.id);
                             if (completedIds.length > 0) {
                                 const key = `${hw.id}_${sid}`;
                                 if (!adminStatuses[key]) {
@@ -78,7 +78,7 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                 await Promise.all(mine.map(async hw => {
                     if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                         const ids = hw.linkedAssignments.map(la => la.assignmentId);
-                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids, hw.createdAt);
+                        const completed = await dbService.checkLinkedAssignmentCompletion(studentId, ids, hw.createdAt, hw.id);
                         if (completed.length > 0) linkedMap[hw.id] = completed;
                     }
                 }));
@@ -301,8 +301,8 @@ export default function HomeworkWidget({ user, isAdmin }: { user: any; isAdmin: 
                                         <Link
                                             key={`l-${num}`}
                                             href={item.linked.classId
-                                                ? `/student/assignment/${item.linked.assignmentId}?classId=${item.linked.classId}`
-                                                : `/student/assignment/${item.linked.assignmentId}`
+                                                ? `/student/assignment/${item.linked.assignmentId}?classId=${item.linked.classId}&hwId=${hw.id}`
+                                                : `/student/assignment/${item.linked.assignmentId}?hwId=${hw.id}`
                                             }
                                             className={`text-[13px] leading-relaxed flex items-start gap-2 hover:underline ${isCompleted ? 'text-slate-400 dark:text-slate-600' : 'text-indigo-600 dark:text-indigo-400'}`}
                                             onClick={e => e.stopPropagation()}

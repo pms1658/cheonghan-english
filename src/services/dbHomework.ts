@@ -158,7 +158,7 @@ export const homeworkService = {
             return null;
         }
     },
-    checkLinkedAssignmentCompletion: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number): Promise<string[]> => {
+    checkLinkedAssignmentCompletion: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number, homeworkId?: string): Promise<string[]> => {
         if (!assignmentIds.length) return [];
         try {
             // 1. 해당 학생의 모든 submission 조회
@@ -193,8 +193,12 @@ export const homeworkService = {
                 }
             };
 
-            // 4. assignmentId별로 최고 점수 추적 (sinceTimestamp 이후)
-            const bestScores: Record<string, number> = {};
+            // 4. fromHomeworkId 기반 매칭
+            // directMatch: 이 homeworkId로 태그된 submission의 최고 점수
+            const directBestScores: Record<string, number> = {};
+            // poolBestScores: fromHomeworkId 없거나 다른 hw의 submission (풀 방식 대상)
+            const poolBestScores: Record<string, number> = {};
+
             sn.docs.forEach(d => {
                 const data = d.data();
                 const aid = data.assignmentId;
@@ -207,14 +211,72 @@ export const homeworkService = {
                 }
 
                 const score = data.score ?? 0;
-                bestScores[aid] = Math.max(bestScores[aid] || 0, score);
+                const subHwId = data.fromHomeworkId;
+
+                if (homeworkId && subHwId === homeworkId) {
+                    // 직접 매칭: 이 과제 링크를 통해 제출된 것
+                    directBestScores[aid] = Math.max(directBestScores[aid] || 0, score);
+                } else if (!subHwId) {
+                    // 풀 대상: fromHomeworkId가 없는 submission (과제방 직접 접근 등)
+                    poolBestScores[aid] = Math.max(poolBestScores[aid] || 0, score);
+                }
+                // 다른 homeworkId로 태그된 submission은 무시 (그 과제에서 이미 소비됨)
             });
 
             // 5. 유형별 기준 충족 여부 판단
-            return assignmentIds.filter(aid => {
+            // 직접 매칭이 합격이면 즉시 완료
+            const directCompleted = assignmentIds.filter(aid => {
                 const passScore = getPassScore(assignmentTypes[aid] || '');
-                return (bestScores[aid] || 0) >= passScore;
+                return (directBestScores[aid] || 0) >= passScore;
             });
+
+            // 풀 매칭: 직접 매칭으로 완료되지 않은 assignment에 대해
+            // 해당 assignmentId를 연동한 모든 homework를 조회 → 가장 오래된 미완료부터 차감
+            const poolCandidates = assignmentIds.filter(aid => {
+                if (directCompleted.includes(aid)) return false;
+                const passScore = getPassScore(assignmentTypes[aid] || '');
+                return (poolBestScores[aid] || 0) >= passScore;
+            });
+
+            if (poolCandidates.length > 0 && homeworkId) {
+                // 해당 학생의 모든 homework를 조회하여 이 assignmentId를 연동한 것들을 찾기
+                const allHws = await getDocs(collection(db, 'homework'));
+                const poolCompleted: string[] = [];
+
+                for (const aid of poolCandidates) {
+                    // 이 assignmentId를 linkedAssignment로 가진 모든 homework를 찾아 createdAt 오름차순 정렬
+                    const hwsWithThisAssignment = allHws.docs
+                        .map(d => ({ id: d.id, ...d.data() } as any))
+                        .filter((hw: any) =>
+                            hw.studentIds?.includes(studentId) &&
+                            hw.linkedAssignments?.some((la: any) => la.assignmentId === aid)
+                        )
+                        .sort((a: any, b: any) => (a.createdAt || 0) - (b.createdAt || 0));
+
+                    // 가장 오래된 미완료 homework에 배정
+                    // 현재 homeworkId가 가장 오래된 것이면 이 과제에서 완료 인정
+                    if (hwsWithThisAssignment.length > 0 && hwsWithThisAssignment[0].id === homeworkId) {
+                        poolCompleted.push(aid);
+                    }
+                    // 과제가 하나뿐이면 (중복 연동 아님) 그냥 완료 인정
+                    else if (hwsWithThisAssignment.length <= 1) {
+                        poolCompleted.push(aid);
+                    }
+                }
+
+                return [...directCompleted, ...poolCompleted];
+            }
+
+            // homeworkId가 없는 경우 (기존 호환: 전부 인정)
+            if (!homeworkId) {
+                return assignmentIds.filter(aid => {
+                    const passScore = getPassScore(assignmentTypes[aid] || '');
+                    const best = Math.max(directBestScores[aid] || 0, poolBestScores[aid] || 0);
+                    return best >= passScore;
+                });
+            }
+
+            return [...directCompleted, ...poolCandidates];
         } catch (e) {
             console.error('Error checking linked assignment completion:', e);
             return [];
@@ -224,7 +286,7 @@ export const homeworkService = {
      * 반환: { completedIds: string[], statuses: Record<assignmentId, status> }
      * status: 'pending_review' | 'approved' | 'in_progress' | 'completed'
      */
-    checkLinkedAssignmentStatuses: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number): Promise<{
+    checkLinkedAssignmentStatuses: async (studentId: string, assignmentIds: string[], sinceTimestamp?: number, homeworkId?: string): Promise<{
         completedIds: string[];
         statuses: Record<string, 'pending_review' | 'approved' | 'in_progress' | 'completed'>;
     }> => {
@@ -261,10 +323,11 @@ export const homeworkService = {
             };
 
             // 각 assignment별 submission 정보 수집
+            // homeworkId가 있으면: 직접 매칭 + 미태그만 고려
             const bestScores: Record<string, number> = {};
-            const latestStatuses: Record<string, string> = {};  // 최신 status
-            const hasTestSubmission: Record<string, boolean> = {};  // 테스트 제출 여부
-            const hasRoundComplete: Record<string, boolean> = {};  // round_complete 상태 추적
+            const latestStatuses: Record<string, string> = {};
+            const hasTestSubmission: Record<string, boolean> = {};
+            const hasRoundComplete: Record<string, boolean> = {};
 
             sn.docs.forEach(d => {
                 const data = d.data();
@@ -276,26 +339,24 @@ export const homeworkService = {
                     if (submittedAt < sinceTimestamp) return;
                 }
 
+                // fromHomeworkId 필터링: 다른 homework에 태그된 submission 무시
+                const subHwId = data.fromHomeworkId;
+                if (homeworkId && subHwId && subHwId !== homeworkId) return;
+
                 const score = data.score ?? 0;
                 const status = data.status || '';
-                const submittedAt = data.submittedAt || data.timestamp || 0;
 
-                // 최고 점수 추적
                 bestScores[aid] = Math.max(bestScores[aid] || 0, score);
 
-                // 테스트 제출 여부 추적 (score > 0이면 테스트를 본 것)
                 if (score > 0) {
                     hasTestSubmission[aid] = true;
                 }
 
-                // round_complete status 추적 (변형문제 완료 표시)
                 if (status === 'round_complete') {
                     hasRoundComplete[aid] = true;
                 }
 
-                // 최신 status 추적 (승인대기, 승인완료 등)
                 if (status === 'pending_review' || status === 'approved' || status === 'selection_rejected') {
-                    // 이 상태들은 시간 관계없이 가장 우선
                     const prevStatus = latestStatuses[aid];
                     if (!prevStatus ||
                         status === 'approved' ||
@@ -317,7 +378,6 @@ export const homeworkService = {
                 const isVocabType = type === 'vocabulary' || type === 'selection';
                 const isTransformType = type === 'transform' || type === 'transform_subjective' || type === 'external_subjective' || type === 'mock_exam';
 
-                // transform 타입: round_complete status 또는 100점이면 완료
                 if (isTransformType && hasRoundComplete[aid]) {
                     statuses[aid] = 'completed';
                     completedIds.push(aid);
@@ -331,7 +391,6 @@ export const homeworkService = {
                 } else if (hasTestSubmission[aid] || best > 0) {
                     statuses[aid] = 'in_progress';
                 }
-                // else: 아직 아무것도 안 함 → statuses에 키 없음
             });
 
             return { completedIds, statuses };

@@ -57,7 +57,7 @@ export default function StudentHomeworkPage() {
         await Promise.all(mine.map(async (hw) => {
             if (hw.linkedAssignments && hw.linkedAssignments.length > 0) {
                 const ids = hw.linkedAssignments.map(la => la.assignmentId);
-                const result = await dbService.checkLinkedAssignmentStatuses(sid, ids, hw.createdAt);
+                const result = await dbService.checkLinkedAssignmentStatuses(sid, ids, hw.createdAt, hw.id);
                 if (result.completedIds.length > 0) linkedCompletedMap[hw.id] = result.completedIds;
                 if (Object.keys(result.statuses).length > 0) linkedStatusesMap[hw.id] = result.statuses;
             }
@@ -492,9 +492,9 @@ export default function StudentHomeworkPage() {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (!isAdmin && la.classId) {
-                                                                router.push(`/student/assignment/${la.assignmentId}?classId=${la.classId}`);
+                                                                router.push(`/student/assignment/${la.assignmentId}?classId=${la.classId}&hwId=${hw.id}`);
                                                             } else if (!isAdmin) {
-                                                                router.push(`/student/assignment/${la.assignmentId}`);
+                                                                router.push(`/student/assignment/${la.assignmentId}?hwId=${hw.id}`);
                                                             }
                                                         }}
                                                         className={`flex items-start gap-2 text-sm transition-all cursor-pointer ${

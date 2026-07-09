@@ -487,9 +487,16 @@ export const dbService = {
     },
     addSubmission: async (submission: Omit<Submission, 'id' | 'timestamp'>, tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
-        const newSub = { ...submission, timestamp: Date.now(), tenantId: tid };
+        const newSub: any = { ...submission, timestamp: Date.now(), tenantId: tid };
         if (newSub.classId === undefined || newSub.classId === null) {
             newSub.classId = 'unknown';
+        }
+        // Auto-attach fromHomeworkId from URL if present
+        if (typeof window !== 'undefined' && !newSub.fromHomeworkId) {
+            try {
+                const hwId = new URLSearchParams(window.location.search).get('hwId');
+                if (hwId) newSub.fromHomeworkId = hwId;
+            } catch { /* SSR safety */ }
         }
         const ref = await addDoc(collection(db, 'submissions'), newSub);
         return { id: ref.id, ...newSub };
