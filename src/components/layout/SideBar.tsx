@@ -92,11 +92,13 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false, isC
                                 {pathname.startsWith('/feedback') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
                             </Link>
 
-                            <Link href="/about" onClick={onClose}
-                                className={`flex items-center justify-between px-4 py-2 rounded-xl transition-all duration-200 ${pathname.startsWith('/about') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
-                                <span className="text-[12px] xl:text-[13px]">학원소개</span>
-                                {pathname.startsWith('/about') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
-                            </Link>
+                            {user?.role === 'admin' && (
+                                <Link href="/about" onClick={onClose}
+                                    className={`flex items-center justify-between px-4 py-2 rounded-xl transition-all duration-200 ${pathname.startsWith('/about') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
+                                    <span className="text-[12px] xl:text-[13px]">브로셔</span>
+                                    {pathname.startsWith('/about') && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>}
+                                </Link>
+                            )}
 
                             <Link href="/guide" onClick={onClose}
                                 className={`flex items-center justify-between px-4 py-2 rounded-xl transition-all duration-200 ${pathname.startsWith('/guide') ? 'bg-white/10 text-white font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
