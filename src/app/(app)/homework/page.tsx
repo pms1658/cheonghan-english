@@ -124,8 +124,11 @@ export default function StudentHomeworkPage() {
         return hw.items.length + (hw.linkedAssignments?.length || 0);
     };
 
-    // v2: Check linked assignment completion
-    const isLinkedComplete = (hwId: string, assignmentId: string): boolean => {
+    // v2: Check linked assignment completion (supports merged homework)
+    const isLinkedComplete = (hwId: string, assignmentId: string, mergedIds?: string[]): boolean => {
+        if (mergedIds) {
+            return mergedIds.some(id => statusMap[id]?.completedAssignments?.includes(assignmentId) || false);
+        }
         return statusMap[hwId]?.completedAssignments?.includes(assignmentId) || false;
     };
 
@@ -170,7 +173,18 @@ export default function StudentHomeworkPage() {
         return statusMap[hwId]?.completedItems?.includes(itemIndex) || false;
     };
 
-    const getCompletionCount = (hw: Homework): number => {
+    const getCompletionCount = (hw: Homework & { _mergedIds?: string[] }): number => {
+        if (hw._mergedIds) {
+            let selfChecked = 0;
+            let linkedComplete = 0;
+            const seenLinked = new Set<string>();
+            hw._mergedIds.forEach(id => {
+                selfChecked += statusMap[id]?.completedItems?.length || 0;
+                (statusMap[id]?.completedAssignments || []).forEach(aid => seenLinked.add(aid));
+            });
+            linkedComplete = seenLinked.size;
+            return selfChecked + linkedComplete;
+        }
         const selfChecked = statusMap[hw.id]?.completedItems?.length || 0;
         const linkedComplete = statusMap[hw.id]?.completedAssignments?.length || 0;
         return selfChecked + linkedComplete;
@@ -208,6 +222,45 @@ export default function StudentHomeworkPage() {
             return !isHwFullyComplete(hw); // older but incomplete
         }).sort((a, b) => b.date.localeCompare(a.date));
     }, [homeworks, todayStr, filterCutoff, statusMap]);
+
+    // ─── Merge same-date homeworks for student view ───
+    const displayHomeworks = useMemo(() => {
+        if (isAdmin) return filteredHomeworks;
+        // Group by date and merge items + linkedAssignments
+        const dateGroups = new Map<string, Homework[]>();
+        filteredHomeworks.forEach(hw => {
+            const existing = dateGroups.get(hw.date) || [];
+            existing.push(hw);
+            dateGroups.set(hw.date, existing);
+        });
+        const merged: (Homework & { _mergedIds?: string[] })[] = [];
+        dateGroups.forEach((hws) => {
+            if (hws.length === 1) {
+                merged.push(hws[0]);
+            } else {
+                // Merge multiple homeworks for the same date into one virtual homework
+                const primary = hws[0]; // Use earliest created as base
+                const allItems = hws.flatMap(hw => hw.items);
+                const allLinked: typeof primary.linkedAssignments = [];
+                const seenAssignmentIds = new Set<string>();
+                hws.forEach(hw => {
+                    (hw.linkedAssignments || []).forEach(la => {
+                        if (!seenAssignmentIds.has(la.assignmentId)) {
+                            seenAssignmentIds.add(la.assignmentId);
+                            allLinked.push(la);
+                        }
+                    });
+                });
+                merged.push({
+                    ...primary,
+                    items: allItems,
+                    linkedAssignments: allLinked,
+                    _mergedIds: hws.map(hw => hw.id),
+                });
+            }
+        });
+        return merged.sort((a, b) => b.date.localeCompare(a.date));
+    }, [filteredHomeworks, isAdmin]);
 
     // ─── Calendar Data ───
     const calendarDays = useMemo(() => {
@@ -367,18 +420,18 @@ export default function StudentHomeworkPage() {
                             ))}
                         </div>
                         <p className="text-xs text-slate-400 font-bold">
-                            {filteredHomeworks.length}개 과제
-                            {filteredHomeworks.some(hw => !isHwFullyComplete(hw) && hw.date < filterCutoff) && (
+                            {displayHomeworks.length}개 과제
+                            {displayHomeworks.some(hw => !isHwFullyComplete(hw) && hw.date < filterCutoff) && (
                                 <span className="text-red-400 ml-1">· 미완료 포함</span>
                             )}
                         </p>
                     </div>
-                    {filteredHomeworks.length === 0 ? (
+                    {displayHomeworks.length === 0 ? (
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-16 text-center">
                             <p className="text-slate-500 dark:text-slate-400 font-medium">아직 부여된 과제가 없습니다</p>
                         </div>
                     ) : (
-                        filteredHomeworks.map((hw, idx) => {
+                        displayHomeworks.map((hw, idx) => {
                             const expanded = expandedId === hw.id;
                             return (
                                 <motion.div
@@ -411,10 +464,11 @@ export default function StudentHomeworkPage() {
                                                 )}
                                                 {/* Completion badges */}
                                                 {!isAdmin && (() => {
-                                                    const adminConfirmed = statusMap[hw.id]?.completed;
+                                                    const mergedIds = (hw as any)._mergedIds as string[] | undefined;
+                                                    const adminConfirmed = mergedIds ? mergedIds.some(id => statusMap[id]?.completed) : statusMap[hw.id]?.completed;
                                                     const allLinkedDone = (hw.linkedAssignments?.length || 0) > 0 && 
-                                                        hw.linkedAssignments!.every(la => isLinkedComplete(hw.id, la.assignmentId));
-                                                    const studentSelfDone = statusMap[hw.id]?.studentCompleted;
+                                                        hw.linkedAssignments!.every(la => isLinkedComplete(hw.id, la.assignmentId, mergedIds));
+                                                    const studentSelfDone = mergedIds ? mergedIds.some(id => statusMap[id]?.studentCompleted) : statusMap[hw.id]?.studentCompleted;
                                                     const hasOnlyLinked = hw.items.length === 0 && (hw.linkedAssignments?.length || 0) > 0;
 
                                                     if (adminConfirmed) {
@@ -483,7 +537,8 @@ export default function StudentHomeworkPage() {
                                             ))}
                                             {/* Linked assignments */}
                                             {(expanded ? hw.linkedAssignments || [] : (hw.linkedAssignments || []).slice(0, Math.max(0, 3 - hw.items.length))).map((la, i) => {
-                                                const isComplete = isLinkedComplete(hw.id, la.assignmentId);
+                                                const mergedIds = (hw as any)._mergedIds as string[] | undefined;
+                                                const isComplete = isLinkedComplete(hw.id, la.assignmentId, mergedIds);
                                                 const linkedStatus = getLinkedStatus(hw.id, la.assignmentId);
                                                 const itemNum = hw.items.length + i + 1;
                                                 return (

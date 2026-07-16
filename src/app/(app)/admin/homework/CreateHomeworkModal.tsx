@@ -84,10 +84,9 @@ export default function CreateHomeworkModal({
     const sortedClasses = useMemo(() => {
         const sorted = [...classes].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
         if (selectedStudentIds.length === 0) return sorted;
-        // Only show classes that all selected students belong to
-        // Check from student side: student.classIds contains class id
+        // Show classes that any of the selected students belong to
         return sorted.filter(cls => 
-            selectedStudentIds.every(sid => {
+            selectedStudentIds.some(sid => {
                 const student = students.find(s => s.id === sid);
                 return student?.classIds?.includes(cls.id) || cls.studentIds?.includes(sid);
             })
