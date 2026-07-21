@@ -532,6 +532,37 @@ export const dbService = {
             return [];
         }
     },
+    /** 오늘의 1회차 단어 테스트 제출 조회 (오답 복습 위젯용) */
+    getTodayVocabFirstAttempts: async (studentId: string) => {
+        try {
+            // KST 기준 오늘 00:00 timestamp
+            const now = new Date();
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const kstNow = new Date(now.getTime() + kstOffset);
+            const kstToday = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate());
+            const todayStart = kstToday.getTime() - kstOffset;
+
+            const q = query(
+                collection(db, 'submissions'),
+                where('studentId', '==', studentId)
+            );
+            const sn = await getDocs(q);
+            return sn.docs
+                .map(d => normalizeSubmission(convertDoc<Submission>(d)))
+                .filter(s => {
+                    const ts = (s.timestamp as number) || (s.submittedAt as number) || 0;
+                    if (ts < todayStart) return false;
+                    if (s.attempt !== 1) return false;
+                    if (s.score < 0 || s.score >= 100) return false;
+                    // vocab-test 또는 typing-ko-ai-graded 유형만
+                    const detailType = (s as any).details?.[0]?.type || '';
+                    return detailType === 'vocab-test' || detailType === 'typing-ko-ai-graded';
+                });
+        } catch (e) {
+            console.error('Error fetching today vocab first attempts:', e);
+            return [];
+        }
+    },
     updateSubmissionFeedback: async (id: string, isGiven: boolean) => {
         await updateDoc(doc(db, 'submissions', id), { isFeedbackGiven: isGiven });
     },

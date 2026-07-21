@@ -7,16 +7,20 @@ import TopBar from './TopBar';
 import MobileBottomNav from './MobileBottomNav';
 import CommandPalette from '@/components/common/CommandPalette';
 import Logo from '@/components/common/Logo';
+import { useAuth } from '@/context/AuthContext';
+import DailyWrongWordsWidget from '@/components/student/DailyWrongWordsWidget';
 
 interface MainLayoutProps {
     children: React.ReactNode;
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
+    const { user } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isXl, setIsXl] = useState(false);
     const pathname = usePathname();
+    const isStudent = (user as any)?.role !== 'admin' && !!(user as any)?.id;
 
     // Persist sidebar collapsed state across sessions
     useEffect(() => {
@@ -132,6 +136,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                 {/* Mobile Bottom Nav */}
                 {(!pathname?.includes('/assignment/')) && <MobileBottomNav />}
+
+                {/* Daily Wrong Words Floating Widget — students only, non-assignment pages */}
+                {isStudent && !pathname?.includes('/assignment/') && (
+                    <DailyWrongWordsWidget
+                        studentId={(user as any).id}
+                        studentName={(user as any).name || ''}
+                    />
+                )}
             </div>
         </div>
     );
