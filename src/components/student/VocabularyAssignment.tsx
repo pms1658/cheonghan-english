@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Assignment, Word } from '@/types';
 import { dbService } from '@/services/db';
+import { wrongNotesService } from '@/services/dbWrongNotes';
 import VocabOverview from './vocab/VocabOverview';
 import FlashcardStudy from './vocab/FlashcardStudy';
 import VocabTest from './vocab/VocabTest';
@@ -277,6 +278,14 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
 
                 localStorage.removeItem(draftKey);
                 toast.success(`AI 채점 완료!\n점수: ${score}점`);
+
+                // ★ 오답노트 자동 저장 (1회차만)
+                if (nextAttempt === 1 && score < 100) {
+                    const wrongWords = words.filter((_, idx) => !results[idx]);
+                    wrongNotesService.saveVocabWrongWords(
+                        student.id, student.name, assignment.id, assignment.title, wrongWords
+                    ).catch(e => console.error('[WrongNotes] save error:', e));
+                }
             } catch (error) {
                 console.error('[typing-ko] AI grading error:', error);
                 toast.error('AI 채점에 실패했습니다. 다시 시도해주세요.');
@@ -324,6 +333,19 @@ export default function VocabularyAssignment({ assignment, student, onExit }: Vo
         localStorage.removeItem(draftKey);
 
         toast.success(`테스트가 완료되었습니다.\n점수: ${score}점`);
+
+        // ★ 오답노트 자동 저장 (1회차만)
+        if (nextAttempt === 1 && score < 100) {
+            const isReverse = testMode === 'reverse' || testMode === 'typing';
+            const wrongWords = words.filter((w, idx) => {
+                const answer = finalAnswers[idx] || '';
+                if (isReverse) return answer.trim().toLowerCase() !== w.term.trim().toLowerCase();
+                return answer !== w.meaning;
+            });
+            wrongNotesService.saveVocabWrongWords(
+                student.id, student.name, assignment.id, assignment.title, wrongWords
+            ).catch(e => console.error('[WrongNotes] save error:', e));
+        }
     };
 
     const handleStudyComplete = async () => {

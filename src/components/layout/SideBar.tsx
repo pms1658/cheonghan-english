@@ -117,6 +117,23 @@ export default function SideBar({ isOpen, onClose, isAssignmentPage = false, isC
                     {/* Separator */}
                     <div className="border-t border-white/[0.08] mx-4 mb-1"></div>
 
+                    {/* Section 1.5: My Wrong Notes (Students only) */}
+                    {(user as any)?.role !== 'admin' && (
+                        <div className="pt-3 mb-2 px-3">
+                            <div className="px-3 xl:px-4 text-[9px] xl:text-[10px] uppercase tracking-wider font-bold text-white/40 mb-2">MY NOTES</div>
+                            <div className="mx-1">
+                                <Link href="/wrong-notes" onClick={onClose}
+                                    className={`flex items-center justify-between px-4 py-2 rounded-xl transition-all duration-200 ${pathname.startsWith('/wrong-notes') ? 'bg-orange-500/20 text-orange-300 font-bold' : 'text-white font-medium hover:bg-white/5'}`}>
+                                    <span className="text-[12px] xl:text-[13px]">📝 나의 오답</span>
+                                    {pathname.startsWith('/wrong-notes') && <div className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></div>}
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Separator */}
+                    <div className="border-t border-white/[0.08] mx-4 mb-1"></div>
+
                     {/* Section 2: Class Tree */}
                     <div className="flex-1 pt-3 px-3">
                         <ClassTree onNavigate={onClose} />

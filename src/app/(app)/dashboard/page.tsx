@@ -7,6 +7,7 @@ import { getAdminDisplayName } from '@/lib/adminConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import HomeworkWidget from './HomeworkWidget';
+import { wrongNotesService, WrongAnswerEntry } from '@/services/dbWrongNotes';
 
 // --- DATA: DAILY QUOTES ---
 const QUOTES = [
@@ -155,6 +156,55 @@ const DDayWidget = () => {
     );
 };
 
+// --- WRONG NOTES CARD COMPONENT ---
+const WrongNotesCard = ({ studentId }: { studentId?: string }) => {
+    const [entries, setEntries] = useState<WrongAnswerEntry[]>([]);
+
+    useEffect(() => {
+        if (!studentId) return;
+        const unsub = wrongNotesService.onStudentWrongAnswers(studentId, setEntries);
+        return () => unsub();
+    }, [studentId]);
+
+    if (!studentId || entries.length === 0) return null;
+
+    const totalWrong = entries.reduce((s, e) => s + (e.vocabWrongWords?.length || 0) + (e.transformWrongProblems?.length || 0), 0);
+    const unclearedCount = entries.filter(e => !e.isCleared).length;
+
+    return (
+        <Link
+            href="/wrong-notes"
+            className="block mt-4 bg-white dark:bg-[#0c102b] border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 hover:shadow-md hover:border-orange-200 dark:hover:border-orange-500/30 transition-all duration-300 group"
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                        <span className="text-lg">📝</span>
+                    </div>
+                    <div>
+                        <div className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                            나의 오답노트
+                        </div>
+                        <div className="text-xs text-slate-400">
+                            {totalWrong}개 오답 · {unclearedCount}개 미복습
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {unclearedCount > 0 && (
+                        <span className="text-xs font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded-lg">
+                            🔥 {unclearedCount}
+                        </span>
+                    )}
+                    <svg className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </Link>
+    );
+};
+
 export default function NewDashboardPage() {
     const { user } = useAuth();
     const [quote, setQuote] = useState(QUOTES[0]);
@@ -267,6 +317,9 @@ export default function NewDashboardPage() {
                 <div>
                     <HomeworkWidget user={user} isAdmin={isAdmin} />
                 </div>
+
+                {/* 1.7 Wrong Notes Card (Students only) */}
+                {!isAdmin && <WrongNotesCard studentId={(user as any)?.id} />}
 
                 {/* 2. Navigation Hub */}
                 <div>

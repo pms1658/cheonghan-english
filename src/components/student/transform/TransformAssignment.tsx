@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { dbService } from '@/services/db';
+import { wrongNotesService } from '@/services/dbWrongNotes';
 import { VariantProblem, VariantSession } from '@/types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -271,6 +272,14 @@ export default function TransformAssignment({
             // v2: localStorage 정리 (제출 완료)
             clearProgress();
             progressSavedRef.current = false;
+
+            // ★ 오답노트 자동 저장 (1회차 & 오답 있을 때만)
+            if (newSession.attemptNumber === 1 && incorrectProblems.length > 0) {
+                wrongNotesService.saveTransformWrongProblems(
+                    studentId, studentName, assignment.id, assignment.title,
+                    problems, currentAnswers, incorrectProblems
+                ).catch(e => console.error('[WrongNotes] transform save error:', e));
+            }
 
         } catch (error) {
             toast.error('제출 중 오류가 발생했습니다.');
