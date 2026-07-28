@@ -146,27 +146,50 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
         } catch { toast.error('저장 실패'); } finally { setMemoSaving(false); }
     };
 
+    const [retryInfo, setRetryInfo] = useState<{ attempt: number; max: number } | null>(null);
+
     const handleComplete = async () => {
         if (!studentId) { toast.error('학생 세션을 찾을 수 없습니다.'); return; }
         setIsSaving(true);
-        try {
-            await dbService.addSubmission({
-                assignmentId,
-                studentId,
-                answers: [],
-                score: 100,
-                attempt: 1,
-                status: 'passed',
-                submittedAt: Date.now()
-            } as any);
-            setIsCompleted(true);
-            toast.success('학습 완료 처리되었습니다!');
-        } catch (err) {
-            console.error('Failed to save completion:', err);
-            toast.error('저장에 실패했습니다. 다시 시도해주세요.');
-        } finally {
-            setIsSaving(false);
+        setRetryInfo(null);
+
+        const MAX_RETRIES = 3;
+        let lastError: unknown = null;
+
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                await dbService.addSubmission({
+                    assignmentId,
+                    studentId,
+                    answers: [],
+                    score: 100,
+                    attempt: 1,
+                    status: 'passed',
+                    submittedAt: Date.now()
+                } as any);
+                setRetryInfo(null);
+                setIsCompleted(true);
+                toast.success('학습 완료 처리되었습니다!');
+                setIsSaving(false);
+                return;
+            } catch (err) {
+                lastError = err;
+                console.error(`[AnalysisAssignment] 제출 실패 (${attempt}/${MAX_RETRIES}):`, err);
+
+                if (attempt < MAX_RETRIES) {
+                    const delayMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+                    setRetryInfo({ attempt: attempt + 1, max: MAX_RETRIES });
+                    toast.info(`저장 재시도 중... (${attempt + 1}/${MAX_RETRIES})`);
+                    await new Promise(resolve => setTimeout(resolve, delayMs));
+                }
+            }
         }
+
+        // All retries exhausted
+        setRetryInfo(null);
+        setIsSaving(false);
+        console.error('[AnalysisAssignment] 모든 재시도 실패:', lastError);
+        toast.error('저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
     };
 
     const { structure, keyGrammar, vocabSummary, examPrediction, tfCheck } = data;
@@ -739,7 +762,7 @@ export default function AnalysisAssignment({ assignmentId, studentId, data, onEx
                         ) : isSaving ? (
                             <>
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                저장 중...
+                                {retryInfo ? `재시도 중 (${retryInfo.attempt}/${retryInfo.max})...` : '저장 중...'}
                             </>
                         ) : (
                             <>
