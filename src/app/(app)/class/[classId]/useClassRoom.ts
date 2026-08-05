@@ -64,6 +64,10 @@ export function useClassRoom() {
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [editingClassName, setEditingClassName] = useState('');
 
+    // Inline Rename States (for editing class name directly in the header)
+    const [isInlineEditing, setIsInlineEditing] = useState(false);
+    const [inlineEditName, setInlineEditName] = useState('');
+
     // Reset Assignment States
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [resetTargetAssignment, setResetTargetAssignment] = useState<Assignment | null>(null);
@@ -402,6 +406,13 @@ export function useClassRoom() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [classId]);
 
+    // Listen for class-updated events from other components (e.g., sidebar ClassTree)
+    useEffect(() => {
+        const handleClassUpdated = () => loadData();
+        window.addEventListener('class-updated', handleClassUpdated);
+        return () => window.removeEventListener('class-updated', handleClassUpdated);
+    }, [classId]);
+
     // Navigation Interceptor for Modal
     useEffect(() => {
         if (isEditorOpen) {
@@ -596,9 +607,29 @@ export function useClassRoom() {
             toast.success("클래스 이름이 수정되었습니다.");
             setIsSettingsModalOpen(false);
             loadData();
+            // Notify other components (e.g., sidebar ClassTree) about the update
+            window.dispatchEvent(new CustomEvent('class-updated', { detail: { id: classId, name: editingClassName } }));
         } catch (e) {
             console.error(e);
             toast.error("수정 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleInlineRenameSubmit = async () => {
+        if (!inlineEditName.trim() || inlineEditName.trim() === classData?.name) {
+            setIsInlineEditing(false);
+            return;
+        }
+        try {
+            await dbService.updateClass(classId, { name: inlineEditName.trim() });
+            toast.success("클래스 이름이 수정되었습니다.");
+            setIsInlineEditing(false);
+            loadData();
+            window.dispatchEvent(new CustomEvent('class-updated', { detail: { id: classId, name: inlineEditName.trim() } }));
+        } catch (e) {
+            console.error(e);
+            toast.error("수정 중 오류가 발생했습니다.");
+            setIsInlineEditing(false);
         }
     };
 
@@ -675,6 +706,7 @@ export function useClassRoom() {
         isAddingStudent, setIsAddingStudent,
         editingAssignment, setEditingAssignment,
         isSettingsModalOpen, setIsSettingsModalOpen, editingClassName, setEditingClassName,
+        isInlineEditing, setIsInlineEditing, inlineEditName, setInlineEditName,
         isResetModalOpen, setIsResetModalOpen, resetTargetAssignment, resetSelectedStudents,
         approvalNeededCount, guidanceNeededCount,
         sortMode, sortDirection, isReordering, setIsReordering, originalOrder, setOriginalOrder,
@@ -692,7 +724,7 @@ export function useClassRoom() {
         loadData, handleCreateClick, handleEditClick, handleDeleteClick, handleResetClick,
         handleExecuteReset, toggleResetStudentSelection, handleAddSelectedStudents, toggleStudentSelection,
         handleSortChange, handleDragEnd, handleSaveOrder, handleToggleReorder,
-        handleUpdateClass, handleDeleteClass, handleMoveAssignment, handleCopyAssignment,
+        handleUpdateClass, handleInlineRenameSubmit, handleDeleteClass, handleMoveAssignment, handleCopyAssignment,
         handleApproveSubmission, handleApproveWithSplit, handleRejectSubmission, handleConvertAssignmentType,
         handleToggleGuidance, handleManualPass, handlePrint, handleDirectPrint,
     };

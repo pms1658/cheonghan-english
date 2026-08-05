@@ -135,6 +135,13 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
         loadData();
     }, [user, isAdmin, tenantId]);
 
+    // Listen for class-updated events from other components (e.g., ClassRoom page)
+    useEffect(() => {
+        const handleClassUpdated = () => loadData();
+        window.addEventListener('class-updated', handleClassUpdated);
+        return () => window.removeEventListener('class-updated', handleClassUpdated);
+    }, []);
+
     const buildTree = (classes: Class[], folders: ClassFolder[]): TreeNode[] => {
         const nodeMap = new Map<string, TreeNode>();
 
@@ -406,19 +413,15 @@ export default function ClassTree({ onNavigate }: { onNavigate?: () => void }) {
         if (!isEditing || !editName.trim()) return;
         try {
             if (isEditing.type === 'folder') {
-                // Assuming updateClassFolder exists or we used updateClass logic? 
-                // Let's check imports. Usually it's updateClassFolder. 
-                // If not, we might need to add it or use a generic update.
-                // Checking previous context, updateClass exists. updateClassFolder might need verification.
-                // Safest to try generic update or assume standard naming.
-                // Actually, let's look at available DB methods in previous steps or assume standard implementation.
-                // Assuming `updateClassFolder` exists in dbService.
                 await dbService.updateClassFolder(isEditing.originalId, editName);
             } else {
                 await dbService.updateClass(isEditing.originalId, { name: editName });
             }
             await loadData();
             setIsEditing(null);
+            toast.success('이름이 수정되었습니다.');
+            // Notify other components (e.g., ClassRoom page) about the update
+            window.dispatchEvent(new CustomEvent('class-updated', { detail: { id: isEditing.originalId, name: editName } }));
         } catch (e) {
             console.error(e);
             toast.error('이름 수정 실패');

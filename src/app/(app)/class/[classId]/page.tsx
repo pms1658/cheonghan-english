@@ -30,6 +30,7 @@ export default function ClassRoomPage() {
         isAddingStudent, setIsAddingStudent,
         editingAssignment, setEditingAssignment,
         isSettingsModalOpen, setIsSettingsModalOpen, editingClassName, setEditingClassName,
+        isInlineEditing, setIsInlineEditing, inlineEditName, setInlineEditName,
         isResetModalOpen, setIsResetModalOpen, resetTargetAssignment, resetSelectedStudents,
         sortMode, sortDirection, isReordering, setIsReordering, originalOrder, setOriginalOrder,
         selectedAssignments, setSelectedAssignments,
@@ -45,7 +46,7 @@ export default function ClassRoomPage() {
         loadData, handleCreateClick, handleEditClick, handleDeleteClick, handleResetClick,
         handleExecuteReset, toggleResetStudentSelection, handleAddSelectedStudents, toggleStudentSelection,
         handleSortChange, handleDragEnd, handleSaveOrder, handleToggleReorder,
-        handleUpdateClass, handleDeleteClass, handleMoveAssignment, handleCopyAssignment,
+        handleUpdateClass, handleInlineRenameSubmit, handleDeleteClass, handleMoveAssignment, handleCopyAssignment,
         handleApproveSubmission, handleApproveWithSplit, handleRejectSubmission, handleConvertAssignmentType,
         handleToggleGuidance, handleManualPass, handlePrint, handleDirectPrint,
     } = state;
@@ -142,21 +143,74 @@ export default function ClassRoomPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                             <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assignment Room</span>
                         </div>
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0A0E27] dark:text-white tracking-tight leading-none flex items-center gap-3">
+                        {isInlineEditing && isAdmin ? (
+                            <div className="flex items-center gap-3">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    value={inlineEditName}
+                                    onChange={e => setInlineEditName(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') handleInlineRenameSubmit();
+                                        if (e.key === 'Escape') setIsInlineEditing(false);
+                                    }}
+                                    onBlur={() => handleInlineRenameSubmit()}
+                                    className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0A0E27] dark:text-white tracking-tight leading-none bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 min-w-0 w-full max-w-xl transition-colors"
+                                />
+                                <button
+                                    onClick={() => handleInlineRenameSubmit()}
+                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
+                                    title="저장"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                </button>
+                                <button
+                                    onClick={() => setIsInlineEditing(false)}
+                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                                    title="취소"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        ) : (
+                        <h1
+                            className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0A0E27] dark:text-white tracking-tight leading-none flex items-center gap-3 group/title"
+                            onDoubleClick={() => {
+                                if (isAdmin && classData) {
+                                    setInlineEditName(classData.name || '');
+                                    setIsInlineEditing(true);
+                                }
+                            }}
+                        >
                             {classData?.name || (loading ? '불러오는 중...' : '클래스 없음')}
                             {isAdmin && classData && (
-                                <button
-                                    onClick={() => {
-                                        setEditingClassName(classData?.name || '');
-                                        setIsSettingsModalOpen(true);
-                                    }}
-                                    className="opacity-20 hover:opacity-100 transition-opacity p-2 text-slate-400 hover:text-blue-600"
-                                    title="클래스 설정"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                </button>
+                                <>
+                                    {/* Inline edit hint (pencil icon) */}
+                                    <button
+                                        onClick={() => {
+                                            setInlineEditName(classData?.name || '');
+                                            setIsInlineEditing(true);
+                                        }}
+                                        className="opacity-0 group-hover/title:opacity-60 hover:!opacity-100 transition-opacity p-1.5 text-slate-400 hover:text-blue-600"
+                                        title="이름 수정 (더블클릭으로도 가능)"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </button>
+                                    {/* Settings modal (gear icon) */}
+                                    <button
+                                        onClick={() => {
+                                            setEditingClassName(classData?.name || '');
+                                            setIsSettingsModalOpen(true);
+                                        }}
+                                        className="opacity-0 group-hover/title:opacity-40 hover:!opacity-100 transition-opacity p-1.5 text-slate-400 hover:text-blue-600"
+                                        title="클래스 설정"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    </button>
+                                </>
                             )}
                         </h1>
+                        )}
                         <p className="mt-3 text-lg font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
                             {isAdmin ? '관리자 모드' : '학생 모드'}
                             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
