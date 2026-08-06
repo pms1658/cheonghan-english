@@ -376,7 +376,7 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
                 while (retries <= maxRetries) {
                     try {
                         const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 9000); // 9초 타임아웃
+                        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20초 타임아웃 (cold start 고려)
 
                         const res = await fetch('/api/grade', {
                             method: 'POST',
@@ -388,8 +388,9 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
                         clearTimeout(timeoutId);
 
                         if (!res.ok) {
-                            const text = await res.text();
-                            throw new Error(`HTTP ${res.status}: ${text}`);
+                            const text = await res.text().catch(() => '(응답 읽기 실패)');
+                            addLog(`Sentence ${i + 1}: HTTP ${res.status} - ${text.substring(0, 200)}`);
+                            throw new Error(`HTTP ${res.status}: ${text.substring(0, 100)}`);
                         }
 
                         const data = await res.json();
@@ -448,8 +449,8 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
             });
 
             if (failedCount > 0) {
-                if (failedCount >= Math.ceil(allResults.length / 2)) {
-                    // 절반 이상 실패 → 전체 실패 처리
+                if (failedCount >= allResults.length) {
+                    // 전부 실패 → 전체 실패 처리 (저장 안 함)
                     toast.error(`${failedCount}/${allResults.length}개 문장 채점 실패. 네트워크를 확인하고 다시 제출해주세요.`, { duration: 8000 });
                     setLoading(false);
                     return;
