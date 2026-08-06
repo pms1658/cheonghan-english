@@ -3,13 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useStudentAssignment } from '@/hooks/useStudentAssignment';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import DesktopAssignment from '@/components/student/DesktopAssignment';
-import MobileAssignment from '@/components/student/MobileAssignment';
 import { SkeletonFullPage } from '@/components/common/Skeleton';
+
+// 화면 크기에 맞는 컴포넌트만 동적 로드 (번들 ~50% 절감)
+const DesktopAssignment = dynamic(() => import('@/components/student/DesktopAssignment'), {
+    loading: () => <SkeletonFullPage message="과제를 불러오는 중..." />,
+});
+const MobileAssignment = dynamic(() => import('@/components/student/MobileAssignment'), {
+    loading: () => <SkeletonFullPage message="과제를 불러오는 중..." />,
+});
 
 export default function StudentAssignmentPage() {
     const params = useParams();

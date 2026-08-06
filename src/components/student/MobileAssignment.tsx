@@ -2,22 +2,25 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Logo from '@/components/common/Logo';
 import StructureEditor, { parseAnalysisString, MARK_STYLES } from '@/components/student/StructureEditor';
 import { StudentAssignmentData } from '@/hooks/useStudentAssignment';
-import VocabularyAssignment from './VocabularyAssignment';
-import TransformAssignment from './transform/TransformAssignment';
-import SubjectiveAssignment from './subjective/SubjectiveAssignment';
-import AnalysisAssignment from './AnalysisAssignment';
-import WorkbookAssignmentView from './WorkbookAssignmentView';
-import WritingAssignment from './WritingAssignment';
-import ListeningSetAssignment from './ListeningSetAssignment';
-import SentenceOrderAssignment from './SentenceOrderAssignment';
-import MockExamAssignment from './MockExamAssignment';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import FinalPassageView from './FinalPassageView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonFullPage } from '@/components/common/Skeleton';
+
+// 과제 유형별 동적 로드 — 해당 유형일 때만 코드 다운로드
+const VocabularyAssignment = dynamic(() => import('./VocabularyAssignment'));
+const TransformAssignment = dynamic(() => import('./transform/TransformAssignment'));
+const SubjectiveAssignment = dynamic(() => import('./subjective/SubjectiveAssignment'));
+const AnalysisAssignment = dynamic(() => import('./AnalysisAssignment'));
+const WorkbookAssignmentView = dynamic(() => import('./WorkbookAssignmentView'));
+const WritingAssignment = dynamic(() => import('./WritingAssignment'));
+const ListeningSetAssignment = dynamic(() => import('./ListeningSetAssignment'));
+const SentenceOrderAssignment = dynamic(() => import('./SentenceOrderAssignment'));
+const MockExamAssignment = dynamic(() => import('./MockExamAssignment'));
 
 /** Resolve student data from props or localStorage fallback (single source of truth) */
 const getStudentData = (student: any) =>

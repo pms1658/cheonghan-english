@@ -56,7 +56,11 @@ let _activeTenantId: string = DEFAULT_TENANT_ID;
 
 /** 현재 활성 tenantId 설정 (TenantContext에서 호출) */
 export function setActiveTenantId(id: string) {
-    _activeTenantId = id;
+    if (_activeTenantId !== id) {
+        _activeTenantId = id;
+        // 테넌트 변경 시 캐시 초기화 (이전 테넌트 데이터 잔류 방지)
+        _queryCache?.clear?.();
+    }
     initHomeworkService(getActiveTenantId);
 }
 
@@ -95,10 +99,46 @@ const normalizeSubmission = (data: Submission): Submission => {
     return data;
 };
 
+// ─── 인메모리 쿼리 캐시 (성능 최적화) ───
+// 같은 세션 내 중복 Firestore 조회 방지. TTL 30초, 뮤테이션 시 무효화.
+const _queryCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 30_000; // 30초
+
+function getCached<T>(key: string): T | null {
+    const entry = _queryCache.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+        _queryCache.delete(key);
+        return null;
+    }
+    return entry.data as T;
+}
+
+function setCache(key: string, data: any): void {
+    _queryCache.set(key, { data, timestamp: Date.now() });
+}
+
+/** 특정 접두사로 시작하는 캐시 키 무효화 */
+function invalidateCache(...prefixes: string[]): void {
+    for (const key of _queryCache.keys()) {
+        if (prefixes.some(p => key.startsWith(p))) {
+            _queryCache.delete(key);
+        }
+    }
+}
+
+/** 전체 캐시 초기화 (테넌트 변경 등) */
+export function clearQueryCache(): void {
+    _queryCache.clear();
+}
+
 export const dbService = {
     // --- Students ---
     getStudents: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
+        const cacheKey = `students_${tid}`;
+        const cached = getCached<Student[]>(cacheKey);
+        if (cached) return cached;
         try {
             // 비기본 테넌트: 서버사이드 필터링 (성능 최적화)
             const q = tid !== DEFAULT_TENANT_ID
@@ -112,7 +152,9 @@ export const dbService = {
                 return data;
             });
             // 기본 테넌트는 레거시 데이터(tenantId 미설정)도 포함해야 하므로 클라이언트 필터 유지
-            return tid === DEFAULT_TENANT_ID ? results.filter(s => matchesTenant(s as any, tid)) : results;
+            const final = tid === DEFAULT_TENANT_ID ? results.filter(s => matchesTenant(s as any, tid)) : results;
+            setCache(cacheKey, final);
+            return final;
         } catch (e) {
             console.error('Error fetching students:', e);
             return [];
@@ -134,13 +176,16 @@ export const dbService = {
             tenantId: tid
         };
         const ref = await addDoc(collection(db, 'students'), newStudent);
+        invalidateCache('students_');
         return { ...newStudent, docId: ref.id };
     },
     updateStudent: async (docId: string, data: Partial<Student>) => {
         await updateDoc(doc(db, 'students', docId), data);
+        invalidateCache('students_');
     },
     deleteStudent: async (docId: string) => {
         await deleteDoc(doc(db, 'students', docId));
+        invalidateCache('students_');
     },
 
     // --- Feedback ---
@@ -175,13 +220,18 @@ export const dbService = {
     },
     getClasses: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
+        const cacheKey = `classes_${tid}`;
+        const cached = getCached<Class[]>(cacheKey);
+        if (cached) return cached;
         try {
             const q = tid !== DEFAULT_TENANT_ID
                 ? query(collection(db, 'classes'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
                 : collection(db, 'classes');
             const classesSnap = await getDocs(q);
             const results = classesSnap.docs.map(d => convertDoc<Class>(d));
-            return tid === DEFAULT_TENANT_ID ? results.filter(c => matchesTenant(c as any, tid)) : results;
+            const final = tid === DEFAULT_TENANT_ID ? results.filter(c => matchesTenant(c as any, tid)) : results;
+            setCache(cacheKey, final);
+            return final;
         } catch (e) {
             console.error("Error fetching classes:", e);
             return [];
@@ -191,13 +241,16 @@ export const dbService = {
         const tid = tenantId || _activeTenantId;
         const newClass = { name, tenantId: tid };
         const ref = await addDoc(collection(db, 'classes'), newClass);
+        invalidateCache('classes_');
         return { id: ref.id, ...newClass };
     },
     deleteClass: async (id: string) => {
         await deleteDoc(doc(db, 'classes', id));
+        invalidateCache('classes_');
     },
     updateClass: async (id: string, data: Partial<Class>) => {
         await updateDoc(doc(db, 'classes', id), data);
+        invalidateCache('classes_');
     },
 
     // --- Class Folders ---
@@ -336,6 +389,9 @@ export const dbService = {
     // --- Assignments ---
     getAssignments: async (tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
+        const cacheKey = `assignments_${tid}`;
+        const cached = getCached<Assignment[]>(cacheKey);
+        if (cached) return cached;
         // Helper: normalize any timestamp format to epoch ms
         const toEpoch = (val: any): number => {
             if (!val) return 0;
@@ -373,7 +429,9 @@ export const dbService = {
                 }
                 return data;
             });
-            return tid === DEFAULT_TENANT_ID ? mapped.filter(a => matchesTenant(a as any, tid)) : mapped;
+            const final = tid === DEFAULT_TENANT_ID ? mapped.filter(a => matchesTenant(a as any, tid)) : mapped;
+            setCache(cacheKey, final);
+            return final;
         } catch (e) { console.error(e); return []; }
     },
     addAssignment: async (assignment: Omit<Assignment, 'id'>, tenantId?: string) => {
@@ -385,16 +443,20 @@ export const dbService = {
             tenantId: tid
         };
         const ref = await addDoc(collection(db, 'assignments'), newAssignment);
+        invalidateCache('assignments_');
         return { id: ref.id, ...newAssignment };
     },
     updateAssignment: async (docId: string, data: Partial<Assignment>) => {
         await updateDoc(doc(db, 'assignments', docId), data);
+        invalidateCache('assignments_');
     },
     updateAssignmentOrder: async (docId: string, order: number) => {
         await updateDoc(doc(db, 'assignments', docId), { order });
+        invalidateCache('assignments_');
     },
     deleteAssignment: async (docId: string) => {
         await deleteDoc(doc(db, 'assignments', docId));
+        invalidateCache('assignments_');
     },
     getAssignmentById: async (id: string) => {
         const d = await getDoc(doc(db, 'assignments', id));
@@ -466,24 +528,31 @@ export const dbService = {
     // --- Submissions ---
     getSubmissions: async (classId?: string, studentName?: string, tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
-        const q = tid !== DEFAULT_TENANT_ID
-            ? query(collection(db, 'submissions'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
-            : query(collection(db, 'submissions'), orderBy('timestamp', 'desc'));
+        const cacheKey = `submissions_${tid}`;
+        let results = getCached<Submission[]>(cacheKey);
+        if (!results) {
+            const q = tid !== DEFAULT_TENANT_ID
+                ? query(collection(db, 'submissions'), where('tenantId', 'in', [tid, SHARED_TENANT_ID]))
+                : query(collection(db, 'submissions'), orderBy('timestamp', 'desc'));
 
-        const sn = await getDocs(q);
-        let results = sn.docs.map(d => normalizeSubmission(convertDoc<Submission>(d)));
-        // 기본 테넌트: matchesTenant 필터 유지
-        if (tid === DEFAULT_TENANT_ID) {
-            results = results.filter(s => matchesTenant(s as any, tid));
-        } else {
-            // 비기본 테넌트: orderBy 없으므로 클라이언트 정렬
-            results.sort((a, b) => ((b.timestamp as number) || 0) - ((a.timestamp as number) || 0));
+            const sn = await getDocs(q);
+            results = sn.docs.map(d => normalizeSubmission(convertDoc<Submission>(d)));
+            // 기본 테넌트: matchesTenant 필터 유지
+            if (tid === DEFAULT_TENANT_ID) {
+                results = results.filter(s => matchesTenant(s as any, tid));
+            } else {
+                // 비기본 테넌트: orderBy 없으므로 클라이언트 정렬
+                results.sort((a, b) => ((b.timestamp as number) || 0) - ((a.timestamp as number) || 0));
+            }
+            setCache(cacheKey, results);
         }
 
-        if (classId) results = results.filter(s => s.classId === classId);
-        if (studentName) results = results.filter(s => s.studentName?.includes(studentName));
+        // 캐시된 전체 결과에서 필터 적용 (원본 변경 방지를 위해 새 배열)
+        let filtered = [...results];
+        if (classId) filtered = filtered.filter(s => s.classId === classId);
+        if (studentName) filtered = filtered.filter(s => s.studentName?.includes(studentName));
 
-        return results;
+        return filtered;
     },
     addSubmission: async (submission: Omit<Submission, 'id' | 'timestamp'>, tenantId?: string) => {
         const tid = tenantId || _activeTenantId;
@@ -499,6 +568,7 @@ export const dbService = {
             } catch { /* SSR safety */ }
         }
         const ref = await addDoc(collection(db, 'submissions'), newSub);
+        invalidateCache('submissions_');
         return { id: ref.id, ...newSub };
     },
     getSubmissionHistory: async (studentId: string, assignmentId: string) => {
