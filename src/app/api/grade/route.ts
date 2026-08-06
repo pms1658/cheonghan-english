@@ -4,9 +4,9 @@ import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddlew
 import { gradeRequestSchema } from '@/schemas/api';
 import { extractJSON, withRetry } from '@/lib/aiUtils';
 
-// Vercel Hobby: 10s max, Pro: up to 300s
-// 클라이언트가 1~2문장씩 보내므로 10초 내 충분히 처리 가능
-export const maxDuration = 10;
+// Serverless: Hobby=10s, Pro=60s
+// gemini-3.5-flash가 ~15-20초 소요 → 스트리밍 방식으로 타임아웃 우회
+export const maxDuration = 60;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -156,7 +156,6 @@ export async function POST(req: Request) {
     validateRequest(gradeRequestSchema, body, 'grade');
     const { assignments } = body;
 
-    // Handle single assignment legacy format if necessary (fallback)
     if (!assignments && body.standard_answer) {
       return NextResponse.json({ error: 'Batch format required' }, { status: 400 });
     }
@@ -165,7 +164,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Gemini API Key is missing' }, { status: 500 });
     }
 
-    // Use user-requested model (found in extract-words route)
     const model = genAI.getGenerativeModel({
       model: "gemini-3.5-flash",
       generationConfig: { responseMimeType: "application/json" }
@@ -173,83 +171,97 @@ export async function POST(req: Request) {
 
     console.log(`[Grading] Starting grading for ${assignments.length} items using gemini-3.5-flash`);
 
-    // 순차 처리: Hobby 10초 제한 대응 (클라이언트가 1~2문장씩 보냄)
-    const results: any[] = [];
-
-    for (let index = 0; index < assignments.length; index++) {
-      const task = assignments[index];
-      const prompt = GRADE_PROMPT
-        .replace("{sentence}", task.sentence)
-        .replace("{analysisString}", task.analysisString)
-        .replace("{translation}", task.translation)
-        .replace("{selectedForms}", task.selectedForms ? JSON.stringify(task.selectedForms) : "[]");
-
-      try {
-        console.log(`[Grading] Item ${index} - Generating content...`);
-        
-        // 최대 1회 재시도 (총 2회 시도) — Hobby 타임아웃 고려하여 줄임
-        const text = await withRetry(async () => {
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const t = response.text();
-          if (!t || t.trim().length === 0) throw new Error('Empty response');
-          return t;
-        }, { maxRetries: 1, baseDelay: 500, label: `Grading Item ${index}` });
-        
-        console.log(`[Grading] Item ${index} - Response received (Length: ${text.length})`);
-
+    // ═══ 스트리밍 응답: Vercel Hobby 10초 타임아웃 우회 ═══
+    // ReadableStream으로 즉시 응답 시작 → Vercel이 연결 유지
+    // 클라이언트에 NDJSON(newline-delimited JSON) 형식으로 전송
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
         try {
-          const parsed = extractJSON(text);
+          const results: any[] = [];
 
-          // SAFEGUARD: Ensure all fields are primitives or arrays of primitives
-          const rawScore = typeof parsed.score === 'number' ? parsed.score : 0;
-          const safeScore = Math.max(0, Math.min(100, rawScore)); // 0~100 클램핑
-          const safeFeedback = typeof parsed.feedback === 'object' ? JSON.stringify(parsed.feedback) : (parsed.feedback || '');
-          // correctStructure에서 이모지 제거 (⚠️ 등이 파서를 혼란시킴)
-          let safeStructure = typeof parsed.correctStructure === 'object' ? JSON.stringify(parsed.correctStructure) : (parsed.correctStructure || '');
-          safeStructure = safeStructure.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}\u{20E3}]|\u26A0\uFE0F?/gu, '').trim();
-          const safeTranslation = typeof parsed.directTranslation === 'object' ? JSON.stringify(parsed.directTranslation) : (parsed.directTranslation || '');
+          for (let index = 0; index < assignments.length; index++) {
+            const task = assignments[index];
+            const prompt = GRADE_PROMPT
+              .replace("{sentence}", task.sentence)
+              .replace("{analysisString}", task.analysisString)
+              .replace("{translation}", task.translation)
+              .replace("{selectedForms}", task.selectedForms ? JSON.stringify(task.selectedForms) : "[]");
 
-          // Sanitize Arrays
-          const safeForms = Array.isArray(parsed.correctForms)
-            ? parsed.correctForms.map((f: any) => typeof f === 'object' ? JSON.stringify(f) : String(f))
-            : [];
+            // 진행 상태를 즉시 스트리밍 (Vercel 연결 유지용)
+            controller.enqueue(encoder.encode(`{"_progress":${index + 1},"_total":${assignments.length}}\n`));
 
-          const safeVocab = Array.isArray(parsed.vocabFeedback)
-            ? parsed.vocabFeedback.map((v: any) => typeof v === 'object' ? (v.word || v.term || JSON.stringify(v)) : String(v))
-            : [];
+            try {
+              console.log(`[Grading] Item ${index} - Generating content...`);
 
-          results.push({
-            score: safeScore,
-            feedback: safeFeedback,
-            correctStructure: safeStructure,
-            correctForms: safeForms,
-            directTranslation: safeTranslation,
-            vocabFeedback: safeVocab,
-            details: parsed
-          });
-        } catch (parseError) {
-          console.error(`[Grading] Item ${index} - JSON Parse Error`, text.substring(0, 500));
-          results.push({
-            score: 0,
-            feedback: '채점 응답 파싱 오류. 다시 시도해주세요.',
-            _error: true
-          });
+              const text = await withRetry(async () => {
+                const streamResult = await model.generateContentStream(prompt);
+                let fullText = '';
+                for await (const chunk of streamResult.stream) {
+                  fullText += chunk.text();
+                  // 스트리밍 중 keep-alive 신호 전송
+                  controller.enqueue(encoder.encode(' '));
+                }
+                if (!fullText || fullText.trim().length === 0) throw new Error('Empty response');
+                return fullText;
+              }, { maxRetries: 1, baseDelay: 500, label: `Grading Item ${index}` });
+
+              console.log(`[Grading] Item ${index} - Response received (Length: ${text.length})`);
+
+              try {
+                const parsed = extractJSON(text);
+                const rawScore = typeof parsed.score === 'number' ? parsed.score : 0;
+                const safeScore = Math.max(0, Math.min(100, rawScore));
+                const safeFeedback = typeof parsed.feedback === 'object' ? JSON.stringify(parsed.feedback) : (parsed.feedback || '');
+                let safeStructure = typeof parsed.correctStructure === 'object' ? JSON.stringify(parsed.correctStructure) : (parsed.correctStructure || '');
+                safeStructure = safeStructure.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}\u{20E3}]|\u26A0\uFE0F?/gu, '').trim();
+                const safeTranslation = typeof parsed.directTranslation === 'object' ? JSON.stringify(parsed.directTranslation) : (parsed.directTranslation || '');
+                const safeForms = Array.isArray(parsed.correctForms)
+                  ? parsed.correctForms.map((f: any) => typeof f === 'object' ? JSON.stringify(f) : String(f))
+                  : [];
+                const safeVocab = Array.isArray(parsed.vocabFeedback)
+                  ? parsed.vocabFeedback.map((v: any) => typeof v === 'object' ? (v.word || v.term || JSON.stringify(v)) : String(v))
+                  : [];
+
+                results.push({
+                  score: safeScore,
+                  feedback: safeFeedback,
+                  correctStructure: safeStructure,
+                  correctForms: safeForms,
+                  directTranslation: safeTranslation,
+                  vocabFeedback: safeVocab,
+                  details: parsed
+                });
+              } catch (parseError) {
+                console.error(`[Grading] Item ${index} - JSON Parse Error`, text.substring(0, 500));
+                results.push({ score: 0, feedback: '채점 응답 파싱 오류. 다시 시도해주세요.', _error: true });
+              }
+            } catch (err: any) {
+              const errMsg = err?.message || err?.rawText?.substring(0, 100) || String(err) || 'Unknown error';
+              console.error(`[Grading] Item ${index} - Failed: ${errMsg}`, err);
+              results.push({ score: 0, feedback: `채점 중 오류가 발생했습니다. [${errMsg}]`, _error: true });
+            }
+          }
+
+          console.log(`[Grading] Completed. Results: ${results.length}`);
+
+          // 최종 결과를 RESULT_START 마커로 구분하여 전송
+          controller.enqueue(encoder.encode(`\nRESULT_START\n${JSON.stringify({ results })}\n`));
+          controller.close();
+        } catch (err) {
+          console.error('[Grading] Stream error:', err);
+          controller.enqueue(encoder.encode(`\nRESULT_START\n${JSON.stringify({ error: 'Grading failed' })}\n`));
+          controller.close();
         }
-      } catch (err: any) {
-        const errMsg = err?.message || err?.rawText?.substring(0, 100) || String(err) || 'Unknown error';
-        console.error(`[Grading] Item ${index} - Failed: ${errMsg}`, err);
-        results.push({
-          score: 0,
-          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요. [${errMsg}]`,
-          _error: true
-        });
       }
-    }
+    });
 
-    console.log(`[Grading] Completed. Results: ${results.length}`);
-
-    return NextResponse.json({ results });
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      }
+    });
 
   } catch (error) {
     return createErrorResponse(error, 'Failed to grade assignments');

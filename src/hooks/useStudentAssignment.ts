@@ -376,7 +376,7 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
                 while (retries <= maxRetries) {
                     try {
                         const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20초 타임아웃 (cold start 고려)
+                        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45초 타임아웃 (스트리밍 응답)
 
                         const res = await fetch('/api/grade', {
                             method: 'POST',
@@ -393,7 +393,18 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
                             throw new Error(`HTTP ${res.status}: ${text.substring(0, 100)}`);
                         }
 
-                        const data = await res.json();
+                        // 스트리밍 응답 파싱: RESULT_START 마커 이후의 JSON 추출
+                        const responseText = await res.text();
+                        const markerIdx = responseText.indexOf('RESULT_START');
+                        let data: any;
+                        if (markerIdx >= 0) {
+                            const jsonStr = responseText.substring(markerIdx + 'RESULT_START'.length).trim();
+                            data = JSON.parse(jsonStr);
+                        } else {
+                            // 폴백: 일반 JSON 응답 (비스트리밍 호환)
+                            data = JSON.parse(responseText.trim());
+                        }
+
                         if (data.results?.[0]) {
                             result = data.results[0];
                             break; // 성공
