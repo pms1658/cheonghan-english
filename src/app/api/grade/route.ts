@@ -32,7 +32,7 @@ Student's Selected Sentence Form(s): {selectedForms}
         - Split: [will](V) (always) [love](V) — **CORRECT**
         - Split: [can](V) (really) [do](V) — **CORRECT**
         - Split without adverb bracket: [can](V) really [do](V) — **CORRECT**
-        - **⚠️ ZERO DEDUCTION: ALL styles above are EQUALLY valid. You MUST NOT deduct ANY points for choosing one style over another. This is the #1 most common grading error — do NOT make it.**
+        - **IMPORTANT — ZERO DEDUCTION: ALL styles above are EQUALLY valid. You MUST NOT deduct ANY points for choosing one style over another. This is the #1 most common grading error — do NOT make it.**
     - **Phrasal Verbs** (e.g., "look at"):
         - Grouped: [look at](V) — **CORRECT**
         - Split: [look](V) (at) — **CORRECT**
@@ -56,7 +56,7 @@ Student's Selected Sentence Form(s): {selectedForms}
 5.  **SUBORDINATORS (Angle Brackets) < ... >**
     - Adverbial Clauses with an explicit subordinating conjunction: because, since, when, if, although, as, etc.
     - **DUAL ACCEPTANCE**: Student may use < > OR ( ) for subordinate clauses. Both are correct since subordinate clauses are not part of the sentence backbone.
-    - **⚠️ PARTICIPIAL CONSTRUCTIONS are NOT subordinate clauses.** They are phrases (conjunction + subject omitted), so they MUST use ( ) modifier brackets:
+    - **CRITICAL: PARTICIPIAL CONSTRUCTIONS are NOT subordinate clauses.** They are phrases (conjunction + subject omitted), so they MUST use ( ) modifier brackets:
       - (Moving into a new situation), many people decide... — CORRECT
       - (Having finished the work), he left early. — CORRECT
       - <Moving into a new situation> — WRONG (no conjunction = not a clause)
@@ -102,7 +102,7 @@ Student's Selected Sentence Form(s): {selectedForms}
 
 2.  **Sentence Form Score (10 pts)**: Compare student's selectedForms against correctForms.
     - Use exact string match. Forms: "1형식", "2형식", "3형식", "4형식", "5형식", "3형식 수동태", "4형식 수동태", "5형식 수동태"
-    - **⚠️ CRITICAL — MAIN CLAUSE ONLY**: correctForms must contain the sentence form(s) of the **MAIN CLAUSE(s) (주절) ONLY**. Do NOT include forms for subordinate clauses (종속절), relative clauses (관계대명사절/관계부사절), adverbial clauses (부사절), or noun clauses (명사절). Only independent clauses and coordinate clauses joined by coordinators (and/but/or/so) count.
+    - **CRITICAL — MAIN CLAUSE ONLY**: correctForms must contain the sentence form(s) of the **MAIN CLAUSE(s) (주절) ONLY**. Do NOT include forms for subordinate clauses (종속절), relative clauses (관계대명사절/관계부사절), adverbial clauses (부사절), or noun clauses (명사절). Only independent clauses and coordinate clauses joined by coordinators (and/but/or/so) count.
     - Example: "When he arrived, she gave him the book" → correctForms: ["4형식"] (main clause only; "When he arrived" is an adverbial clause — IGNORE its form)
     - Example: "He studies hard and she reads books" → correctForms: ["1형식", "3형식"] (two coordinate main clauses)
     - Do NOT match the number of items to the student's selectedForms count. Determine correctForms independently based on how many main/coordinate clauses exist.
@@ -130,7 +130,7 @@ Student's Selected Sentence Form(s): {selectedForms}
 
 - **directTranslation** (string): Chunk-by-chunk Korean translation following the original English word order.
   - **KOREAN ONLY**. Zero English words. Translate everything into Korean.
-  - **⚠️ NO MARKUP**: Do NOT include any symbols like [qn], [/qn], [V], [△], [O], <, >, /, ( ), etc. in the translation. Output PURE Korean text only. Use / (slash) ONLY as a chunk separator between translated phrases.
+  - **IMPORTANT — NO MARKUP**: Do NOT include any symbols like [qn], [/qn], [V], [△], [O], <, >, /, ( ), etc. in the translation. Output PURE Korean text only. Use / (slash) ONLY as a chunk separator between translated phrases.
 
 - **vocabFeedback** (string[]): Key vocabulary with Korean meanings.
 
@@ -205,7 +205,9 @@ export async function POST(req: Request) {
           const rawScore = typeof parsed.score === 'number' ? parsed.score : 0;
           const safeScore = Math.max(0, Math.min(100, rawScore)); // 0~100 클램핑
           const safeFeedback = typeof parsed.feedback === 'object' ? JSON.stringify(parsed.feedback) : (parsed.feedback || '');
-          const safeStructure = typeof parsed.correctStructure === 'object' ? JSON.stringify(parsed.correctStructure) : (parsed.correctStructure || '');
+          // correctStructure에서 이모지 제거 (⚠️ 등이 파서를 혼란시킴)
+          let safeStructure = typeof parsed.correctStructure === 'object' ? JSON.stringify(parsed.correctStructure) : (parsed.correctStructure || '');
+          safeStructure = safeStructure.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}\u{20E3}]|\u26A0\uFE0F?/gu, '').trim();
           const safeTranslation = typeof parsed.directTranslation === 'object' ? JSON.stringify(parsed.directTranslation) : (parsed.directTranslation || '');
 
           // Sanitize Arrays
