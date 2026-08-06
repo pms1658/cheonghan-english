@@ -50,6 +50,8 @@ export interface StudentAssignmentData {
     completedCount: number;
     totalSentences: number;
     attemptsCount: number;
+    /** 채점 진행률 (null이면 채점 중 아님) */
+    gradingProgress: { current: number; total: number } | null;
 }
 
 export function useStudentAssignment(assignmentId: string): StudentAssignmentData {
@@ -70,6 +72,7 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
     const [isRetryMode, setIsRetryMode] = useState(false);
     const [student, setStudent] = useState<{ id: string, name: string, classId: string } | null>(null);
     const [debugLog, setDebugLog] = useState<string[]>([]);
+    const [gradingProgress, setGradingProgress] = useState<{ current: number; total: number } | null>(null);
 
     const addLog = (msg: string) => setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()} - ${msg} `]);
 
@@ -343,7 +346,8 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
                 return;
             }
 
-            const payload = targetIndices.map(idx => {
+            // 각 문장에 대한 payload 생성
+            const payloadItems = targetIndices.map(idx => {
                 const ans = answers[idx] || { marks: [], translation: '', selectedForms: [] };
                 const rawSent = assignment.sentences?.[idx] || '';
                 const sentenceText = (typeof rawSent === 'string' ? rawSent : (rawSent.original || '')) || '';
@@ -357,45 +361,105 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
                 };
             });
 
-            const res = await fetch('/api/grade', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assignments: payload })
-            });
+            // ═══ 순차 채점: 1문장씩 API 호출 (Hobby 10초 제한 대응) ═══
+            const allResults: any[] = new Array(payloadItems.length).fill(null);
+            setGradingProgress({ current: 0, total: payloadItems.length });
 
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`Grading failed: ${text} `);
+            for (let i = 0; i < payloadItems.length; i++) {
+                setGradingProgress({ current: i + 1, total: payloadItems.length });
+                addLog(`Grading sentence ${i + 1}/${payloadItems.length}...`);
+
+                let result: any = null;
+                let retries = 0;
+                const maxRetries = 2; // 실패 시 최대 2회 재시도
+
+                while (retries <= maxRetries) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 9000); // 9초 타임아웃
+
+                        const res = await fetch('/api/grade', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ assignments: [payloadItems[i]] }),
+                            signal: controller.signal
+                        });
+
+                        clearTimeout(timeoutId);
+
+                        if (!res.ok) {
+                            const text = await res.text();
+                            throw new Error(`HTTP ${res.status}: ${text}`);
+                        }
+
+                        const data = await res.json();
+                        if (data.results?.[0]) {
+                            result = data.results[0];
+                            break; // 성공
+                        } else {
+                            throw new Error('Empty result');
+                        }
+                    } catch (err: any) {
+                        retries++;
+                        const isTimeout = err?.name === 'AbortError';
+                        const errMsg = isTimeout ? '서버 응답 지연' : (err?.message || 'Unknown');
+                        addLog(`Sentence ${i + 1} attempt ${retries} failed: ${errMsg}`);
+
+                        if (retries <= maxRetries) {
+                            // 짧은 대기 후 재시도
+                            await new Promise(r => setTimeout(r, 500 * retries));
+                        } else {
+                            // 최종 실패
+                            result = {
+                                score: 0,
+                                feedback: `채점 실패: ${errMsg}. 제출 후 해당 문장만 재채점됩니다.`,
+                                _error: true
+                            };
+                        }
+                    }
+                }
+
+                allResults[i] = result;
             }
+
+            setGradingProgress(null);
+            addLog(`All grading complete. ${allResults.filter(r => r && !r._error).length}/${allResults.length} succeeded.`);
 
             localStorage.removeItem(`CHEONGHAN_DRAFT_${assignmentId}_${student.id}`);
 
-            const data = await res.json();
-            addLog(`API Response received: ${data.results ? data.results.length : 0} items`);
+            // ═══ 결과 병합 ═══
+            const totalSentenceCount = assignment.sentences?.length || 0;
+            let finalDetails = submissionResult
+                ? [...submissionResult.details]
+                : new Array(totalSentenceCount).fill(null);
 
-            let finalDetails = submissionResult ? [...submissionResult.details] : new Array((assignment.sentences?.length || 0)).fill(null);
-
-            if (Array.isArray(data.results)) {
-                let failedCount = 0;
-                data.results.forEach((result: any, i: number) => {
-                    const originalIdx = targetIndices[i];
-                    if (originalIdx !== undefined) {
-                        finalDetails[originalIdx] = result;
-                        // 개별 문장 채점 실패 감지
-                        if (result && result.score === 0 && result.feedback && result.feedback.includes('오류')) {
-                            failedCount++;
-                        }
-                    }
-                });
-                if (failedCount > 0) {
-                    toast.warning(`${failedCount}개 문장의 채점 중 오류가 발생했습니다. 다시 제출해주세요.`, { duration: 6000 });
-                }
-            } else {
-                console.error('Unexpected grading response format:', data);
-                throw new Error('채점 결과 형식이 올바르지 않습니다.');
+            // finalDetails 크기가 부족하면 확장
+            while (finalDetails.length < totalSentenceCount) {
+                finalDetails.push(null);
             }
 
-            const validScores = finalDetails.filter(d => d).map(d => d.score);
+            let failedCount = 0;
+            allResults.forEach((result: any, i: number) => {
+                const originalIdx = targetIndices[i];
+                if (originalIdx !== undefined && result) {
+                    finalDetails[originalIdx] = result;
+                    if (result._error) failedCount++;
+                }
+            });
+
+            if (failedCount > 0) {
+                if (failedCount >= Math.ceil(allResults.length / 2)) {
+                    // 절반 이상 실패 → 전체 실패 처리
+                    toast.error(`${failedCount}/${allResults.length}개 문장 채점 실패. 네트워크를 확인하고 다시 제출해주세요.`, { duration: 8000 });
+                    setLoading(false);
+                    return;
+                }
+                toast.warning(`${failedCount}개 문장 채점 실패. 성공한 문장만 반영됩니다. 재제출하면 실패 문장이 다시 채점됩니다.`, { duration: 6000 });
+            }
+
+            // 점수 계산: 실패 문장(_error)은 제외하고 평균
+            const validDetails = finalDetails.filter(d => d && !d._error);
+            const validScores = validDetails.map(d => d.score);
             const totalScore = validScores.length ? Math.floor(validScores.reduce((a: number, b: number) => a + b, 0) / validScores.length) : 0;
 
             if (mode === 'preview') {
@@ -410,14 +474,6 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
 
             const history = await dbService.getSubmissionHistory(student.id, assignmentId);
             const currentAttempt = history.length + 1;
-
-            if (currentAttempt > 3 && mode !== 'practice') {
-                // Limit removed per user request: "3회채점 없애기... 무제한 응시 가능하되"
-                // Just log or do nothing
-                // toast("이미 3회 제출하였습니다. 오답 학습 모드를 이용해주세요.");
-                // setLoading(false);
-                // return;
-            }
 
             await dbService.addSubmission({
                 studentId: student.id,
@@ -443,6 +499,7 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
             toast.error(`채점 오류: ${e.message}`);
         } finally {
             setLoading(false);
+            setGradingProgress(null);
         }
     };
 
@@ -552,6 +609,7 @@ export function useStudentAssignment(assignmentId: string): StudentAssignmentDat
         isLast,
         completedCount,
         totalSentences,
-        attemptsCount
+        attemptsCount,
+        gradingProgress
     };
 }

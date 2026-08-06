@@ -4,6 +4,10 @@ import { apiGuard, createErrorResponse, validateRequest } from '@/lib/apiMiddlew
 import { gradeRequestSchema } from '@/schemas/api';
 import { extractJSON, withRetry } from '@/lib/aiUtils';
 
+// Vercel Hobby: 10s max, Pro: up to 300s
+// 클라이언트가 1~2문장씩 보내므로 10초 내 충분히 처리 가능
+export const maxDuration = 10;
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 const GRADE_PROMPT = `
@@ -167,9 +171,13 @@ export async function POST(req: Request) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    console.log(`[Grading] Starting batch grading for ${assignments.length} items using gemini-3.5-flash`);
+    console.log(`[Grading] Starting grading for ${assignments.length} items using gemini-3.5-flash`);
 
-    const gradingPromises = assignments.map(async (task: any, index: number) => {
+    // 순차 처리: Hobby 10초 제한 대응 (클라이언트가 1~2문장씩 보냄)
+    const results: any[] = [];
+
+    for (let index = 0; index < assignments.length; index++) {
+      const task = assignments[index];
       const prompt = GRADE_PROMPT
         .replace("{sentence}", task.sentence)
         .replace("{analysisString}", task.analysisString)
@@ -179,14 +187,14 @@ export async function POST(req: Request) {
       try {
         console.log(`[Grading] Item ${index} - Generating content...`);
         
-        // 최대 2회 재시도 (총 3회 시도)
+        // 최대 1회 재시도 (총 2회 시도) — Hobby 타임아웃 고려하여 줄임
         const text = await withRetry(async () => {
           const result = await model.generateContent(prompt);
           const response = await result.response;
           const t = response.text();
           if (!t || t.trim().length === 0) throw new Error('Empty response');
           return t;
-        }, { maxRetries: 2, label: `Grading Item ${index}` });
+        }, { maxRetries: 1, baseDelay: 500, label: `Grading Item ${index}` });
         
         console.log(`[Grading] Item ${index} - Response received (Length: ${text.length})`);
 
@@ -209,7 +217,7 @@ export async function POST(req: Request) {
             ? parsed.vocabFeedback.map((v: any) => typeof v === 'object' ? (v.word || v.term || JSON.stringify(v)) : String(v))
             : [];
 
-          return {
+          results.push({
             score: safeScore,
             feedback: safeFeedback,
             correctStructure: safeStructure,
@@ -217,23 +225,27 @@ export async function POST(req: Request) {
             directTranslation: safeTranslation,
             vocabFeedback: safeVocab,
             details: parsed
-          };
+          });
         } catch (parseError) {
           console.error(`[Grading] Item ${index} - JSON Parse Error`, text.substring(0, 500));
-          throw { message: 'JSON Parse Error', rawText: text };
+          results.push({
+            score: 0,
+            feedback: '채점 응답 파싱 오류. 다시 시도해주세요.',
+            _error: true
+          });
         }
       } catch (err: any) {
         const errMsg = err?.message || err?.rawText?.substring(0, 100) || String(err) || 'Unknown error';
         console.error(`[Grading] Item ${index} - Failed: ${errMsg}`, err);
-        return {
+        results.push({
           score: 0,
-          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요. [${errMsg}]`
-        };
+          feedback: `채점 중 오류가 발생했습니다. 다시 시도해주세요. [${errMsg}]`,
+          _error: true
+        });
       }
-    });
+    }
 
-    const results = await Promise.all(gradingPromises);
-    console.log(`[Grading] Batch completed. Results: ${results.length}`);
+    console.log(`[Grading] Completed. Results: ${results.length}`);
 
     return NextResponse.json({ results });
 

@@ -43,7 +43,8 @@ export default function MobileAssignment({
     isLast,
     completedCount,
     totalSentences,
-    student
+    student,
+    gradingProgress
 }: StudentAssignmentData) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -68,6 +69,7 @@ export default function MobileAssignment({
     if (loading) {
         // Structure reading: show grading UI when assignment is loaded (AI scoring in progress)
         if (assignment) {
+            const progress = gradingProgress;
             return (
                 <div className="fixed inset-0 z-[100] bg-[#0A0E27] flex flex-col items-center justify-center">
                     <div className="w-20 h-20 bg-[#083973] rounded-[1.2rem] flex items-center justify-center p-2 shadow-2xl shadow-blue-900/30 overflow-hidden animate-pulse mb-6">
@@ -75,15 +77,34 @@ export default function MobileAssignment({
                     </div>
                     <div className="space-y-2 text-center z-10">
                         <h2 className="text-xl font-bold text-white tracking-tight">채점 중...</h2>
-                        <p className="text-slate-400 text-xs font-medium leading-relaxed whitespace-pre-line">
-                            AI가 정밀하게 분석하고 있습니다.{"\n"}잠시만 기다려주세요!
-                        </p>
+                        {progress ? (
+                            <>
+                                <p className="text-slate-300 text-sm font-semibold">
+                                    {progress.current} / {progress.total} 문장
+                                </p>
+                                <div className="w-48 h-2 bg-white/10 rounded-full overflow-hidden mx-auto mt-3">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-blue-400 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                                        style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
+                                    />
+                                </div>
+                                <p className="text-slate-500 text-[10px] mt-1">
+                                    AI가 문장별로 정밀 분석 중입니다
+                                </p>
+                            </>
+                        ) : (
+                            <p className="text-slate-400 text-xs font-medium leading-relaxed whitespace-pre-line">
+                                AI가 정밀하게 분석하고 있습니다.{"\n"}잠시만 기다려주세요!
+                            </p>
+                        )}
                     </div>
-                    <div className="mt-4 flex justify-center gap-1">
-                        {[0, 1, 2].map(i => (
-                            <div key={i} className="w-2 h-2 bg-[#1e3a5f] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                        ))}
-                    </div>
+                    {!progress && (
+                        <div className="mt-4 flex justify-center gap-1">
+                            {[0, 1, 2].map(i => (
+                                <div key={i} className="w-2 h-2 bg-[#1e3a5f] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
         }
