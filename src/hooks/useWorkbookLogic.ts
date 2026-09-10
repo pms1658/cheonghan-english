@@ -27,13 +27,15 @@ export const useWorkbookLogic = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [retryMode, setRetryMode] = useState(false);
-    const [failedIndices, setFailedIndices] = useState<number[]>([]);
+    // Per-level failed indices map (key: levelIdx, value: array of problem indices)
+    const [failedIndicesMap, setFailedIndicesMap] = useState<Record<number, number[]>>({});
 
     // Modals
     const [showCelebration, setShowCelebration] = useState(false);
     const [showFailedModal, setShowFailedModal] = useState(false);
     const [failedResult, setFailedResult] = useState<{ correct: number; total: number } | null>(null);
     const [showFlowModal, setShowFlowModal] = useState(false); // After Level 2
+    const [showResumeModal, setShowResumeModal] = useState(false); // PASS re-entry choice
 
     // Complex State for specific levels
     const [writingState, setWritingState] = useState<Record<string, string[]>>({});
@@ -44,6 +46,9 @@ export const useWorkbookLogic = ({
     const [existingHistory, setExistingHistory] = useState<Submission[]>([]);
 
     const currentLevel = levels[currentLevelIdx];
+
+    // Helper: get failed indices for the current level
+    const failedIndices = failedIndicesMap[currentLevelIdx] || [];
 
     // Load History Logic
     useEffect(() => {
@@ -66,9 +71,13 @@ export const useWorkbookLogic = ({
                         setCurrentLevelIdx(levels.length - 1);
                         setShowCelebration(true);
                     } else if (completed.includes(1) && completed.includes(2)) {
-                        // Core done -> Level 3 or 4
-                        if (completed.includes(3)) setCurrentLevelIdx(3);
-                        else setCurrentLevelIdx(2);
+                        // Core done -> Show resume modal to let student choose
+                        if (completed.includes(3)) {
+                            setCurrentLevelIdx(3);
+                        } else {
+                            // PASS state: let student choose start from beginning or stage 3
+                            setShowResumeModal(true);
+                        }
                     }
                 }
             } catch (error) {
@@ -190,54 +199,66 @@ export const useWorkbookLogic = ({
         return { correct, total: level.problems.length, failed };
     };
 
-    // Level Completion Handler
+    // Level Completion Handler — Independent per-level scoring
     const handleLevelComplete = async () => {
-        // Special Logic for Level 2 (Grammar) completion check (Must verify both L1 & L2)
-        if (currentLevelIdx === 1) {
-            const res1 = checkLevelScore(0);
-            const res2 = checkLevelScore(1);
+        const res = checkLevelScore(currentLevelIdx);
+        const isPerfect = res.correct === res.total;
 
-            if (res1.correct < res1.total || res2.correct < res2.total) {
-                setFailedResult({
-                    correct: res1.correct + res2.correct,
-                    total: res1.total + res2.total
-                });
+        // --- Level 0 (Vocab) ---
+        if (currentLevelIdx === 0) {
+            if (!isPerfect) {
+                setFailedResult(res);
+                setFailedIndicesMap(prev => ({ ...prev, [0]: res.failed }));
                 setShowFailedModal(true);
-
-                // STRICT RETRY: Clear L1 & L2
-                setAnswers(prev => {
-                    const next = { ...prev };
-                    Object.keys(next).filter(k => k.startsWith('0-') || k.startsWith('1-')).forEach(k => delete next[k]);
-                    return next;
-                });
-                setCurrentLevelIdx(0);
-                window.scrollTo(0, 0);
                 return;
             }
 
-            // Core Pass -> Show Flow Modal
+            // Level 0 passed -> mark level 1 completed, move to level 1 (grammar)
+            const newCompleted = [...new Set([...completedLevels, 1])];
+            setCompletedLevels(newCompleted);
+            setRetryMode(false);
+            setFailedIndicesMap(prev => { const next = { ...prev }; delete next[0]; return next; });
+
+            // Save silently (just vocab done, not full core yet)
+            await finalizeSubmission(newCompleted, true);
+
+            setCurrentLevelIdx(1);
+            window.scrollTo(0, 0);
+            return;
+        }
+
+        // --- Level 1 (Grammar) ---
+        if (currentLevelIdx === 1) {
+            if (!isPerfect) {
+                setFailedResult(res);
+                setFailedIndicesMap(prev => ({ ...prev, [1]: res.failed }));
+                setShowFailedModal(true);
+                return;
+            }
+
+            // Level 1 passed -> Core complete (1+2), show flow modal
+            const newCompleted = [...new Set([...completedLevels, 1, 2])];
+            setCompletedLevels(newCompleted);
+            setRetryMode(false);
+            setFailedIndicesMap(prev => { const next = { ...prev }; delete next[1]; return next; });
+
             setShowFlowModal(true);
             return;
         }
 
-        // Standard Logic for other levels
-        const res = checkLevelScore(currentLevelIdx);
-        const isPerfect = res.correct === res.total;
-
+        // --- Standard Logic for other levels (Mastery / Stage 3+) ---
         if (!isPerfect) {
             setFailedResult(res);
-            setFailedIndices(res.failed);
+            setFailedIndicesMap(prev => ({ ...prev, [currentLevelIdx]: res.failed }));
             setShowFailedModal(true);
             return;
         }
 
         // Success state update
         const newCompleted = [...new Set([...completedLevels, currentLevelIdx + 1])];
-        if (currentLevelIdx === 1) newCompleted.push(1, 2); // Redundant safe-guard
-
         setCompletedLevels(newCompleted);
         setRetryMode(false);
-        setFailedIndices([]);
+        setFailedIndicesMap(prev => { const next = { ...prev }; delete next[currentLevelIdx]; return next; });
 
         await finalizeSubmission(newCompleted);
 
@@ -280,11 +301,7 @@ export const useWorkbookLogic = ({
                             // Check if segments are suspiciously missing or short compared to answer
                             const answerWords = p.answer.split(/\s+/);
                             if (availableWords.length < answerWords.length) {
-                                // console.warn(`Problem ${i} has insufficient segments. Regenerating from answer.`);
                                 // Simple fallback: Split answer by space, shuffle.
-                                // Logic: Normalize answer, keep punctuation attached or split? 
-                                // For unscramble, usually words + punctuation are separate or attached.
-                                // Let's try to just split by space for now, it's safer than nothing.
                                 availableWords = p.answer.split(' ');
                             }
 
@@ -368,6 +385,40 @@ export const useWorkbookLogic = ({
         });
     };
 
+    // --- Drag & Drop: Insert a word from available into a specific position in selected ---
+    const insertWordAt = (problemKey: string, word: string, wordIdx: number, insertPosition: number) => {
+        if (answers[problemKey]) return;
+        setUnscrambleState(prev => {
+            const state = prev[problemKey];
+            if (!state) return prev;
+            const newAvailable = [...state.available];
+            newAvailable.splice(wordIdx, 1);
+            const newSelected = [...state.selected];
+            newSelected.splice(insertPosition, 0, word);
+            return {
+                ...prev,
+                [problemKey]: { available: newAvailable, selected: newSelected }
+            };
+        });
+    };
+
+    // --- Drag & Drop: Reorder within selected ---
+    const reorderSelected = (problemKey: string, fromIdx: number, toIdx: number) => {
+        if (answers[problemKey]) return;
+        if (fromIdx === toIdx) return;
+        setUnscrambleState(prev => {
+            const state = prev[problemKey];
+            if (!state) return prev;
+            const newSelected = [...state.selected];
+            const [moved] = newSelected.splice(fromIdx, 1);
+            newSelected.splice(toIdx, 0, moved);
+            return {
+                ...prev,
+                [problemKey]: { available: state.available, selected: newSelected }
+            };
+        });
+    };
+
     const checkUnscramble = (problemKey: string, prob: any) => {
         const state = unscrambleState[problemKey];
         if (!state) return;
@@ -408,13 +459,15 @@ export const useWorkbookLogic = ({
         completedLevels,
         isLoading, isSubmitting,
         retryMode, setRetryMode,
-        failedIndices,
+        failedIndices, // derived from failedIndicesMap[currentLevelIdx]
+        failedIndicesMap, setFailedIndicesMap,
 
         // Modals
         showCelebration, setShowCelebration,
         showFailedModal, setShowFailedModal,
         failedResult,
         showFlowModal, setShowFlowModal,
+        showResumeModal, setShowResumeModal,
 
         // Complex Inputs
         writingState, setWritingState,
@@ -426,13 +479,13 @@ export const useWorkbookLogic = ({
         handleWordSelect,
         moveToAvailable,
         moveToSelected,
+        insertWordAt,
+        reorderSelected,
         checkUnscramble,
         handleWritingChange,
 
         // Setters (for Reset Logic)
         setCompletedLevels,
-        setFailedIndices,
-
 
         // Data
         currentLevel,

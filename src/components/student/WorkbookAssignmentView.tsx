@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Assignment, Submission, WorkbookConfig, WorkbookLevelType } from '@/types';
 import { dbService } from '@/services/db';
 import { useWorkbookLogic } from '@/hooks/useWorkbookLogic';
@@ -29,11 +29,12 @@ export default function WorkbookAssignmentView({
         completedLevels, setCompletedLevels,
         isLoading, isSubmitting,
         retryMode, setRetryMode,
-        failedIndices, setFailedIndices,
+        failedIndices, failedIndicesMap, setFailedIndicesMap,
         showCelebration, setShowCelebration,
         showFailedModal, setShowFailedModal,
         failedResult,
         showFlowModal, setShowFlowModal,
+        showResumeModal, setShowResumeModal,
         writingState, setWritingState,
         unscrambleState, setUnscrambleState,
         handleLevelComplete,
@@ -41,6 +42,8 @@ export default function WorkbookAssignmentView({
         handleWordSelect,
         moveToAvailable,
         moveToSelected,
+        insertWordAt,
+        reorderSelected,
         checkUnscramble,
         handleWritingChange,
         currentLevel,
@@ -54,6 +57,10 @@ export default function WorkbookAssignmentView({
         studentName,
         onComplete
     });
+
+    // --- Drag & Drop State ---
+    const [dragSource, setDragSource] = useState<{ type: 'available' | 'selected'; problemKey: string; wordIdx: number; word: string } | null>(null);
+    const [dropIndicator, setDropIndicator] = useState<{ problemKey: string; position: number } | null>(null);
 
     // Print function
     const handlePrint = () => {
@@ -136,6 +143,52 @@ export default function WorkbookAssignmentView({
         setTimeout(() => printWindow.print(), 300);
     };
 
+    // --- Drag Handlers ---
+    const handleDragStart = useCallback((e: React.DragEvent, type: 'available' | 'selected', problemKey: string, wordIdx: number, word: string) => {
+        setDragSource({ type, problemKey, wordIdx, word });
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', word);
+        // Style the dragged element
+        if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.opacity = '0.4';
+        }
+    }, []);
+
+    const handleDragEnd = useCallback((e: React.DragEvent) => {
+        setDragSource(null);
+        setDropIndicator(null);
+        if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.opacity = '1';
+        }
+    }, []);
+
+    const handleDragOverSelected = useCallback((e: React.DragEvent, problemKey: string, position: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        setDropIndicator({ problemKey, position });
+    }, []);
+
+    const handleDropOnSelected = useCallback((e: React.DragEvent, problemKey: string, position: number) => {
+        e.preventDefault();
+        setDropIndicator(null);
+
+        if (!dragSource || dragSource.problemKey !== problemKey) return;
+
+        if (dragSource.type === 'available') {
+            // Move from available to specific position in selected
+            insertWordAt(problemKey, dragSource.word, dragSource.wordIdx, position);
+        } else if (dragSource.type === 'selected') {
+            // Reorder within selected
+            let adjustedPosition = position;
+            if (dragSource.wordIdx < position) {
+                adjustedPosition = position - 1;
+            }
+            reorderSelected(problemKey, dragSource.wordIdx, adjustedPosition);
+        }
+
+        setDragSource(null);
+    }, [dragSource, insertWordAt, reorderSelected]);
+
     return (
         <div className="max-w-4xl mx-auto space-y-4 animate-fadeIn pb-20">
             {/* Celebration Popup */}
@@ -152,6 +205,46 @@ export default function WorkbookAssignmentView({
                         >
                             확인
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Resume Choice Modal (PASS re-entry) */}
+            {showResumeModal && (
+                <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+                    <div className="bg-white dark:bg-slate-900 rounded-[32px] p-10 text-center shadow-2xl scale-110 transform transition-all max-w-sm w-full mx-4 border border-emerald-100 dark:border-emerald-900">
+                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">이전에 PASS 하셨습니다!</h2>
+                        <p className="text-slate-500 dark:text-slate-400 font-bold mb-8">어디서부터 학습하시겠습니까?</p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowResumeModal(false);
+                                    // Reset everything and start from level 0
+                                    setCurrentLevelIdx(0);
+                                    setCompletedLevels([]);
+                                    setAnswers({});
+                                    setRetryMode(false);
+                                    setFailedIndicesMap({});
+                                    window.scrollTo(0, 0);
+                                }}
+                                className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-colors"
+                            >
+                                📖 처음부터 다시 학습하기
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowResumeModal(false);
+                                    setCurrentLevelIdx(2);
+                                    window.scrollTo(0, 0);
+                                }}
+                                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-[1.02] transition-transform"
+                            >
+                                🎯 3단계부터 바로 시작하기
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -174,10 +267,12 @@ export default function WorkbookAssignmentView({
                                     setShowFailedModal(false);
                                     setRetryMode(true);
 
-                                    // Reset state for failed problems only
+                                    const currentFailed = failedIndicesMap[currentLevelIdx] || [];
+
+                                    // Reset state for failed problems only (current level)
                                     setAnswers(prev => {
                                         const next = { ...prev };
-                                        failedIndices.forEach(idx => {
+                                        currentFailed.forEach(idx => {
                                             delete next[`${currentLevelIdx}-${idx}`];
                                         });
                                         return next;
@@ -186,7 +281,7 @@ export default function WorkbookAssignmentView({
                                     // Clear writing inputs for failed problems
                                     setWritingState(prev => {
                                         const next = { ...prev };
-                                        failedIndices.forEach(idx => {
+                                        currentFailed.forEach(idx => {
                                             // Reset to empty strings preserving array length
                                             if (next[`${currentLevelIdx}-${idx}`]) {
                                                 next[`${currentLevelIdx}-${idx}`] = next[`${currentLevelIdx}-${idx}`].map(() => '');
@@ -198,7 +293,7 @@ export default function WorkbookAssignmentView({
                                     // Reset unscramble selection for failed problems
                                     setUnscrambleState(prev => {
                                         const next = { ...prev };
-                                        failedIndices.forEach(idx => {
+                                        currentFailed.forEach(idx => {
                                             const key = `${currentLevelIdx}-${idx}`;
                                             if (next[key]) {
                                                 // Move selected back to available and shuffle
@@ -474,26 +569,79 @@ export default function WorkbookAssignmentView({
                                             ) : probType === 'unscramble' ? (
                                                 <div className="space-y-3">
                                                     <div className="space-y-2">
-                                                        <div className={`min-h-[44px] p-2.5 bg-slate-50/50 rounded-xl border-2 border-dashed transition-all flex flex-wrap gap-1.5 items-center ${isAnswered ? 'border-emerald-200 bg-emerald-50/20' : 'border-indigo-100'}`}>
-                                                            {unscrambleState[problemKey]?.selected.length === 0 && <span className="text-[10px] font-bold text-slate-300 ml-2 uppercase tracking-widest italic">단어를 선택하세요</span>}
+                                                        {/* Selected Area (Drop Zone) */}
+                                                        <div
+                                                            className={`min-h-[44px] p-2.5 bg-slate-50/50 rounded-xl border-2 border-dashed transition-all flex flex-wrap gap-1.5 items-center ${isAnswered ? 'border-emerald-200 bg-emerald-50/20' : dragSource?.problemKey === problemKey ? 'border-indigo-400 bg-indigo-50/30' : 'border-indigo-100'}`}
+                                                            onDragOver={(e) => {
+                                                                if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                    const selectedCount = unscrambleState[problemKey]?.selected.length || 0;
+                                                                    handleDragOverSelected(e, problemKey, selectedCount);
+                                                                }
+                                                            }}
+                                                            onDrop={(e) => {
+                                                                if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                    const selectedCount = unscrambleState[problemKey]?.selected.length || 0;
+                                                                    handleDropOnSelected(e, problemKey, selectedCount);
+                                                                }
+                                                            }}
+                                                        >
+                                                            {unscrambleState[problemKey]?.selected.length === 0 && <span className="text-[10px] font-bold text-slate-300 ml-2 uppercase tracking-widest italic">단어를 선택하거나 드래그하세요</span>}
                                                             {(unscrambleState[problemKey]?.selected || []).map((word, wIdx) => (
-                                                                <button
-                                                                    key={wIdx}
-                                                                    disabled={isAnswered}
-                                                                    onClick={() => moveToAvailable(problemKey, word, wIdx)}
-                                                                    className={`px-3 py-1 rounded-lg text-sm font-black shadow-sm transition-all ${isAnswered ? 'bg-white border border-emerald-500 text-emerald-600' : 'bg-indigo-600 text-white hover:bg-rose-500'}`}
-                                                                >
-                                                                    {word}
-                                                                </button>
+                                                                <span key={`selected-wrapper-${wIdx}`} className="inline-flex items-center">
+                                                                    {/* Drop zone indicator before each word */}
+                                                                    <div
+                                                                        className={`w-1 transition-all duration-150 rounded-full mx-0.5 self-stretch ${dropIndicator?.problemKey === problemKey && dropIndicator?.position === wIdx ? 'w-1.5 bg-indigo-500 shadow-lg shadow-indigo-300' : ''}`}
+                                                                        onDragOver={(e) => {
+                                                                            if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                                handleDragOverSelected(e, problemKey, wIdx);
+                                                                            }
+                                                                        }}
+                                                                        onDrop={(e) => {
+                                                                            if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                                handleDropOnSelected(e, problemKey, wIdx);
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    <button
+                                                                        disabled={isAnswered}
+                                                                        draggable={!isAnswered}
+                                                                        onDragStart={(e) => handleDragStart(e, 'selected', problemKey, wIdx, word)}
+                                                                        onDragEnd={handleDragEnd}
+                                                                        onClick={() => moveToAvailable(problemKey, word, wIdx)}
+                                                                        className={`px-3 py-1 rounded-lg text-sm font-black shadow-sm transition-all cursor-grab active:cursor-grabbing ${isAnswered ? 'bg-white border border-emerald-500 text-emerald-600' : 'bg-indigo-600 text-white hover:bg-rose-500'}`}
+                                                                    >
+                                                                        {word}
+                                                                    </button>
+                                                                </span>
                                                             ))}
+                                                            {/* Drop zone indicator at the end */}
+                                                            {(unscrambleState[problemKey]?.selected.length || 0) > 0 && (
+                                                                <div
+                                                                    className={`w-1 transition-all duration-150 rounded-full mx-0.5 self-stretch min-h-[28px] ${dropIndicator?.problemKey === problemKey && dropIndicator?.position === (unscrambleState[problemKey]?.selected.length || 0) ? 'w-1.5 bg-indigo-500 shadow-lg shadow-indigo-300' : ''}`}
+                                                                    onDragOver={(e) => {
+                                                                        if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                            handleDragOverSelected(e, problemKey, unscrambleState[problemKey]?.selected.length || 0);
+                                                                        }
+                                                                    }}
+                                                                    onDrop={(e) => {
+                                                                        if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                            handleDropOnSelected(e, problemKey, unscrambleState[problemKey]?.selected.length || 0);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            )}
                                                         </div>
+                                                        {/* Available Words */}
                                                         <div className="flex flex-wrap gap-1.5 p-2 bg-slate-100/30 rounded-lg border border-slate-100 min-h-[40px]">
                                                             {(unscrambleState[problemKey]?.available || []).map((word, wIdx) => (
                                                                 <button
                                                                     key={wIdx}
                                                                     disabled={isAnswered}
+                                                                    draggable={!isAnswered}
+                                                                    onDragStart={(e) => handleDragStart(e, 'available', problemKey, wIdx, word)}
+                                                                    onDragEnd={handleDragEnd}
                                                                     onClick={() => moveToSelected(problemKey, word, wIdx)}
-                                                                    className="px-3 py-1 bg-white rounded-lg text-sm font-bold border border-slate-100 text-slate-600 hover:border-indigo-400 transition-all opacity-80 hover:opacity-100 disabled:opacity-20"
+                                                                    className="px-3 py-1 bg-white rounded-lg text-sm font-bold border border-slate-100 text-slate-600 hover:border-indigo-400 transition-all opacity-80 hover:opacity-100 disabled:opacity-20 cursor-grab active:cursor-grabbing"
                                                                 >
                                                                     {word}
                                                                 </button>
