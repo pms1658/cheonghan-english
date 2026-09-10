@@ -148,7 +148,6 @@ export default function WorkbookAssignmentView({
         setDragSource({ type, problemKey, wordIdx, word });
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', word);
-        // Style the dragged element
         if (e.currentTarget instanceof HTMLElement) {
             e.currentTarget.style.opacity = '0.4';
         }
@@ -162,24 +161,36 @@ export default function WorkbookAssignmentView({
         }
     }, []);
 
-    const handleDragOverSelected = useCallback((e: React.DragEvent, problemKey: string, position: number) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        setDropIndicator({ problemKey, position });
+    // Calculate insert position based on mouse position relative to the word element
+    const calcInsertPosition = useCallback((e: React.DragEvent, wordIdx: number): number => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const midX = rect.left + rect.width / 2;
+        // If mouse is on the left half, insert before this word; right half, insert after
+        return e.clientX < midX ? wordIdx : wordIdx + 1;
     }, []);
 
-    const handleDropOnSelected = useCallback((e: React.DragEvent, problemKey: string, position: number) => {
+    const handleWordDragOver = useCallback((e: React.DragEvent, problemKey: string, wordIdx: number) => {
         e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        const position = calcInsertPosition(e, wordIdx);
+        setDropIndicator({ problemKey, position });
+    }, [calcInsertPosition]);
+
+    const handleWordDrop = useCallback((e: React.DragEvent, problemKey: string, wordIdx: number) => {
+        e.preventDefault();
+        e.stopPropagation();
         setDropIndicator(null);
 
         if (!dragSource || dragSource.problemKey !== problemKey) return;
 
+        const position = calcInsertPosition(e, wordIdx);
+
         if (dragSource.type === 'available') {
-            // Move from available to specific position in selected
             insertWordAt(problemKey, dragSource.word, dragSource.wordIdx, position);
         } else if (dragSource.type === 'selected') {
-            // Reorder within selected
             let adjustedPosition = position;
+            // When moving forward, account for the removed item shifting positions
             if (dragSource.wordIdx < position) {
                 adjustedPosition = position - 1;
             }
@@ -187,7 +198,25 @@ export default function WorkbookAssignmentView({
         }
 
         setDragSource(null);
-    }, [dragSource, insertWordAt, reorderSelected]);
+    }, [dragSource, calcInsertPosition, insertWordAt, reorderSelected]);
+
+    // Fallback: drop on empty area of the selected container (append to end)
+    const handleContainerDrop = useCallback((e: React.DragEvent, problemKey: string) => {
+        e.preventDefault();
+        setDropIndicator(null);
+
+        if (!dragSource || dragSource.problemKey !== problemKey) return;
+
+        const selectedCount = unscrambleState[problemKey]?.selected.length || 0;
+
+        if (dragSource.type === 'available') {
+            insertWordAt(problemKey, dragSource.word, dragSource.wordIdx, selectedCount);
+        } else if (dragSource.type === 'selected') {
+            reorderSelected(problemKey, dragSource.wordIdx, selectedCount - 1);
+        }
+
+        setDragSource(null);
+    }, [dragSource, unscrambleState, insertWordAt, reorderSelected]);
 
     return (
         <div className="max-w-4xl mx-auto space-y-4 animate-fadeIn pb-20">
@@ -569,66 +598,54 @@ export default function WorkbookAssignmentView({
                                             ) : probType === 'unscramble' ? (
                                                 <div className="space-y-3">
                                                     <div className="space-y-2">
-                                                        {/* Selected Area (Drop Zone) */}
+                                                        {/* Selected Area — each word is a drop target */}
                                                         <div
-                                                            className={`min-h-[44px] p-2.5 bg-slate-50/50 rounded-xl border-2 border-dashed transition-all flex flex-wrap gap-1.5 items-center ${isAnswered ? 'border-emerald-200 bg-emerald-50/20' : dragSource?.problemKey === problemKey ? 'border-indigo-400 bg-indigo-50/30' : 'border-indigo-100'}`}
+                                                            className={`min-h-[44px] p-2.5 bg-slate-50/50 rounded-xl border-2 border-dashed transition-all flex flex-wrap gap-0 items-center ${isAnswered ? 'border-emerald-200 bg-emerald-50/20' : dragSource?.problemKey === problemKey ? 'border-indigo-400 bg-indigo-50/30' : 'border-indigo-100'}`}
                                                             onDragOver={(e) => {
                                                                 if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                    e.preventDefault();
+                                                                    e.dataTransfer.dropEffect = 'move';
+                                                                    // Only set end position if not over a word
                                                                     const selectedCount = unscrambleState[problemKey]?.selected.length || 0;
-                                                                    handleDragOverSelected(e, problemKey, selectedCount);
+                                                                    setDropIndicator({ problemKey, position: selectedCount });
                                                                 }
                                                             }}
                                                             onDrop={(e) => {
                                                                 if (!isAnswered && dragSource?.problemKey === problemKey) {
-                                                                    const selectedCount = unscrambleState[problemKey]?.selected.length || 0;
-                                                                    handleDropOnSelected(e, problemKey, selectedCount);
+                                                                    handleContainerDrop(e, problemKey);
                                                                 }
                                                             }}
                                                         >
                                                             {unscrambleState[problemKey]?.selected.length === 0 && <span className="text-[10px] font-bold text-slate-300 ml-2 uppercase tracking-widest italic">단어를 선택하거나 드래그하세요</span>}
                                                             {(unscrambleState[problemKey]?.selected || []).map((word, wIdx) => (
-                                                                <span key={`selected-wrapper-${wIdx}`} className="inline-flex items-center">
-                                                                    {/* Drop zone indicator before each word */}
-                                                                    <div
-                                                                        className={`w-1 transition-all duration-150 rounded-full mx-0.5 self-stretch ${dropIndicator?.problemKey === problemKey && dropIndicator?.position === wIdx ? 'w-1.5 bg-indigo-500 shadow-lg shadow-indigo-300' : ''}`}
-                                                                        onDragOver={(e) => {
-                                                                            if (!isAnswered && dragSource?.problemKey === problemKey) {
-                                                                                handleDragOverSelected(e, problemKey, wIdx);
-                                                                            }
-                                                                        }}
-                                                                        onDrop={(e) => {
-                                                                            if (!isAnswered && dragSource?.problemKey === problemKey) {
-                                                                                handleDropOnSelected(e, problemKey, wIdx);
-                                                                            }
-                                                                        }}
-                                                                    />
+                                                                <div key={`selected-wrapper-${wIdx}`} className="inline-flex items-center">
+                                                                    {/* Visual insert indicator BEFORE this word */}
+                                                                    <div className={`w-0.5 rounded-full self-stretch transition-all duration-150 mx-0.5 ${dropIndicator?.problemKey === problemKey && dropIndicator?.position === wIdx ? 'w-1.5 bg-indigo-500 shadow-lg shadow-indigo-300 min-h-[28px]' : ''}`} />
                                                                     <button
                                                                         disabled={isAnswered}
                                                                         draggable={!isAnswered}
                                                                         onDragStart={(e) => handleDragStart(e, 'selected', problemKey, wIdx, word)}
                                                                         onDragEnd={handleDragEnd}
+                                                                        onDragOver={(e) => {
+                                                                            if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                                handleWordDragOver(e, problemKey, wIdx);
+                                                                            }
+                                                                        }}
+                                                                        onDrop={(e) => {
+                                                                            if (!isAnswered && dragSource?.problemKey === problemKey) {
+                                                                                handleWordDrop(e, problemKey, wIdx);
+                                                                            }
+                                                                        }}
                                                                         onClick={() => moveToAvailable(problemKey, word, wIdx)}
                                                                         className={`px-3 py-1 rounded-lg text-sm font-black shadow-sm transition-all cursor-grab active:cursor-grabbing ${isAnswered ? 'bg-white border border-emerald-500 text-emerald-600' : 'bg-indigo-600 text-white hover:bg-rose-500'}`}
                                                                     >
                                                                         {word}
                                                                     </button>
-                                                                </span>
+                                                                </div>
                                                             ))}
-                                                            {/* Drop zone indicator at the end */}
+                                                            {/* Visual insert indicator at END */}
                                                             {(unscrambleState[problemKey]?.selected.length || 0) > 0 && (
-                                                                <div
-                                                                    className={`w-1 transition-all duration-150 rounded-full mx-0.5 self-stretch min-h-[28px] ${dropIndicator?.problemKey === problemKey && dropIndicator?.position === (unscrambleState[problemKey]?.selected.length || 0) ? 'w-1.5 bg-indigo-500 shadow-lg shadow-indigo-300' : ''}`}
-                                                                    onDragOver={(e) => {
-                                                                        if (!isAnswered && dragSource?.problemKey === problemKey) {
-                                                                            handleDragOverSelected(e, problemKey, unscrambleState[problemKey]?.selected.length || 0);
-                                                                        }
-                                                                    }}
-                                                                    onDrop={(e) => {
-                                                                        if (!isAnswered && dragSource?.problemKey === problemKey) {
-                                                                            handleDropOnSelected(e, problemKey, unscrambleState[problemKey]?.selected.length || 0);
-                                                                        }
-                                                                    }}
-                                                                />
+                                                                <div className={`w-0.5 rounded-full self-stretch transition-all duration-150 mx-0.5 min-h-[28px] ${dropIndicator?.problemKey === problemKey && dropIndicator?.position === (unscrambleState[problemKey]?.selected.length || 0) ? 'w-1.5 bg-indigo-500 shadow-lg shadow-indigo-300' : ''}`} />
                                                             )}
                                                         </div>
                                                         {/* Available Words */}

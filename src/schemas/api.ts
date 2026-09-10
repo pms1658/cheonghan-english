@@ -11,7 +11,7 @@ import { z } from 'zod';
 // 공통 스키마
 // ═══════════════════════════════════════
 
-const targetGradeSchema = z.enum(['e4', 'e5', 'e6', 'm1', 'm2', 'm3', '1', '2', '3']).optional().default('3');
+const targetGradeSchema = z.enum(['e4', 'e5', 'e6', 'm1', 'm2', 'm3', '1', '2', '3', 'adv']).optional().default('3');
 
 // ═══════════════════════════════════════
 // 채점 (Grading) 스키마
