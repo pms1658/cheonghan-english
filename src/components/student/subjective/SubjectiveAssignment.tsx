@@ -28,6 +28,7 @@ const TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
     conditional_blank_writing: { label: '조건부 빈칸 영작', emoji: '✏️' },
     passage_comprehension_fill: { label: '빈칸 완성', emoji: '🔲' },
     relative_clause_completion: { label: '관계사 문장 완성', emoji: '🔗' },
+    sentence_combining: { label: '두 문장 합치기', emoji: '🔗' },
 };
 
 const GRAMMAR_LABELS = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)'];
@@ -835,8 +836,8 @@ export default function SubjectiveAssignment({
                                     </div>
                                 )}
 
-                                {/* TYPE 12: 관계사 문장 완성 (relative_clause_completion) */}
-                                {currentProblem.type === 'relative_clause_completion' && (
+                                {/* TYPE 12: 두 문장 합치기 (sentence_combining / relative_clause_completion) */}
+                                {((currentProblem.type as string) === 'sentence_combining' || (currentProblem.type as string) === 'relative_clause_completion') && (
                                     <div className="space-y-3">
                                         {/* 두 원본 문장 */}
                                         {(currentProblem as any).sentence1 ? (
@@ -858,19 +859,19 @@ export default function SubjectiveAssignment({
                                             </div>
                                         ) : (
                                             <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200">
-                                                <p className="text-xs text-amber-700">📖 위 지문에서 두 문장을 찾아 관계사로 연결하세요.</p>
+                                                <p className="text-xs text-amber-700">📖 위 지문에서 두 문장을 찾아 한 문장으로 연결하세요.</p>
                                             </div>
                                         )}
-                                        {(currentProblem as any).relativeClauseType && (
-                                            <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-700">
-                                                <span className="text-blue-500 text-xs mt-0.5">📌</span>
-                                                <span className="text-xs font-bold text-blue-800 dark:text-blue-300">사용할 관계사: {(currentProblem as any).relativeClauseType}</span>
+                                        {((currentProblem as any).combiningMethod || (currentProblem as any).relativeClauseType) && (
+                                            <div className="flex items-start gap-2 bg-teal-50 dark:bg-teal-900/20 px-3 py-2 rounded-lg border border-teal-200 dark:border-teal-700">
+                                                <span className="text-teal-500 text-xs mt-0.5">📌</span>
+                                                <span className="text-xs font-bold text-teal-800 dark:text-teal-300">합치기 방법: {(currentProblem as any).combiningMethod || (currentProblem as any).relativeClauseType}</span>
                                             </div>
                                         )}
                                         <textarea
                                             value={currentAnswer?.textAnswer || ''}
                                             onChange={e => updateTextAnswer(currentIdx, e.target.value)}
-                                            placeholder="관계사를 이용하여 두 문장을 한 문장으로 완성하세요..."
+                                            placeholder="두 문장을 한 문장으로 합쳐 쓰세요..."
                                             className="w-full h-28 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm leading-relaxed focus:ring-2 focus:ring-[#1e3a5f] outline-none resize-none"
                                         />
                                     </div>

@@ -759,30 +759,198 @@ Provide ONLY a valid JSON object:
 export const getSubjectiveProblemsPrompt = (passage: string, grade: string, problemTypes?: string[], source?: string, autoCount?: number) => {
   const gradeLabel = GRADE_LABELS[grade] || GRADE_LABELS['2'];
   
-  const allTypes = {
-      "eng_composition": "### TYPE: eng_composition (영작)\\n- Select ONE sentence from the passage. Prefer SHORT sentences (under 20 words).\\n- Provide the BEGINNING of the sentence in English (the easy part).\\n- Provide ONLY the key clause/phrase in Korean for the student to complete.\\n- Provide 3-5 key hint words and a grammar condition.\\n- Add an \"englishStart\" field with the given English beginning.",
-      "sentence_interpretation": "### TYPE: sentence_interpretation (해석/의미 서술)\\n- Select ONE figurative or abstract sentence from the passage.\\n- The student writes a Korean interpretation explaining what it means.\\n- Provide a model answer (2-3 sentences in Korean).",
-      "grammar_correction": "### TYPE: grammar_correction (어법 교정)\\n- Select 6 grammar-relevant parts, label (a)-(f).\\n- Make EXACTLY 3 incorrect, keep 3 correct.\\n- Use [[UL:(label)]]word[[/UL]] markers.\\n- For each: label, underlinedText, isCorrect, correctForm, explanation.",
-      "blank_fill": "### TYPE: blank_fill (빈칸 서술)\\n- Create a blank in the passage (replace with __________ ).\\n- Provide the answer and context.\\n- Focus on key vocabulary or logical transitions.",
-      "pronoun_reference": "### TYPE: pronoun_reference (지칭 추론)\\n- Select a pronoun that refers to an important preceding noun phrase.\\n- Ask what it refers to in Korean.",
-      "summary_completion": "### TYPE: summary_completion (요약문 완성)\\n- Provide a summary of the passage with two blanks (A) and (B).\\n- Students must provide the words for blanks.",
-      "sentence_transform": "### TYPE: sentence_transform (문장 전환)\\n- Select a sentence from the passage.\\n- Require transformation (e.g., Active to Passive, using a participle, etc.).\\n- CRITICAL: You MUST include a \"koreanMeaning\" field with the Korean translation of the ORIGINAL sentence — this is what the student reads to know what to write.\\n- Also include \"originalSentence\" (the original English) and \"transformCondition\" (the condition in Korean, e.g., \"수동태를 사용할 것\", \"8단어 이내로 쓸 것\").",
-      "korean_summary": "### TYPE: korean_summary (한국어 요약)\\n- Ask the student to summarize the main point in 2-3 Korean sentences.",
-      "english_answer": "### TYPE: english_answer (영어로 답하기)\\n- Ask a comprehension question that requires a short English answer.",
-      "conditional_blank_writing": "### TYPE: conditional_blank_writing (조건부 빈칸 영작)\\n- Find a sentence in the passage with a key clause/phrase, and remove it to create a blank ( __________ ) in the passage.\\n- CRITICAL: The passage shown to students MUST contain the blank ( __________ ) where the answer goes.\\n- Provide 2-3 conditions in Korean (e.g., 수동태를 사용할 것, 특정 단어 포함, 단어 수 제한).\\n- Field \"passageWithBlank\": the FULL passage text with __________ at the blank position.\\n- Field \"conditions\": array of Korean condition strings.\\n- Field \"modelAnswer\": the English phrase/clause that fills the blank.\\n- Field \"scoringCriteria\": Korean description of how to score (e.g., 수동태 구조 2점, 단어 포함 1점, 단어 수 준수 1점).",
-      "passage_comprehension_fill": "### TYPE: passage_comprehension_fill (지문 이해 빈칸 완성)\\n- Based on the passage content, create a summary sentence or paragraph with TWO blanks: (A) __________ and (B) __________.\\n- CRITICAL: The summaryText field MUST literally contain \"(A) __________\" and \"(B) __________\" as visible text — do NOT fill in the answers.\\n- The student reads the passage and fills in (A) and (B) with the appropriate English words.\\n- Field \"summaryText\": the summary with (A) __________ and (B) __________ visible in the text.\\n- Field \"blankAnswers\": [{\"label\": \"A\", \"answer\": \"word_A\"}, {\"label\": \"B\", \"answer\": \"word_B\"}]\\n- Field \"scoringCriteria\": Korean scoring description.",
-      "relative_clause_completion": "### TYPE: relative_clause_completion (관계사 문장 완성)\\n- Select TWO sentences from the passage that can be combined using a relative clause (who, which, that, where, when, whose).\\n- CRITICAL: You MUST provide both original sentences so the student knows what to combine.\\n- Field \"sentence1\": the first original English sentence.\\n- Field \"sentence2\": the second original English sentence.\\n- Field \"koreanMeaning1\": Korean translation of sentence1.\\n- Field \"koreanMeaning2\": Korean translation of sentence2.\\n- Field \"relativeClauseType\": which relative pronoun/adverb to use (e.g., \"관계대명사 who\", \"관계부사 where\").\\n- Field \"modelAnswer\": the combined sentence using a relative clause.\\n- Field \"scoringCriteria\": Korean scoring description."
+  const allTypes: Record<string, { definition: string; example: string }> = {
+      "eng_composition": {
+        definition: "### TYPE: eng_composition (영작)\n- Select ONE sentence from the passage. Prefer SHORT sentences (under 20 words).\n- Provide the BEGINNING of the sentence in English (the easy part).\n- Provide ONLY the key clause/phrase in Korean for the student to complete.\n- Provide 3-5 key hint words and a grammar condition.\n- Add an \"englishStart\" field with the given English beginning.",
+        example: `{
+      "type": "eng_composition",
+      "instruction": "다음 문장을 주어진 조건에 맞게 영어로 완성하시오.",
+      "originalSentence": "The full original English sentence",
+      "englishStart": "The beginning...",
+      "koreanMeaning": "한국어 내용",
+      "hintWords": ["word1", "word2"],
+      "grammarCondition": "Use a relative clause",
+      "modelAnswer": "The full sentence"
+    }`
+      },
+      "sentence_interpretation": {
+        definition: "### TYPE: sentence_interpretation (해석/의미 서술)\n- Select ONE figurative or abstract sentence from the passage.\n- The student writes a Korean interpretation explaining what it means.\n- Provide a model answer (2-3 sentences in Korean).",
+        example: `{
+      "type": "sentence_interpretation",
+      "instruction": "다음 문장의 의미를 본문의 맥락을 고려하여 한국어로 서술하시오.",
+      "targetSentence": "The sentence to interpret",
+      "modelAnswer": "한국어 모범 해석 (2-3문장)"
+    }`
+      },
+      "grammar_correction": {
+        definition: "### TYPE: grammar_correction (어법 교정)\n- Select 6 grammar-relevant parts, label (a)-(f).\n- Make EXACTLY 3 incorrect, keep 3 correct.\n- Use [[UL:(label)]]word[[/UL]] markers.\n- For each: label, underlinedText, isCorrect, correctForm, explanation.",
+        example: `{
+      "type": "grammar_correction",
+      "instruction": "다음 글의 밑줄 친 (a)~(f) 중 어법상 틀린 것 세 개를 찾아 기호를 쓰고, 바르게 고치시오.",
+      "passageWithUnderlines": "Passage with [[UL:(a)]]word[[/UL]] markers...",
+      "grammarItems": [
+        { "label": "(a)", "underlinedText": "word", "isCorrect": false, "correctForm": "correct", "explanation": "설명" }
+      ]
+    }`
+      },
+      "blank_fill": {
+        definition: "### TYPE: blank_fill (빈칸 서술)\n- Create a blank in the passage (replace with __________ ).\n- Provide the answer and context.\n- Focus on key vocabulary or logical transitions.",
+        example: `{
+      "type": "blank_fill",
+      "instruction": "다음 글의 빈칸에 들어갈 적절한 단어를 쓰시오.",
+      "passageWithBlank": "Passage with __________ blank",
+      "blankAnswer": "correct word(s)",
+      "blankContext": "Contextual hint"
+    }`
+      },
+      "pronoun_reference": {
+        definition: "### TYPE: pronoun_reference (지칭 추론)\n- Select a pronoun that refers to an important preceding noun phrase.\n- Ask what it refers to in Korean.",
+        example: `{
+      "type": "pronoun_reference",
+      "instruction": "다음 글의 밑줄 친 부분이 가리키는 대상을 한국어로 쓰시오.",
+      "pronounSentence": "Sentence with the pronoun",
+      "underlinedPronoun": "it",
+      "referenceAnswer": "한국어 답"
+    }`
+      },
+      "summary_completion": {
+        definition: "### TYPE: summary_completion (요약문 완성)\n- Provide a summary of the passage with two blanks (A) and (B).\n- Students must provide the words for blanks.",
+        example: `{
+      "type": "summary_completion",
+      "instruction": "다음 글의 내용을 요약할 때, 빈칸 (A)와 (B)에 들어갈 적절한 단어를 쓰시오.",
+      "summaryText": "Summary with (A) and (B) blanks...",
+      "blankAnswers": [
+        { "label": "A", "answer": "word_A" },
+        { "label": "B", "answer": "word_B" }
+      ]
+    }`
+      },
+      "sentence_transform": {
+        definition: `### TYPE: sentence_transform (문장 전환)
+- Select a sentence from the passage.
+- Require transformation using one of the following methods (choose the MOST SUITABLE one for the selected sentence):
+  * 능동태 ↔ 수동태 (Active ↔ Passive)
+  * 가주어/진주어 (It ~ that/to 구문)
+  * 분사구문 ↔ 접속사절 (Participial phrase ↔ Adverbial clause)
+  * too ~ to ↔ so ~ that ~ not
+  * 관계사절 ↔ 분사 후치수식 (Relative clause ↔ Participle modifier)
+  * 강조구문 (It is ~ that cleft sentence)
+  * 직접화법 ↔ 간접화법 (Direct ↔ Indirect speech)
+  * 접속사절 ↔ 전치사구 (Because S+V → Because of N)
+- CRITICAL: Choose the transformation type that NATURALLY FITS the selected sentence. Do NOT force a transformation that doesn't work.
+- CRITICAL: You MUST include a "koreanMeaning" field with the Korean translation of the ORIGINAL sentence — this is what the student reads to know what to write.
+- Also include "originalSentence" (the original English) and "transformCondition" (the condition in Korean, e.g., "수동태를 사용할 것", "가주어 it을 사용하여 쓸 것", "분사구문으로 바꿀 것").`,
+        example: `{
+      "type": "sentence_transform",
+      "instruction": "다음 글을 읽고, 조건에 맞게 빈칸에 들어갈 말을 영어로 쓰시오.",
+      "originalSentence": "Original English sentence from passage",
+      "koreanMeaning": "원문 문장의 한국어 해석 — 학생이 이 해석을 보고 영작함",
+      "transformCondition": "분사구문으로 전환할 것 / 8단어 이내로 쓸 것",
+      "transformedAnswer": "Model transformed sentence"
+    }`
+      },
+      "korean_summary": {
+        definition: "### TYPE: korean_summary (한국어 요약)\n- Ask the student to summarize the main point in 2-3 Korean sentences.",
+        example: `{
+      "type": "korean_summary",
+      "instruction": "다음 글의 내용을 한국어로 2~3문장으로 요약하시오.",
+      "koreanSummaryModelAnswer": "한국어 모범 요약 답안 (2-3문장)"
+    }`
+      },
+      "english_answer": {
+        definition: "### TYPE: english_answer (영어로 답하기)\n- Ask a comprehension question that requires a short English answer.",
+        example: `{
+      "type": "english_answer",
+      "instruction": "다음 질문에 영어로 답하시오.",
+      "comprehensionQuestion": "What is the main point the author is trying to make?",
+      "englishModelAnswer": "English model answer (1-2 sentences)"
+    }`
+      },
+      "conditional_blank_writing": {
+        definition: "### TYPE: conditional_blank_writing (조건부 빈칸 영작)\n- Find a sentence in the passage with a key clause/phrase, and remove it to create a blank ( __________ ) in the passage.\n- CRITICAL: The passage shown to students MUST contain the blank ( __________ ) where the answer goes.\n- Provide 2-3 conditions in Korean (e.g., 수동태를 사용할 것, 특정 단어 포함, 단어 수 제한).\n- Field \"passageWithBlank\": the FULL passage text with __________ at the blank position.\n- Field \"conditions\": array of Korean condition strings.\n- Field \"modelAnswer\": the English phrase/clause that fills the blank.\n- Field \"scoringCriteria\": Korean description of how to score.",
+        example: `{
+      "type": "conditional_blank_writing",
+      "instruction": "다음 글을 읽고, 조건에 맞게 빈칸에 들어갈 말을 영어로 쓰시오.",
+      "passageWithBlank": "The full passage text... One might really fancy that __________.",
+      "conditions": ["수동태를 사용할 것", "different 또는 various를 포함할 것", "8단어 이내로 쓸 것"],
+      "modelAnswer": "one species was modified for different purposes",
+      "scoringCriteria": "수동태 구조(was modified) 2점, different/various 포함 1점, 문맥 적합성 1점, 단어 수 준수 1점"
+    }`
+      },
+      "passage_comprehension_fill": {
+        definition: "### TYPE: passage_comprehension_fill (지문 이해 빈칸 완성)\n- Based on the passage content, create a summary sentence or paragraph with TWO blanks: (A) __________ and (B) __________.\n- CRITICAL: The summaryText field MUST literally contain \"(A) __________\" and \"(B) __________\" as visible text — do NOT fill in the answers.\n- The student reads the passage and fills in (A) and (B) with the appropriate English words.\n- Field \"summaryText\": the summary with (A) __________ and (B) __________ visible in the text.\n- Field \"blankAnswers\": [{\"label\": \"A\", \"answer\": \"word_A\"}, {\"label\": \"B\", \"answer\": \"word_B\"}]\n- Field \"scoringCriteria\": Korean scoring description.",
+        example: `{
+      "type": "passage_comprehension_fill",
+      "instruction": "다음 글을 읽고 빈칸 (A), (B)에 들어갈 알맞은 말을 영어로 쓰시오.",
+      "summaryText": "These sacred mountain temples are the tallest of all the (A) __________ temples, buildings that no man can build, and the world seems (B) __________.",
+      "blankAnswers": [
+        { "label": "A", "answer": "temples" },
+        { "label": "B", "answer": "perfect" }
+      ],
+      "scoringCriteria": "(A) temples 3점, (B) perfect 3점"
+    }`
+      },
+      "sentence_combining": {
+        definition: `### TYPE: sentence_combining (두 문장 합치기)
+- Select TWO sentences from the passage that can be combined into one sentence.
+- Choose the MOST SUITABLE combining method based on the sentence pair:
+  * 관계대명사 (who, which, that, whose) — when sentences share a noun
+  * 관계부사 (where, when, why, how) — when one sentence describes place/time/reason
+  * 접속사 (although, because, while, if, so that) — when sentences have logical relationship
+  * 분사구문 (participial phrase) — when one clause can be reduced to a participle
+  * to부정사 (to-infinitive) — for purpose or result
+  * 동격 (appositive) — when one sentence explains/renames a noun
+- CRITICAL: You MUST provide both original sentences so the student knows what to combine.
+- CRITICAL: Choose the combining method that NATURALLY FITS the two sentences. Do NOT force a method that doesn't work.
+- Field "sentence1": the first original English sentence.
+- Field "sentence2": the second original English sentence.
+- Field "koreanMeaning1": Korean translation of sentence1.
+- Field "koreanMeaning2": Korean translation of sentence2.
+- Field "combiningMethod": the method used (e.g., "관계대명사 who", "접속사 although", "분사구문", "to부정사").
+- Field "modelAnswer": the combined sentence.
+- Field "scoringCriteria": Korean scoring description.`,
+        example: `{
+      "type": "sentence_combining",
+      "instruction": "다음 두 문장을 한 문장으로 합쳐 쓰시오.",
+      "sentence1": "First original English sentence from passage.",
+      "sentence2": "Second original English sentence from passage.",
+      "koreanMeaning1": "첫 번째 문장의 한국어 해석",
+      "koreanMeaning2": "두 번째 문장의 한국어 해석",
+      "combiningMethod": "관계대명사 who",
+      "modelAnswer": "The combined sentence.",
+      "scoringCriteria": "합치기 방법 정확 2점, 문장 완성도 2점"
+    }`
+      },
   };
 
-  const selectedTypes = problemTypes ? problemTypes.map(t => allTypes[t as keyof typeof allTypes]).join('\n\n') : Object.values(allTypes).join('\n\n');
+  // Determine which types to use and how many problems
+  const typeKeys = problemTypes && problemTypes.length > 0
+    ? problemTypes
+    : Object.keys(allTypes);
+  
+  const count = problemTypes && problemTypes.length > 0
+    ? problemTypes.length
+    : (autoCount || 5);
+  
+  // Build type definitions and examples for selected types only
+  const selectedDefinitions = typeKeys
+    .map(t => allTypes[t as keyof typeof allTypes]?.definition)
+    .filter(Boolean)
+    .join('\n\n');
+  
+  const selectedExamples = typeKeys
+    .map(t => allTypes[t as keyof typeof allTypes]?.example)
+    .filter(Boolean)
+    .join(',\n');
 
   return `You are an expert English teacher creating high-quality, exam-style subjective questions (서술형 문제) for Korean students (Level: ${gradeLabel}).
 
 ### TASK
-Create ${autoCount || 5} subjective questions based on the passage.
+Create EXACTLY ${count} subjective questions based on the passage.
+${problemTypes && problemTypes.length > 0 ? `\n★★★ CRITICAL: You MUST generate EXACTLY one problem for EACH of these types: [${typeKeys.join(', ')}]. Do NOT generate any other types. Do NOT skip any. ★★★` : ''}
 
-### SELECTED TYPES:
-${selectedTypes}
+### AVAILABLE TYPES (generate ONLY from these):
+${selectedDefinitions}
 
 ### ORIGINAL PASSAGE:
 """
@@ -792,108 +960,14 @@ ${passage}
 ### OUTPUT FORMAT (JSON Only):
 {
   "problems": [
-    {
-      "id": 1,
-      "type": "eng_composition",
-      "instruction": "다음 문장을 주어진 조건에 맞게 영어로 완성하시오.",
-      "originalSentence": "The full original English sentence",
-      "englishStart": "The beginning...",
-      "koreanMeaning": "한국어 내용",
-      "hintWords": ["word1", "word2"],
-      "grammarCondition": "Use a relative clause",
-      "modelAnswer": "The full sentence"
-    },
-    {
-      "type": "sentence_interpretation",
-      "instruction": "다음 문장의 의미를 본문의 맥락을 고려하여 한국어로 서술하시오.",
-      "targetSentence": "The sentence to interpret",
-      "modelAnswer": "한국어 모범 해석 (2-3문장)"
-    },
-    {
-      "type": "grammar_correction",
-      "instruction": "다음 글의 밑줄 친 (a)~(f) 중 어법상 틀린 것 세 개를 찾아 기호를 쓰고, 바르게 고치시오.",
-      "passageWithUnderlines": "Passage with [[UL:(a)]]word[[/UL]] markers...",
-      "grammarItems": [
-        { "label": "(a)", "underlinedText": "word", "isCorrect": false, "correctForm": "correct", "explanation": "설명" }
-      ]
-    },
-    {
-      "type": "blank_fill",
-      "instruction": "다음 글의 빈칸에 들어갈 적절한 단어를 쓰시오.",
-      "passageWithBlank": "Passage with __________ blank",
-      "blankAnswer": "correct word(s)",
-      "blankContext": "Contextual hint"
-    },
-    {
-      "type": "pronoun_reference",
-      "instruction": "다음 글의 밑줄 친 부분이 가리키는 대상을 한국어로 쓰시오.",
-      "pronounSentence": "Sentence with the pronoun",
-      "underlinedPronoun": "it",
-      "referenceAnswer": "한국어 답"
-    },
-    {
-      "type": "summary_completion",
-      "instruction": "다음 글의 내용을 요약할 때, 빈칸 (A)와 (B)에 들어갈 적절한 단어를 쓰시오.",
-      "summaryText": "Summary with (A) and (B) blanks...",
-      "blankAnswers": [
-        { "label": "A", "answer": "word_A" },
-        { "label": "B", "answer": "word_B" }
-      ]
-    },
-    {
-      "type": "sentence_transform",
-      "instruction": "다음 글을 읽고, 조건에 맞게 빈칸에 들어갈 말을 영어로 쓰시오.",
-      "originalSentence": "Original English sentence from passage",
-      "koreanMeaning": "원문 문장의 한국어 해석 — 학생이 이 해석을 보고 영작함",
-      "transformCondition": "수동태를 사용할 것 / 8단어 이내로 쓸 것",
-      "transformedAnswer": "Model transformed sentence"
-    },
-    {
-      "type": "korean_summary",
-      "instruction": "다음 글의 내용을 한국어로 2~3문장으로 요약하시오.",
-      "koreanSummaryModelAnswer": "한국어 모범 요약 답안 (2-3문장)"
-    },
-    {
-      "type": "english_answer",
-      "instruction": "다음 질문에 영어로 답하시오.",
-      "comprehensionQuestion": "What is the main point the author is trying to make?",
-      "englishModelAnswer": "English model answer (1-2 sentences)"
-    },
-    {
-      "type": "conditional_blank_writing",
-      "instruction": "다음 글을 읽고, 조건에 맞게 빈칸에 들어갈 말을 영어로 쓰시오.",
-      "passageWithBlank": "The full passage text... One might really fancy that __________.",
-      "conditions": ["수동태를 사용할 것", "different 또는 various를 포함할 것", "8단어 이내로 쓸 것"],
-      "modelAnswer": "one species was modified for different purposes",
-      "scoringCriteria": "수동태 구조(was modified) 2점, different/various 포함 1점, 문맥 적합성 1점, 단어 수 준수 1점"
-    },
-    {
-      "type": "passage_comprehension_fill",
-      "instruction": "다음 글을 읽고 빈칸 (A), (B)에 들어갈 알맞은 말을 영어로 쓰시오.",
-      "summaryText": "These sacred mountain temples are the tallest of all the (A) __________ temples, buildings that no man can build, and the world seems (B) __________.",
-      "blankAnswers": [
-        { "label": "A", "answer": "temples" },
-        { "label": "B", "answer": "perfect" }
-      ],
-      "scoringCriteria": "(A) temples (산을 신성한 사원으로 묘사) 3점, (B) perfect (완벽하다고 표현) 3점"
-    },
-    {
-      "type": "relative_clause_completion",
-      "instruction": "다음 두 문장을 관계사를 이용하여 한 문장으로 완성하시오.",
-      "sentence1": "First original English sentence from passage.",
-      "sentence2": "Second original English sentence from passage.",
-      "koreanMeaning1": "첫 번째 문장의 한국어 해석",
-      "koreanMeaning2": "두 번째 문장의 한국어 해석",
-      "relativeClauseType": "관계부사 where",
-      "modelAnswer": "The combined sentence using a relative clause.",
-      "scoringCriteria": "관계사 사용 2점, 문장 완성도 2점"
-    }
+    ${selectedExamples}
   ],
   "modifiedPassage": ""
 }
 
-IMPORTANT: Generate ONLY for the requested types. Return ONLY valid JSON.`;
+IMPORTANT: Generate ONLY for the listed types above. Each problem MUST have a unique "type" matching one of the listed types. Return ONLY valid JSON.`;
 };
+
 
 /**
  * SL (Special Level) — 지문 변형 프롬프트
@@ -990,7 +1064,7 @@ For each problem, grade the student's answer on a scale of 0-100.
 - **english_answer**: Factually correct with grammar issues = 70+. Short correct answers fully accepted.
 - **conditional_blank_writing**: Check against modelAnswer and scoringCriteria. Each condition met = partial credit. Passive structure correct = major points. Semantically close = 60+.
 - **passage_comprehension_fill**: Each blank (A)/(B) = 50% each. Accept synonyms/paraphrases. Correct concept but different word form = 70+.
-- **relative_clause_completion**: Relative clause correctly used = 60pts base. Complete sentence = 40pts extra. Minor errors in non-relative parts = no deduction.
+- **relative_clause_completion / sentence_combining**: Combining method correctly used = 60pts base. Complete sentence = 40pts extra. Minor errors in non-combined parts = no deduction.
 
 ### OUTPUT FORMAT (JSON Only):
 {

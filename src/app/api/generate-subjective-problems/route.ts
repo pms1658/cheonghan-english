@@ -38,7 +38,8 @@ export async function POST(req: Request) {
 
         // Generate subjective problems
         const typesToGenerate = mode === 'manual' && problemTypes?.length > 0 ? problemTypes : undefined;
-        const prompt = getSubjectiveProblemsPrompt(passage, targetGrade, typesToGenerate, source, autoCount);
+        const effectiveCount = typesToGenerate ? typesToGenerate.length : autoCount;
+        const prompt = getSubjectiveProblemsPrompt(passage, targetGrade, typesToGenerate, source, effectiveCount);
 
         console.log(`[Subjective Gen] Generating problems, mode=${mode}, types=${typesToGenerate?.join(',') || 'all'}`);
 

@@ -289,7 +289,7 @@ export type SubjectiveProblemType =
     | 'english_answer'              // 영어로 답하기 (내용 이해 질문에 영어로 답변)
     | 'conditional_blank_writing'   // 조건부 빈칸 영작 (조건 + 지문 빈칸 영작)
     | 'passage_comprehension_fill'  // 지문 빈칸 완성 (A)(B) 빈칸 완성
-    | 'relative_clause_completion'; // 관계사 문장 완성 (두 문장 → 관계사로 합치기)
+    | 'sentence_combining';          // 두 문장 합치기 (관계사/접속사/분사구문 등)
 
 export interface GrammarItem {
     label: string;               // "(a)" ~ "(f)"
@@ -353,11 +353,12 @@ export interface SubjectiveProblem {
     // === 유형11: 지문 빈칸 완성 (passage_comprehension_fill) ===
     // summaryText, blankAnswers 필드 재활용 (유형6과 동일 구조)
 
-    // === 유형12: 관계사 문장 완성 ===
+    // === 유형12: 두 문장 합치기 ===
     sentence1?: string;                 // 첫 번째 문장 (영어)
     sentence2?: string;                 // 두 번째 문장 (영어)
     koreanMeaning1?: string;            // 첫 번째 문장 한국어 뜻
     koreanMeaning2?: string;            // 두 번째 문장 한국어 뜻
+    combiningMethod?: string;           // 합치기 방법 (관계대명사/접속사/분사구문 등)
 }
 
 export interface SubjectiveConfig {

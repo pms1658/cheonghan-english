@@ -427,7 +427,7 @@ export default function ResultHistoryModal({
     // Mock Exam 오답 상세 오버레이
     if (mockExamDetailSub && mockExamAssignment) {
         const details: any[] = (mockExamDetailSub as any).details || [];
-        const mcqDetails = details.filter((d: any) => d.type && !['conditional_blank_writing','word_box_fill','relative_clause_completion','passage_comprehension_fill','phrase_selection_fill'].includes(d.type));
+        const mcqDetails = details.filter((d: any) => d.type && !['conditional_blank_writing','word_box_fill','relative_clause_completion','sentence_combining','passage_comprehension_fill','phrase_selection_fill'].includes(d.type));
         const wrongDetails = mcqDetails.filter((d: any) => !d.isCorrect);
         const wrongIndices = mcqDetails.map((d: any, i: number) => ({ i, isCorrect: d.isCorrect })).filter((x: any) => !x.isCorrect).map((x: any) => x.i);
         const allMcq = (mockExamAssignment.mockExamProblems?.mcq || []);
@@ -636,6 +636,7 @@ export default function ResultHistoryModal({
             conditional_blank_writing: { label: '조건부 빈칸 영작', emoji: '✏️' },
             passage_comprehension_fill: { label: '지문 빈칸 완성', emoji: '📄' },
             relative_clause_completion: { label: '관계사 완성', emoji: '🔗' },
+            sentence_combining: { label: '두 문장 합치기', emoji: '🔗' },
         };
 
         return (
