@@ -259,7 +259,7 @@ ${passage}
 
 **Level 1: Vocabulary (어휘) — 5 problems, 4 choices each**
 - Select 5 important vocabulary words/phrases FROM the passage.
-- Create a sentence using the word in context (can be the original sentence or a modified one) with a ( ) blank where the word should go.
+- **CRITICAL**: The "question" field MUST be the EXACT original sentence from the passage with ONLY the target word replaced by ( ). Do NOT create new sentences or rephrase. Copy the sentence verbatim from the passage.
 - Provide 4 English word choices: 1 correct + 3 plausible distractors.
 - **Difficulty**: Use vocabulary appropriate for the target grade level. Do NOT use GRE/SAT-level obscure words. Stick to words that would appear in Korean English textbooks for this grade.
 - **explanation**: Write in Korean. Explain why the correct answer fits the context.
@@ -274,7 +274,7 @@ ${passage}
   - Verb forms (시제, 가정법)
   - Pro-verbs / Substitute verbs (대동사 do)
   - Reflexive pronouns (재귀대명사)
-- Create a sentence from the passage with a ( ) blank at the grammar point.
+- **CRITICAL**: The "question" field MUST be the EXACT original sentence from the passage with ONLY the grammar point replaced by ( ). Do NOT create new sentences or rephrase. Copy the sentence verbatim from the passage.
 - Provide **4** English choices (e.g., "grows", "grow", "growing", "grown").
 - **explanation**: Write in Korean. Explain the grammar rule that determines the correct answer.
 

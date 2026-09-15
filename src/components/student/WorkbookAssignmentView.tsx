@@ -81,7 +81,6 @@ export default function WorkbookAssignmentView({
                     problemsHtml += `<div class="problem">
                         <div class="problem-num">${probLabel}</div>
                         <div class="problem-content">
-                            <p class="question">${prob.question}</p>
                             <div class="choices">${(prob.choices || []).map((c: string, i: number) => `<span class="choice">${i + 1}. ${c}</span>`).join('')}</div>
                         </div>
                     </div>`;
@@ -553,9 +552,6 @@ export default function WorkbookAssignmentView({
 
                                             {(probType === 'vocab' || probType === 'grammar') ? (
                                                 <div className="space-y-3">
-                                                    {prob.question && (
-                                                        <p className="text-sm font-bold text-slate-600 dark:text-slate-300">{prob.question}</p>
-                                                    )}
                                                     <div className="flex flex-wrap gap-2">
                                                         {(prob.shuffledChoices || prob.choices || []).map((choice: string, cIdx: number) => {
                                                             const selected = answers[problemKey];
