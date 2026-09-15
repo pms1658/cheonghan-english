@@ -214,6 +214,26 @@ export const dbService = {
                     console.warn(`[deleteStudent] Failed to clean '${colName}':`, e);
                 }
             }
+
+            // 4. 과제(homework)의 studentIds에서 삭제된 학생 ID 제거
+            try {
+                const hwSn = await getDocs(collection(db, 'homework'));
+                const hwUpdates = hwSn.docs
+                    .filter(d => {
+                        const sids: string[] = d.data().studentIds || [];
+                        return sids.includes(studentLoginId!);
+                    })
+                    .map(d => {
+                        const sids: string[] = d.data().studentIds || [];
+                        return updateDoc(d.ref, { studentIds: sids.filter(id => id !== studentLoginId) });
+                    });
+                if (hwUpdates.length > 0) {
+                    await Promise.all(hwUpdates);
+                    console.log(`[deleteStudent] Removed '${studentLoginId}' from studentIds in ${hwUpdates.length} homework docs`);
+                }
+            } catch (e) {
+                console.warn(`[deleteStudent] Failed to clean homework studentIds:`, e);
+            }
         }
 
         invalidateCache('students_');
@@ -916,6 +936,37 @@ export const dbService = {
                 console.error(`[cleanupOrphanData] Error in '${colName}':`, e);
                 results[colName] = { total: -1, orphaned: 0, deleted: 0, orphanIds: [] };
             }
+        }
+
+        // 과제(homework)의 studentIds에서 삭제된 학생 ID 제거
+        try {
+            const hwSn = await getDocs(collection(db, 'homework'));
+            const orphanHwDocs = hwSn.docs.filter(d => {
+                const sids: string[] = d.data().studentIds || [];
+                return sids.some(sid => !validStudentIds.has(sid));
+            });
+            const orphanHwStudentIds = [...new Set(
+                orphanHwDocs.flatMap(d => (d.data().studentIds || []).filter((sid: string) => !validStudentIds.has(sid)))
+            )];
+
+            let hwCleanedCount = 0;
+            if (!dryRun && orphanHwDocs.length > 0) {
+                await Promise.all(orphanHwDocs.map(d => {
+                    const sids: string[] = d.data().studentIds || [];
+                    return updateDoc(d.ref, { studentIds: sids.filter(sid => validStudentIds.has(sid)) });
+                }));
+                hwCleanedCount = orphanHwDocs.length;
+            }
+
+            results['homework_studentIds'] = {
+                total: hwSn.size,
+                orphaned: orphanHwDocs.length,
+                deleted: hwCleanedCount,
+                orphanIds: orphanHwStudentIds
+            };
+        } catch (e) {
+            console.error('[cleanupOrphanData] Error cleaning homework studentIds:', e);
+            results['homework_studentIds'] = { total: -1, orphaned: 0, deleted: 0, orphanIds: [] };
         }
 
         if (!dryRun) {
