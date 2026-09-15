@@ -184,8 +184,40 @@ export const dbService = {
         invalidateCache('students_');
     },
     deleteStudent: async (docId: string) => {
+        // 1. 학생의 로그인 ID를 먼저 조회 (submissions 등에서 사용하는 키)
+        let studentLoginId: string | null = null;
+        try {
+            const studentDoc = await getDoc(doc(db, 'students', docId));
+            if (studentDoc.exists()) {
+                studentLoginId = studentDoc.data()?.id || null;
+            }
+        } catch (e) {
+            console.warn('[deleteStudent] Failed to fetch student doc:', e);
+        }
+
+        // 2. 학생 문서 삭제
         await deleteDoc(doc(db, 'students', docId));
+
+        // 3. 연관 데이터 일괄 삭제 (고아 데이터 방지)
+        if (studentLoginId) {
+            const collectionsToClean = ['submissions', 'wrong_answers', 'homework_status', 'reports'];
+            for (const colName of collectionsToClean) {
+                try {
+                    const q = query(collection(db, colName), where('studentId', '==', studentLoginId));
+                    const sn = await getDocs(q);
+                    if (!sn.empty) {
+                        const deletes = sn.docs.map(d => deleteDoc(d.ref));
+                        await Promise.all(deletes);
+                        console.log(`[deleteStudent] Cleaned ${sn.size} docs from '${colName}' for student '${studentLoginId}'`);
+                    }
+                } catch (e) {
+                    console.warn(`[deleteStudent] Failed to clean '${colName}':`, e);
+                }
+            }
+        }
+
         invalidateCache('students_');
+        invalidateCache('submissions_');
     },
 
     // --- Feedback ---
@@ -845,6 +877,52 @@ export const dbService = {
     },
     deleteReport: async (id: string) => {
         await deleteDoc(doc(db, 'reports', id));
+    },
+
+    // --- 고아 데이터 정리 ---
+    cleanupOrphanData: async (dryRun: boolean = true) => {
+        // 1. 모든 학생의 로그인 ID 수집
+        const studentsSn = await getDocs(collection(db, 'students'));
+        const validStudentIds = new Set<string>();
+        studentsSn.docs.forEach(d => {
+            const data = d.data();
+            if (data.id) validStudentIds.add(data.id);
+        });
+
+        const collectionsToClean = ['submissions', 'wrong_answers', 'homework_status', 'reports'];
+        const results: Record<string, { total: number; orphaned: number; deleted: number; orphanIds: string[] }> = {};
+
+        for (const colName of collectionsToClean) {
+            try {
+                const sn = await getDocs(collection(db, colName));
+                const orphanDocs = sn.docs.filter(d => {
+                    const sid = d.data().studentId;
+                    return sid && !validStudentIds.has(sid);
+                });
+                const orphanStudentIds = [...new Set(orphanDocs.map(d => d.data().studentId))];
+
+                let deletedCount = 0;
+                if (!dryRun && orphanDocs.length > 0) {
+                    const batchSize = 20;
+                    for (let i = 0; i < orphanDocs.length; i += batchSize) {
+                        const batch = orphanDocs.slice(i, i + batchSize);
+                        await Promise.all(batch.map(d => deleteDoc(d.ref)));
+                        deletedCount += batch.length;
+                    }
+                }
+
+                results[colName] = { total: sn.size, orphaned: orphanDocs.length, deleted: deletedCount, orphanIds: orphanStudentIds };
+            } catch (e) {
+                console.error(`[cleanupOrphanData] Error in '${colName}':`, e);
+                results[colName] = { total: -1, orphaned: 0, deleted: 0, orphanIds: [] };
+            }
+        }
+
+        if (!dryRun) {
+            invalidateCache('submissions_');
+        }
+
+        return { validStudentCount: validStudentIds.size, results };
     },
 };
 

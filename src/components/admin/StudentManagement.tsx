@@ -166,6 +166,34 @@ export default function StudentManagement() {
         }
     };
 
+    const handleCleanupOrphans = async () => {
+        toast.info('🔍 고아 데이터 검색 중...');
+        try {
+            const preview = await dbService.cleanupOrphanData(true);
+            const totalOrphans = Object.values(preview.results).reduce((sum, r) => sum + r.orphaned, 0);
+            
+            if (totalOrphans === 0) {
+                toast.success('✅ 고아 데이터가 없습니다!');
+                return;
+            }
+
+            const detail = Object.entries(preview.results)
+                .filter(([_, r]) => r.orphaned > 0)
+                .map(([col, r]) => `${col}: ${r.orphaned}건`)
+                .join(', ');
+
+            if (confirm(`총 ${totalOrphans}건의 고아 데이터가 발견되었습니다.\n(${detail})\n\n삭제하시겠습니까?`)) {
+                toast.info('🗑️ 삭제 중...');
+                const result = await dbService.cleanupOrphanData(false);
+                const totalDeleted = Object.values(result.results).reduce((sum, r) => sum + r.deleted, 0);
+                toast.success(`✅ ${totalDeleted}건의 고아 데이터를 삭제했습니다.`);
+            }
+        } catch (e) {
+            console.error('Cleanup error:', e);
+            toast.error('고아 데이터 정리 중 오류가 발생했습니다.');
+        }
+    };
+
     // Sort indicator
     const SortIcon = ({ column }: { column: keyof Student }) => {
         if (sortConfig?.key !== column) return <svg className="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>;
@@ -247,6 +275,14 @@ export default function StudentManagement() {
                         고아 데이터 정리
                     </button>
                 )}
+                <button
+                    onClick={handleCleanupOrphans}
+                    className="flex items-center gap-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-700 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-500/20 transition-all"
+                    title="삭제된 학생의 과제/제출 데이터를 정리합니다."
+                >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    삭제 계정 데이터 정리
+                </button>
             </div>
 
             {/* Student List */}
