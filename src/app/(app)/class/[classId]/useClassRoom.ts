@@ -237,8 +237,15 @@ export function useClassRoom() {
         }
 
         try {
-            await Promise.all(newAssignments.map(a => dbService.addAssignment(a as any)));
-            toast.success("과제가 성공적으로 ${newAssignments.length}개로 분할되었습니다.");
+            // Save sequentially with incrementing timestamps to guarantee order.
+            // Promise.all would save in parallel, giving near-identical timestamps
+            // and causing unpredictable sort order in the UI.
+            const baseTime = Date.now();
+            for (let i = 0; i < newAssignments.length; i++) {
+                newAssignments[i].createdAt = new Date(baseTime + i).toISOString();
+                await dbService.addAssignment(newAssignments[i] as any);
+            }
+            toast.success(`과제가 성공적으로 ${newAssignments.length}개로 분할되었습니다.`);
 
             setIsSplitModalOpen(false);
             setSplitTarget(null);
@@ -246,7 +253,7 @@ export function useClassRoom() {
             loadData();
         } catch (error: any) {
             console.error('Split Error:', error);
-            toast.error("분할 중 오류가 발생했습니다: ${error.message || error}");
+            toast.error(`분할 중 오류가 발생했습니다: ${error.message || error}`);
         }
     };
 
