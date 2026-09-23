@@ -189,4 +189,111 @@ export function sanitizeChoiceText(choice: string): string {
     return cleaned.trim();
 }
 
+/**
+ * Detect if user-pasted text contains an existing problem with choices.
+ * Common patterns:
+ * - Circled number choices: ① choice1 ② choice2 ... ⑤ choice5
+ * - Numbered choices: 1) choice1, 2) choice2, etc.
+ * - Korean question stems: "다음 글을 읽고", "고르시오", etc.
+ * 
+ * Returns extracted info if an existing problem is detected, null otherwise.
+ */
+export interface ExistingProblemInfo {
+    /** The extracted choices from the existing problem (cleaned text) */
+    choices: string[];
+    /** Question/instruction text that was detected (if any) */
+    questionSnippet: string;
+    /** Whether a full problem pattern was confidently detected */
+    detected: boolean;
+}
 
+export function extractExistingProblemInfo(rawText: string): ExistingProblemInfo | null {
+    if (!rawText || rawText.length < 50) return null;
+
+    const result: ExistingProblemInfo = {
+        choices: [],
+        questionSnippet: '',
+        detected: false,
+    };
+
+    // Pattern 1: Circled number choices ① ... ② ... ③ ... ④ ... ⑤
+    const hasCircled = /[①②③④⑤❶❷❸❹❺]/.test(rawText);
+    
+    if (hasCircled) {
+        // Count how many distinct circled numbers appear
+        const circledMarkers = rawText.match(/[①②③④⑤❶❷❸❹❺]/g) || [];
+        const uniqueMarkers = new Set(circledMarkers);
+        
+        if (uniqueMarkers.size >= 3) {
+            // Extract choices between circled markers
+            const choiceRegex = /[①②③④⑤❶❷❸❹❺]\s*([^\n①②③④⑤❶❷❸❹❺]+)/g;
+            let match;
+            while ((match = choiceRegex.exec(rawText)) !== null) {
+                const choiceText = match[1].trim();
+                if (choiceText.length > 0) {
+                    result.choices.push(choiceText);
+                }
+            }
+        }
+    }
+
+    // Pattern 2: Numbered choices (1. or 1) style on separate lines)
+    if (result.choices.length < 3) {
+        const numberedRegex = /^[1-5][.)]\s+(.+)$/gm;
+        const numberedChoices: string[] = [];
+        let match;
+        while ((match = numberedRegex.exec(rawText)) !== null) {
+            numberedChoices.push(match[1].trim());
+        }
+        if (numberedChoices.length >= 3 && numberedChoices.length <= 5) {
+            result.choices = numberedChoices;
+        }
+    }
+
+    // Detect Korean question stem patterns
+    const koreanQPatterns = [
+        /다음\s*글[^.]*?고르시오/,
+        /가장\s*적절한\s*것/,
+        /적절하지\s*않은\s*것/,
+        /일치하지\s*않는\s*것/,
+        /밑줄\s*친[^.]*?의미/,
+        /빈칸에\s*들어갈/,
+        /순서로\s*가장/,
+        /들어가기에\s*가장/,
+        /관계\s*없는\s*문장/,
+        /요약하고자/,
+    ];
+
+    for (const pattern of koreanQPatterns) {
+        const qMatch = rawText.match(pattern);
+        if (qMatch) {
+            result.questionSnippet = qMatch[0];
+            break;
+        }
+    }
+
+    // English question stem patterns
+    if (!result.questionSnippet) {
+        const englishQPatterns = [
+            /which\s+of\s+the\s+following/i,
+            /what\s+is\s+the\s+(?:main|best)\s+(?:topic|title|idea)/i,
+            /choose\s+the\s+(?:best|most)\s+appropriate/i,
+            /the\s+underlined\s+(?:word|phrase|part)/i,
+        ];
+        for (const pattern of englishQPatterns) {
+            const qMatch = rawText.match(pattern);
+            if (qMatch) {
+                result.questionSnippet = qMatch[0];
+                break;
+            }
+        }
+    }
+
+    // Determine if a full problem is detected
+    // Confident detection: choices found AND (question stem found OR many choices)
+    result.detected = result.choices.length >= 3 && (
+        result.questionSnippet.length > 0 || result.choices.length >= 5
+    );
+
+    return result.detected ? result : null;
+}

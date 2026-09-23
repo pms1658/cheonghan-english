@@ -143,9 +143,37 @@ const CONSTRUCTION_RULES: Record<string, string> = {
   `
 };
 
-export const getVariantPrompt = (type: string, grade: string, passage: string) => {
+export const getVariantPrompt = (type: string, grade: string, passage: string, existingProblem?: { choices: string[]; questionSnippet: string } | null) => {
   const specificRule = CONSTRUCTION_RULES[type] || 'Standard multiple choice format.';
   const definition = PROBLEM_DEFINITIONS[type] || 'Solve the problem.';
+
+  // Build anti-duplication section when an existing problem is detected in the input
+  let antiDuplicationSection = '';
+  if (existingProblem && existingProblem.choices.length > 0) {
+    const existingChoicesText = existingProblem.choices
+      .map((c, i) => `  ${i + 1}. "${c}"`)
+      .join('\n');
+    antiDuplicationSection = `
+### ★★★ ANTI-DUPLICATION (CRITICAL — READ CAREFULLY) ★★★
+The input passage contains an EXISTING problem that was already given to a student. 
+You MUST create a COMPLETELY DIFFERENT problem. Follow these rules STRICTLY:
+
+1. **DO NOT copy or paraphrase these existing choices:**
+${existingChoicesText}
+
+2. **Create FRESH content**: Your new question MUST differ in at least TWO of these aspects:
+   - Different target sentences/words/phrases in the passage
+   - Different question angle or focus point
+   - Different distractor logic for wrong answers
+   - Different correct answer content
+
+3. **VERIFICATION**: Before outputting, compare your generated choices against the existing ones above. 
+   If ANY of your choices are identical or near-identical (>80% word overlap) to the existing choices, 
+   you MUST regenerate with different content.
+
+4. The passage text itself should still be used — only the PROBLEM (question + choices) must be new and different.
+`;
+  }
 
   return `
 Create a CSAT(수능)-style English multiple choice problem.
@@ -156,7 +184,7 @@ Level: ${GRADE_LABELS[grade]}
 - **Problem Type**: ${definition}
 - **Specific Rules**:
 ${specificRule.trim()}
-
+${antiDuplicationSection}
 ### RULES
 1. **Passage Preservation**: STRICTLY preserve the original passage text. Do NOT rewrite, omit, or paraphrase existing sentences.
 2. For problem types like 'insertion', 'flow' (irrelevant sentence), or 'summary', you are FULLY ALLOWED to generate completely NEW sentences that fit the problem logic.
@@ -197,6 +225,7 @@ ${passage}
 """
 `;
 };
+
 
 
 export const getBestTypesPrompt = (grade: string, passage: string) => {

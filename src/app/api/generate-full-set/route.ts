@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateFullSetRequestSchema } from '@/schemas/api';
 import { getWorkbookPrompt, getVariantPrompt, getAnalysisPrompt, getBestTypesPrompt, GRADE_LABELS } from '@/services/geminiPrompts';
-import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText } from '@/utils/textUtils';
+import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, extractExistingProblemInfo } from '@/utils/textUtils';
 import { extractJSON } from '@/lib/aiUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
@@ -24,6 +24,10 @@ export async function POST(req: Request) {
         const body = await req.json();
         validateRequest(generateFullSetRequestSchema, body, 'generate-full-set');
         const { passage: rawPassage, problemTypes, targetGrade = '3' } = body;
+        
+        // Detect existing problem patterns BEFORE cleaning markers
+        const existingProblem = extractExistingProblemInfo(rawPassage);
+        
         const passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) return NextResponse.json({ error: 'Passage is required' }, { status: 400 });
@@ -73,7 +77,7 @@ export async function POST(req: Request) {
 
         const variantTasks = (typesToGen as string[]).map(async (type, i) => {
             try {
-                const prompt = getVariantPrompt(type, targetGrade, passage);
+                const prompt = getVariantPrompt(type, targetGrade, passage, existingProblem);
                 const result = await model.generateContent({
                     contents: [{ role: 'user', parts: [{ text: prompt }] }],
                     generationConfig: { responseMimeType: "application/json", temperature: 0.7 },

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateVariantRequestSchema } from '@/schemas/api';
 import { getVariantPrompt, getBestTypesPrompt, getPassageRewritePrompt, GRADE_LABELS } from '@/services/geminiPrompts';
-import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, sanitizeSummaryBlanks } from '@/utils/textUtils';
+import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, sanitizeSummaryBlanks, extractExistingProblemInfo } from '@/utils/textUtils';
 import { extractJSONWithBlockFallback as extractJSON } from '@/lib/aiUtils';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
@@ -43,6 +43,17 @@ export async function POST(req: Request) {
         const body = await req.json();
         validateRequest(generateVariantRequestSchema, body, 'generate-variant-problems');
         let { passage: rawPassage, problemTypes, autoGenerate, autoCount, targetGrade = '3', isSpecialLevel = false, singleType } = body;
+        
+        // Detect existing problem patterns BEFORE cleaning markers
+        const existingProblem = extractExistingProblemInfo(rawPassage);
+        if (existingProblem) {
+            console.log('[API] Existing problem detected in input:', {
+                choiceCount: existingProblem.choices.length,
+                questionSnippet: existingProblem.questionSnippet,
+                choices: existingProblem.choices.slice(0, 3).map(c => c.substring(0, 40)),
+            });
+        }
+        
         let passage = cleanPassageMarkers(rawPassage);
 
         if (!passage) {
@@ -54,7 +65,7 @@ export async function POST(req: Request) {
         // ★ SINGLE TYPE MODE: 개별 문제 재생성
         if (singleType) {
             try {
-                const prompt = getVariantPrompt(singleType, targetGrade, passage);
+                const prompt = getVariantPrompt(singleType, targetGrade, passage, existingProblem);
                 const result = await model.generateContent({
                     contents: [{ role: 'user', parts: [{ text: prompt }] }],
                     generationConfig: { temperature: 0.8, maxOutputTokens: 8192 },
@@ -310,7 +321,7 @@ export async function POST(req: Request) {
         }
 
         async function attemptGeneration(type: string, index: number, retryCount = 0): Promise<any> {
-            const prompt = getVariantPrompt(type, targetGrade, passage);
+            const prompt = getVariantPrompt(type, targetGrade, passage, existingProblem);
             const tokenLimit = retryCount > 0 ? 16384 : 8192;
             try {
                 const result = await model.generateContent({
