@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { apiGuard, createErrorResponse, validateRequest, AI_RATE_LIMIT } from '@/lib/apiMiddleware';
 import { generateVariantRequestSchema } from '@/schemas/api';
 import { getVariantPrompt, getBestTypesPrompt, getPassageRewritePrompt, GRADE_LABELS } from '@/services/geminiPrompts';
+import { resolveOrderProblem } from '@/utils/orderProblem';
 import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, sanitizeSummaryBlanks, extractExistingProblemInfo } from '@/utils/textUtils';
 import { extractJSONWithBlockFallback as extractJSON } from '@/lib/aiUtils';
 
@@ -73,6 +74,18 @@ export async function POST(req: Request) {
                 });
                 const responseText = result.response.text();
                 const problemData = extractJSON(responseText);
+                // ★ order: 레이블·정답·해설을 서버에서 한 번에 결정 (불일치 방지)
+                if (singleType === 'order') {
+                    const core = resolveOrderProblem(problemData, passage, sanitizeAIQuestionText);
+                    if (!core) throw new Error('Invalid Format');
+                    return NextResponse.json({
+                        problem: {
+                            id: `prob_${Date.now()}_regen_${Math.random().toString(36).substr(2, 5)}`,
+                            type: 'order',
+                            ...core,
+                        },
+                    });
+                }
                 if (!problemData.question || !Array.isArray(problemData.choices)) {
                     throw new Error('Invalid Format');
                 }
@@ -88,63 +101,6 @@ export async function POST(req: Request) {
                     explanation: (problemData.explanation || '').trim(),
                     choiceExplanations: (problemData.choiceExplanations || []).map((e: string) => (e || '').trim()),
                 };
-                // order 유형 선지 강제 정규화 (재생성 시에도 동일하게 적용)
-                const ORDER_STD = ['(A) - (C) - (B)','(B) - (A) - (C)','(B) - (C) - (A)','(C) - (A) - (B)','(C) - (B) - (A)'];
-                function normOrd(p: any) {
-                    if (p.type !== 'order') return p;
-                    const n = (c: string) => c.trim().replace(/\s*[–—]\s*/g,' - ').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim();
-                    const nc = p.choices.map(n);
-                    const ct = nc[p.correctAnswer] ?? '';
-                    const remapped = ORDER_STD.indexOf(ct);
-                    let r = { ...p, choices: ORDER_STD, correctAnswer: remapped >= 0 ? remapped : 0 };
-                    // split 방식으로 (A)(B)(C) 섹션 추출 후 원문 위치로 정답 검증
-                    try {
-                        const q = p.question || '';
-                        const noBox = q.replace(/\[\[BOX\]\][\s\S]*?\[\[\/BOX\]\]/gi,'').replace(/\[\[\/BOX\]\]/gi,'').trim();
-                        const parts = noBox.split(/\(([A-C])\)/);
-                        const secs: Record<string,string> = {};
-                        for (let i=1; i<parts.length; i+=2) {
-                            const lbl=parts[i], cnt=(parts[i+1]||'').replace(/\[\[.*?\]\]/g,'').replace(/\s+/g,' ').trim();
-                            if (lbl && cnt.length>=5) secs[lbl]=cnt.substring(0,50);
-                        }
-                        const sA=secs['A']||'', sB=secs['B']||'', sC=secs['C']||'';
-                        if (sA && sB && sC) {
-                            const pf = passage.replace(/\s+/g,' ');
-                            const fp = (s:string)=>{ for(let l=Math.min(s.length,45);l>=10;l-=5){ const i=pf.indexOf(s.substring(0,l)); if(i>=0) return i; } return -1; };
-                            const pA=fp(sA), pB=fp(sB), pC=fp(sC);
-                            if (pA>=0 && pB>=0 && pC>=0) {
-                                const sorted=[{l:'A',p:pA},{l:'B',p:pB},{l:'C',p:pC}].sort((a,b)=>a.p-b.p);
-                                const seq=`(${sorted[0].l}) - (${sorted[1].l}) - (${sorted[2].l})`;
-                                const vi=ORDER_STD.indexOf(seq);
-                                if (vi>=0) { r={...r,correctAnswer:vi}; }
-                                else {
-                                    // ★ 표준에 없는 순서 (AI가 레이블 미스크램블) → 레이블 swap으로 교정
-                                    const first=sorted[0].l, second=sorted[1].l, third=sorted[2].l;
-                                    // 둘째↔셋째 swap → 정답이 "(first)-(third)-(second)"가 됨
-                                    const swSeq=`(${first}) - (${third}) - (${second})`;
-                                    const swIdx=ORDER_STD.indexOf(swSeq);
-                                    if (swIdx>=0) {
-                                        let swQ=r.question;
-                                        const lb2=`(${second})`, lb3=`(${third})`, tmp='(__SWAP_TEMP__)';
-                                        swQ=swQ.split(lb2).join(tmp);
-                                        swQ=swQ.split(lb3).join(lb2);
-                                        swQ=swQ.split(tmp).join(lb3);
-                                        let swExp=r.explanation||'';
-                                        swExp=swExp.split(lb2).join(tmp);
-                                        swExp=swExp.split(lb3).join(lb2);
-                                        swExp=swExp.split(tmp).join(lb3);
-                                        const swCE=(r.choiceExplanations||[]).map((e:string)=>{
-                                            let s=e; s=s.split(lb2).join(tmp); s=s.split(lb3).join(lb2); s=s.split(tmp).join(lb3); return s;
-                                        });
-                                        console.log(`[API/regen] Order label swap: ${lb2}↔${lb3}, answer→${swIdx}`);
-                                        r={...r, question:swQ, correctAnswer:swIdx, explanation:swExp, choiceExplanations:swCE};
-                                    }
-                                }
-                            }
-                        }
-                    } catch(_) {}
-                    return r;
-                }
                 // insertion 유형 correctAnswer 검증 (재생성 시에도 적용)
                 function valIns(p: any) {
                     if (p.type !== 'insertion') return p;
@@ -188,7 +144,7 @@ export async function POST(req: Request) {
                     } catch(_) {}
                     return {...p, correctAnswer: ca};
                 }
-                const problem = valIns(normOrd(rawProblem));
+                const problem = valIns(rawProblem);
                 return NextResponse.json({ problem });
             } catch (err) {
                 return createErrorResponse(err, '개별 문제 재생성 실패');
@@ -261,182 +217,7 @@ export async function POST(req: Request) {
         const fallbackPool = ['topic', 'vocabulary', 'grammar', 'blank', 'order', 'insertion', 'title', 'claim', 'flow', 'summary', 'meaning', 'mismatch']
             .filter(t => !problemTypes.includes(t));
 
-        // ★ order 유형 선지 서버측 강제 정규화 (수능 실제 5개 고정)
-        const ORDER_CHOICES_STANDARD = [
-            '(A) - (C) - (B)',
-            '(B) - (A) - (C)',
-            '(B) - (C) - (A)',
-            '(C) - (A) - (B)',
-            '(C) - (B) - (A)',
-        ];
-        function normalizeOrderProblemServer(prob: any): any {
-            if (prob.type !== 'order') return prob;
-
-            const norm = (c: string) =>
-                c.trim().replace(/\s*[–—]\s*/g, ' - ').replace(/\s*-\s*/g, ' - ').replace(/\s+/g, ' ').trim();
-            const normalized = (prob.choices as string[]).map(norm);
-
-            // Step 1: 선지를 표준 5개로 교체 + correctAnswer 텍스트 기반 재매핑
-            const correctText = normalized[prob.correctAnswer] ?? '';
-            const alreadyExact = normalized.length === 5 && normalized.every((n, i) => n === ORDER_CHOICES_STANDARD[i]);
-            let remappedAnswer = prob.correctAnswer;
-            if (!alreadyExact) {
-                const idx = ORDER_CHOICES_STANDARD.indexOf(correctText);
-                remappedAnswer = idx >= 0 ? idx : 0;
-            }
-            let result = { ...prob, choices: ORDER_CHOICES_STANDARD, correctAnswer: remappedAnswer };
-
-            // Step 2: 원문 위치 추적으로 correctAnswer 자동 검증·교정
-            // split 방식으로 (A)(B)(C) 섹션 추출 → 훨씬 더 신뢰성 있음
-            try {
-                const q = prob.question || '';
-
-                // [[BOX]]...[[/BOX]] 제거 후, (A)/(B)/(C) 레이블로 split
-                const noBox = q
-                    .replace(/\[\[BOX\]\][\s\S]*?\[\[\/BOX\]\]/gi, '')
-                    .replace(/\[\[\/BOX\]\]/gi, '') // 혹시 닫힘 태그만 남은 경우
-                    .trim();
-
-                // "(A)", "(B)", "(C)" 로 나눠 각 섹션 텍스트 추출
-                const sectionParts = noBox.split(/\(([A-C])\)/);
-                // sectionParts = [before, 'A', A_content, 'B', B_content, 'C', C_content]
-                const sections: Record<string, string> = {};
-                for (let i = 1; i < sectionParts.length; i += 2) {
-                    const lbl = sectionParts[i];
-                    const content = (sectionParts[i + 1] || '')
-                        .replace(/\[\[.*?\]\]/g, '')  // 마커 제거
-                        .replace(/\s+/g, ' ')
-                        .trim();
-                    if (lbl && content.length >= 5) {
-                        sections[lbl] = content.substring(0, 50);
-                    }
-                }
-
-                const snipA = sections['A'] || '';
-                const snipB = sections['B'] || '';
-                const snipC = sections['C'] || '';
-
-                console.log('[API] Order snippets:', { A: snipA.substring(0,25), B: snipB.substring(0,25), C: snipC.substring(0,25) });
-
-                if (snipA && snipB && snipC) {
-                    const passageFlat = passage.replace(/\s+/g, ' ');
-                    const findPos = (snippet: string): number => {
-                        // 길이를 줄여가며 검색
-                        for (let len = Math.min(snippet.length, 45); len >= 10; len -= 5) {
-                            const p = passageFlat.indexOf(snippet.substring(0, len));
-                            if (p >= 0) return p;
-                        }
-                        return -1;
-                    };
-                    const posA = findPos(snipA);
-                    const posB = findPos(snipB);
-                    const posC = findPos(snipC);
-
-                    console.log(`[API] Order passage positions: A=${posA} B=${posB} C=${posC}`);
-
-                    if (posA >= 0 && posB >= 0 && posC >= 0) {
-                        const sorted = [{ l: 'A', p: posA }, { l: 'B', p: posB }, { l: 'C', p: posC }]
-                            .sort((a, b) => a.p - b.p);
-                        const correctSeq = `(${sorted[0].l}) - (${sorted[1].l}) - (${sorted[2].l})`;
-                        const verifiedIdx = ORDER_CHOICES_STANDARD.indexOf(correctSeq);
-
-                        if (verifiedIdx >= 0) {
-                            // 표준 선지에 있는 순서 → 그대로 사용
-                            if (verifiedIdx !== result.correctAnswer) {
-                                console.log(`[API] Order correctAnswer verified: ${result.correctAnswer}→${verifiedIdx} ("${correctSeq}")`);
-                            }
-                            result = { ...result, correctAnswer: verifiedIdx };
-                        } else {
-                            // ★★★ 핵심 수정: "(A)-(B)-(C)" 처럼 표준에 없는 순서 → AI가 레이블을 스크램블하지 않음
-                            // 단순 매핑이 아니라, question 텍스트에서 (B)↔(C) 레이블을 실제로 swap하여
-                            // 정답이 "(A)-(C)-(B)"가 되도록 함 (텍스트와 정답이 일치하게)
-                            console.log(`[API] Order verify: "${correctSeq}" not in standard choices — labels not scrambled, performing label swap`);
-                            
-                            // 원문 순서(sorted)를 기반으로 어떤 swap을 해야 표준 선지가 되는지 결정
-                            // sorted[0]=첫째, sorted[1]=둘째, sorted[2]=셋째 (원문 순서)
-                            // 목표: swap 후 새로운 라벨 배치가 표준 선지에 포함되게 만들기
-                            // 가장 간단한 전략: 둘째↔셋째를 swap → 정답이 "(첫째)-(셋째)-(둘째)"가 됨
-                            const first = sorted[0].l, second = sorted[1].l, third = sorted[2].l;
-                            
-                            // second와 third의 레이블을 교환
-                            const swapMap: Record<string, string> = {};
-                            swapMap[second] = third;  // 둘째 레이블 → 셋째 레이블로
-                            swapMap[third] = second;  // 셋째 레이블 → 둘째 레이블로
-                            swapMap[first] = first;   // 첫째는 유지
-                            
-                            // 교환 후 정답: "(first) - (third) - (second)"
-                            const swappedSeq = `(${first}) - (${third}) - (${second})`;
-                            const swappedIdx = ORDER_CHOICES_STANDARD.indexOf(swappedSeq);
-                            
-                            if (swappedIdx >= 0) {
-                                // question 텍스트에서 실제 레이블 교환
-                                // (B)와 (C)를 swap하는 경우: (B)→__TEMP_B__, (C)→(B), __TEMP_B__→(C)
-                                let swappedQ = result.question;
-                                const lblSecond = `(${second})`;
-                                const lblThird = `(${third})`;
-                                const tempLabel = `(__SWAP_TEMP__)`;
-                                swappedQ = swappedQ.split(lblSecond).join(tempLabel);
-                                swappedQ = swappedQ.split(lblThird).join(lblSecond);
-                                swappedQ = swappedQ.split(tempLabel).join(lblThird);
-                                
-                                // choiceExplanations도 해당 레이블 교환
-                                let swappedExplanation = result.explanation || '';
-                                swappedExplanation = swappedExplanation.split(lblSecond).join(tempLabel);
-                                swappedExplanation = swappedExplanation.split(lblThird).join(lblSecond);
-                                swappedExplanation = swappedExplanation.split(tempLabel).join(lblThird);
-                                
-                                const swappedChoiceExplanations = (result.choiceExplanations || []).map((e: string) => {
-                                    let s = e;
-                                    s = s.split(lblSecond).join(tempLabel);
-                                    s = s.split(lblThird).join(lblSecond);
-                                    s = s.split(tempLabel).join(lblThird);
-                                    return s;
-                                });
-                                
-                                console.log(`[API] Order label swap: ${lblSecond}↔${lblThird}, correctAnswer: ${result.correctAnswer}→${swappedIdx} ("${swappedSeq}")`);
-                                result = { 
-                                    ...result, 
-                                    question: swappedQ, 
-                                    correctAnswer: swappedIdx,
-                                    explanation: swappedExplanation,
-                                    choiceExplanations: swappedChoiceExplanations,
-                                };
-                            } else {
-                                // swap 후에도 표준에 없으면 (이론적으로 불가능하지만 방어)
-                                // 더 복잡한 재배치: 3개 모두 회전
-                                // A→B→C→A 회전: 원래 sorted 기준 first→second label, second→third label, third→first label
-                                console.warn(`[API] Order: simple swap didn't produce standard choice, trying rotation`);
-                                const rotMap: Record<string, string> = {};
-                                rotMap[first] = second;
-                                rotMap[second] = third;
-                                rotMap[third] = first;
-                                // 회전 후 정답: "(rotMap[first]) - (rotMap[second]) - (rotMap[third])" = "(second) - (third) - (first)"
-                                const rotSeq = `(${rotMap[sorted[0].l]}) - (${rotMap[sorted[1].l]}) - (${rotMap[sorted[2].l]})`;
-                                const rotIdx = ORDER_CHOICES_STANDARD.indexOf(rotSeq);
-                                if (rotIdx >= 0) {
-                                    let rotQ = result.question;
-                                    // 3-way rotation: A→B→C→A using temps
-                                    const lblA = `(${first})`, lblB = `(${second})`, lblC = `(${third})`;
-                                    rotQ = rotQ.split(lblA).join('(__ROT_1__)');
-                                    rotQ = rotQ.split(lblB).join('(__ROT_2__)');
-                                    rotQ = rotQ.split(lblC).join('(__ROT_3__)');
-                                    rotQ = rotQ.split('(__ROT_1__)').join(`(${rotMap[first]})`);
-                                    rotQ = rotQ.split('(__ROT_2__)').join(`(${rotMap[second]})`);
-                                    rotQ = rotQ.split('(__ROT_3__)').join(`(${rotMap[third]})`);
-                                    
-                                    console.log(`[API] Order label rotation applied, correctAnswer: ${result.correctAnswer}→${rotIdx} ("${rotSeq}")`);
-                                    result = { ...result, question: rotQ, correctAnswer: rotIdx };
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('[API] Order passage verification failed, using remapped answer:', e);
-            }
-
-            return result;
-        }
+        // ★ order 유형은 attemptGeneration 내부에서 resolveOrderProblem()으로 레이블·정답·해설을 일괄 결정
 
         // ★ insertion 유형 correctAnswer 서버측 검증
         function validateInsertionProblem(prob: any): any {
@@ -556,6 +337,18 @@ export async function POST(req: Request) {
                 }
 
                 const problemData = extractJSON(responseText);
+
+                // ★ order: 레이블·정답·해설을 서버에서 한 번에 결정 (불일치 방지)
+                if (type === 'order') {
+                    const core = resolveOrderProblem(problemData, passage, sanitizeAIQuestionText);
+                    if (!core) throw new Error('Invalid Format');
+                    return {
+                        id: `prob_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 5)}`,
+                        type,
+                        ...core,
+                    };
+                }
+
                 if (!problemData.question || !Array.isArray(problemData.choices)) throw new Error('Invalid Format');
 
                 while (problemData.choices.length < 5) problemData.choices.push('-');
@@ -600,12 +393,11 @@ export async function POST(req: Request) {
             }
         });
 
-        // Points calculation (order 유형 선지 정규화 포함)
+        // Points calculation (insertion 정답 검증 포함)
         const pointsPerProblem = Math.floor(100 / finalProblems.length);
         let remainingPoints = 100;
         const problemsWithPoints = finalProblems.map((p, i) => {
-            let normalized = normalizeOrderProblemServer(p);
-            normalized = validateInsertionProblem(normalized);
+            const normalized = validateInsertionProblem(p);
             const points = (i === finalProblems.length - 1) ? remainingPoints : pointsPerProblem;
             remainingPoints -= points;
             return { ...normalized, points };

@@ -5,6 +5,7 @@ import { generateFullSetRequestSchema } from '@/schemas/api';
 import { getWorkbookPrompt, getVariantPrompt, getAnalysisPrompt, getBestTypesPrompt, GRADE_LABELS } from '@/services/geminiPrompts';
 import { cleanPassageMarkers, sanitizeAIQuestionText, sanitizeChoiceText, extractExistingProblemInfo } from '@/utils/textUtils';
 import { extractJSON } from '@/lib/aiUtils';
+import { resolveOrderProblem } from '@/utils/orderProblem';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -84,6 +85,12 @@ export async function POST(req: Request) {
                     safetySettings
                 });
                 const data = extractJSON(result.response.text());
+
+                if (type === 'order') {
+                    const core = resolveOrderProblem(data, passage, sanitizeAIQuestionText);
+                    if (!core) throw new Error('Invalid JSON');
+                    return { id: `prob_${Date.now()}_${i}`, type, ...core, points: 0 };
+                }
 
                 if (!data || !data.question) throw new Error('Invalid JSON');
 

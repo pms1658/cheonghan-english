@@ -175,6 +175,10 @@ ${existingChoicesText}
 `;
   }
 
+  if (type === 'order') {
+    return getOrderVariantPrompt(grade, passage, antiDuplicationSection);
+  }
+
   return `
 Create a CSAT(수능)-style English multiple choice problem.
 Model: ${type.toUpperCase()}
@@ -227,6 +231,50 @@ ${passage}
 };
 
 
+
+/**
+ * 순서(order) 전용 프롬프트
+ * AI는 레이블/정답을 정하지 않고, 원문 순서대로의 단락 3개와 연결 근거만 반환한다.
+ * (A)(B)(C) 배정·정답·해설 조립은 서버(src/utils/orderProblem.ts)에서 결정적으로 수행 → 정답/해설 불일치 원천 차단.
+ */
+const getOrderVariantPrompt = (grade: string, passage: string, antiDuplicationSection: string) => `
+Create a CSAT(수능)-style English "sentence order" (글의 순서) problem.
+Level: ${GRADE_LABELS[grade]}
+
+### TASK
+Split the passage into:
+- "box": the first 1-3 sentences of the passage (the intro that gives orientation). Copy VERBATIM.
+- "segments": the REMAINING sentences split into EXACTLY 3 consecutive groups, kept in the ORIGINAL reading order. Copy VERBATIM.
+  - Every remaining sentence must belong to exactly one segment. Do NOT skip, rewrite, or paraphrase.
+  - Choose split points so the order is uniquely determinable by clear clues (pronouns, demonstratives, connectives, logical flow).
+- DO NOT add labels like (A), (B), (C) and DO NOT shuffle. The server will shuffle and label the segments.
+
+### REASONS (Korean)
+- "reasons": exactly 3 Korean strings explaining the concrete clue for each link:
+  1. why [P1] comes right after 주어진 글
+  2. why [P2] comes right after [P1]
+  3. why [P3] comes right after [P2]
+- "explanation": a short Korean overall explanation of the flow.
+- **STRICT**: In reasons/explanation refer to segments ONLY as [P1], [P2], [P3] and to the box as "주어진 글".
+  NEVER write (A), (B), (C), choice numbers (①~⑤), or "정답은 ~".
+  - ✅ "[P1]의 'This problem'은 주어진 글의 문제 상황을 가리키므로 가장 먼저 와야 한다."
+  - ❌ "(B)의 'This problem'은 ..."
+- Quote the key English clue words in the reasons.
+${antiDuplicationSection}
+### OUTPUT FORMAT
+Output ONLY a raw JSON object (no markdown code fences):
+{
+  "box": "verbatim intro sentences",
+  "segments": ["verbatim segment 1", "verbatim segment 2", "verbatim segment 3"],
+  "reasons": ["주어진 글 → [P1] 근거", "[P1] → [P2] 근거", "[P2] → [P3] 근거"],
+  "explanation": "전체 흐름 해설 ([P1]~[P3]만 사용)"
+}
+
+### PASSAGE:
+"""
+${passage}
+"""
+`;
 
 export const getBestTypesPrompt = (grade: string, passage: string) => {
   return `
