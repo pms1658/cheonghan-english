@@ -595,6 +595,25 @@ export function useClassRoom() {
         }
     };
 
+    /** 지금 화면에 정렬된 순서(유형별·이름순 등)를 그대로 '직접 설정' 순서로 저장 → 학생 화면에도 반영 */
+    const handleSaveSortedOrder = async () => {
+        if (!confirm("지금 보이는 순서를 과제 순서로 저장하시겠습니까?\n학생들에게도 이 순서대로 보여지며, 정렬은 '직접 설정'으로 바뀝니다.")) return;
+        try {
+            await Promise.all(assignments.map((a, index) => dbService.updateAssignmentOrder(a.id, index)));
+            const withOrder = assignments.map((a, i) => ({ ...a, order: i }));
+            const prefs: SortPrefs = { mode: 'custom', direction: sortDirection, groupByType: false, typePriority };
+            setSortMode('custom');
+            setGroupByType(false);
+            saveSortPrefs(prefs);
+            setAssignments(withOrder);
+            setIsReordering(false);
+            toast.success("현재 순서가 저장되었습니다.");
+        } catch (e) {
+            console.error(e);
+            toast.error("순서 저장 중 오류가 발생했습니다.");
+        }
+    };
+
     const handleToggleReorder = () => {
         if (isReordering) {
             // Cancel - Revert? 
@@ -718,7 +737,7 @@ export function useClassRoom() {
         isResetModalOpen, setIsResetModalOpen, resetTargetAssignment, resetSelectedStudents,
         approvalNeededCount, guidanceNeededCount,
         sortMode, sortDirection, isReordering, setIsReordering, originalOrder, setOriginalOrder,
-        groupByType, typePriority, handleToggleGroupByType, handleTypePriorityChange,
+        groupByType, typePriority, handleToggleGroupByType, handleTypePriorityChange, handleSaveSortedOrder,
         selectedAssignments, setSelectedAssignments,
         isSplitModalOpen, setIsSplitModalOpen, splitTarget, setSplitTarget, splitOptions, setSplitOptions,
         isPrintModalOpen, setIsPrintModalOpen, printTitle, setPrintTitle, printStudentId, setPrintStudentId,

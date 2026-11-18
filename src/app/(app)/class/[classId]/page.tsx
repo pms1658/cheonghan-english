@@ -35,7 +35,7 @@ export default function ClassRoomPage() {
         isInlineEditing, setIsInlineEditing, inlineEditName, setInlineEditName,
         isResetModalOpen, setIsResetModalOpen, resetTargetAssignment, resetSelectedStudents,
         sortMode, sortDirection, isReordering, setIsReordering, originalOrder, setOriginalOrder,
-        groupByType, typePriority, handleToggleGroupByType, handleTypePriorityChange,
+        groupByType, typePriority, handleToggleGroupByType, handleTypePriorityChange, handleSaveSortedOrder,
         selectedAssignments, setSelectedAssignments,
         isSplitModalOpen, setIsSplitModalOpen, splitTarget, setSplitTarget, splitOptions, setSplitOptions,
         isPrintModalOpen, setIsPrintModalOpen, printTitle, setPrintTitle, printStudentId, setPrintStudentId,
@@ -536,6 +536,16 @@ export default function ClassRoomPage() {
                         typeCounts={typeCounts}
                     />
                 </div>
+
+                {isAdmin && (sortMode !== 'custom' || groupByType) && assignments.length > 1 && (
+                    <button
+                        onClick={handleSaveSortedOrder}
+                        className="px-4 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-lg transition-colors animate-in fade-in duration-200"
+                        title="지금 정렬된 순서를 과제 순서로 저장합니다 (학생 화면에도 반영)"
+                    >
+                        이 순서로 저장
+                    </button>
+                )}
 
                 {isAdmin && sortMode === 'custom' && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
