@@ -15,6 +15,8 @@ import WritingDetailModal from './components/WritingDetailModal';
 import QuickHomeworkModal from '@/components/admin/QuickHomeworkModal';
 import { AssignmentItem, SortableItem } from './components/AssignmentItem';
 import { useClassRoom, AssignmentWithStats } from './useClassRoom';
+import SortControls from './components/SortControls';
+import { typeLabel } from './assignmentSort';
 
 // Dnd Kit
 import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -33,6 +35,7 @@ export default function ClassRoomPage() {
         isInlineEditing, setIsInlineEditing, inlineEditName, setInlineEditName,
         isResetModalOpen, setIsResetModalOpen, resetTargetAssignment, resetSelectedStudents,
         sortMode, sortDirection, isReordering, setIsReordering, originalOrder, setOriginalOrder,
+        groupByType, typePriority, handleToggleGroupByType, handleTypePriorityChange,
         selectedAssignments, setSelectedAssignments,
         isSplitModalOpen, setIsSplitModalOpen, splitTarget, setSplitTarget, splitOptions, setSplitOptions,
         isPrintModalOpen, setIsPrintModalOpen, printTitle, setPrintTitle, printStudentId, setPrintStudentId,
@@ -93,6 +96,11 @@ export default function ClassRoomPage() {
 
     // Calculate students for this class ONLY
     const currentClassStudents = allStudents.filter(s => (s.classIds || []).includes(classId));
+
+    // 유형별 정렬용: 현재 반에 있는 유형 / 유형별 개수
+    const typeCounts: Record<string, number> = {};
+    assignments.forEach(a => { typeCounts[a.type] = (typeCounts[a.type] || 0) + 1; });
+    const presentTypes = Object.keys(typeCounts);
     // Filter available students (excluding already in class)
     const availableStudents = allStudents
         .filter(s => !(s.classIds || []).includes(classId))
@@ -492,8 +500,8 @@ export default function ClassRoomPage() {
             </div>
 
             {/* Sort Controls & Select All */}
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
+                <div className="flex items-center gap-3 flex-wrap">
                     {/* Select All Checkbox */}
                     {isAdmin && (
                         <label className="flex items-center gap-2 cursor-pointer select-none" onClick={e => e.stopPropagation()}>
@@ -514,51 +522,26 @@ export default function ClassRoomPage() {
                         </label>
                     )}
 
-                    {/* Sort Buttons */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
-                        <button
-                            onClick={() => handleSortChange('date')}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${
-                                sortMode === 'date' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                        >
-                            최신순
-                            {sortMode === 'date' && (
-                                <span className="text-[10px] text-blue-500">{sortDirection === 'desc' ? '↓' : '↑'}</span>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => handleSortChange('name')}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${
-                                sortMode === 'name' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                        >
-                            이름순
-                            {sortMode === 'name' && (
-                                <span className="text-[10px] text-blue-500">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                            )}
-                        </button>
-                        {isAdmin && (
-                            <button
-                                onClick={() => handleSortChange('custom')}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                                    sortMode === 'custom' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                }`}
-                            >
-                                직접 설정
-                            </button>
-                        )}
-                    </div>
+                    {/* Sort Controls (1차: 유형별 묶기 / 2차: 최신·이름·진행률·직접) */}
+                    <SortControls
+                        isAdmin={isAdmin}
+                        sortMode={sortMode}
+                        sortDirection={sortDirection}
+                        onSortChange={(m) => handleSortChange(m)}
+                        groupByType={groupByType}
+                        onToggleGroup={handleToggleGroupByType}
+                        typePriority={typePriority}
+                        onPriorityChange={handleTypePriorityChange}
+                        presentTypes={presentTypes}
+                        typeCounts={typeCounts}
+                    />
                 </div>
 
                 {isAdmin && sortMode === 'custom' && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
                         {!isReordering ? (
                             <button
-                                onClick={() => {
-                                    setOriginalOrder(assignments.map(a => a.id));
-                                    setIsReordering(true);
-                                }}
+                                onClick={handleToggleReorder}
                                 className="px-4 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                             >
                                 순서 변경
@@ -613,8 +596,15 @@ export default function ClassRoomPage() {
                             disabled={!isReordering}
                         >
                             {assignments.map((ass, idx) => (
+                                <React.Fragment key={ass.id}>
+                                {groupByType && (idx === 0 || assignments[idx - 1].type !== ass.type) && (
+                                    <div className={`flex items-center gap-3 px-1 ${idx === 0 ? '' : 'pt-4'}`}>
+                                        <span className="text-xs font-black text-slate-500 dark:text-slate-400">{typeLabel(ass.type)}</span>
+                                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{typeCounts[ass.type] ?? 0}</span>
+                                        <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
+                                    </div>
+                                )}
                                 <div
-                                    key={ass.id}
                                     data-assignment-id={ass.id}
                                     className={`rounded-2xl transition-all duration-500 ${isReordering ? 'touch-none' : ''}`}
                                 >
@@ -652,6 +642,7 @@ export default function ClassRoomPage() {
                                         />
                                     </SortableItem>
                                 </div>
+                                </React.Fragment>
                             ))}
                         </SortableContext>
                     </DndContext>

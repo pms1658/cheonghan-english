@@ -10,6 +10,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { toast } from 'sonner';
 import { useClassPrint } from './useClassPrint';
 import { useClassApproval } from './useClassApproval';
+import { SortMode, SortDirection, SortPrefs, sortAssignments, loadSortPrefs, saveSortPrefs, normalizePriority } from './assignmentSort';
 
 // Extended type for display
 export interface AssignmentWithStats extends Assignment {
@@ -78,8 +79,10 @@ export function useClassRoom() {
     const [guidanceNeededCount, setGuidanceNeededCount] = useState(0);
 
     // Sorting State
-    const [sortMode, setSortMode] = useState<'date' | 'name' | 'custom'>('date');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [sortMode, setSortMode] = useState<SortMode>('date');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+    const [groupByType, setGroupByType] = useState(false);
+    const [typePriority, setTypePriority] = useState<string[]>(() => normalizePriority());
     const [isReordering, setIsReordering] = useState(false);
     const [originalOrder, setOriginalOrder] = useState<string[]>([]); // To revert cancellation
 
@@ -332,30 +335,21 @@ export function useClassRoom() {
                     return { ...assignment, submissionCount, progressRate, totalStudents };
                 });
 
-            // Initial Sort Application based on saved orders or default
-            let sorted = [...classAssignments];
+            // Initial Sort Application: saved prefs (this browser) → DB custom order → date
+            const hasCustomOrder = classAssignments.some(a => typeof a.order === 'number');
+            const saved = loadSortPrefs();
+            const initialPrefs: SortPrefs = {
+                mode: saved?.mode ?? (hasCustomOrder ? 'custom' : 'date'),
+                direction: saved?.direction ?? 'asc',
+                groupByType: saved?.groupByType ?? false,
+                typePriority: saved?.typePriority ?? normalizePriority(),
+            };
+            setSortMode(initialPrefs.mode);
+            setSortDirection(initialPrefs.direction);
+            setGroupByType(initialPrefs.groupByType);
+            setTypePriority(initialPrefs.typePriority);
 
-            const hasCustomOrder = sorted.some(a => typeof a.order === 'number');
-
-            if (hasCustomOrder) {
-                sorted.sort((a, b) => {
-                    const oa = a.order ?? 9999;
-                    const ob = b.order ?? 9999;
-                    if (oa !== ob) return oa - ob;
-                    return getTime(a.createdAt) - getTime(b.createdAt);
-                });
-                setSortMode('custom');
-            } else {
-                sorted.sort((a, b) => {
-                    const ta = getTime(a.createdAt);
-                    const tb = getTime(b.createdAt);
-                    if (ta || tb) return ta - tb;
-                    return ((a as any).docId || a.id || '').localeCompare((b as any).docId || b.id || '');
-                });
-                setSortMode('date');
-            }
-
-            setAssignments(sorted);
+            setAssignments(sortAssignments(classAssignments, initialPrefs, getTime));
 
             // 3. Calculate Dashboard Statistics (optimized with pre-indexed Map)
             let approvalCount = 0;
@@ -535,35 +529,38 @@ export function useClassRoom() {
         setSelectedStudentIds(newSet);
     };
 
-    const handleSortChange = (mode: 'date' | 'name' | 'custom', dir?: 'asc' | 'desc') => {
-        const direction = dir || (mode === sortMode ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc');
-        setSortMode(mode);
-        setSortDirection(direction);
-        let sorted = [...assignments];
-        if (mode === 'date') {
-            sorted.sort((a, b) => {
-                const ta = getTime(a.createdAt);
-                const tb = getTime(b.createdAt);
-                if (ta || tb) return direction === 'desc' ? tb - ta : ta - tb;
-                return direction === 'desc'
-                    ? ((b as any).docId || b.id || '').localeCompare((a as any).docId || a.id || '')
-                    : ((a as any).docId || a.id || '').localeCompare((b as any).docId || b.id || '');
-            });
-            setIsReordering(false);
-        } else if (mode === 'name') {
-            sorted.sort((a, b) => direction === 'asc'
-                ? a.title.localeCompare(b.title)
-                : b.title.localeCompare(a.title));
-            setIsReordering(false);
-        } else if (mode === 'custom') {
-            sorted.sort((a, b) => {
-                const oa = a.order ?? 9999;
-                const ob = b.order ?? 9999;
-                if (oa !== ob) return oa - ob;
-                return getTime(a.createdAt) - getTime(b.createdAt);
-            });
-        }
+    const applySort = (next: Partial<SortPrefs>) => {
+        const prefs: SortPrefs = {
+            mode: next.mode ?? sortMode,
+            direction: next.direction ?? sortDirection,
+            groupByType: next.groupByType ?? groupByType,
+            typePriority: next.typePriority ?? typePriority,
+        };
+        setSortMode(prefs.mode);
+        setSortDirection(prefs.direction);
+        setGroupByType(prefs.groupByType);
+        setTypePriority(prefs.typePriority);
+        saveSortPrefs(prefs);
+        const sorted = sortAssignments(assignments, prefs, getTime);
         setAssignments(sorted);
+        return sorted;
+    };
+
+    const handleSortChange = (mode: SortMode, dir?: SortDirection) => {
+        // 같은 버튼을 다시 누르면 방향 전환. 진행률순은 처음 누를 때 높은 순(내림차순)
+        const firstDir: SortDirection = mode === 'progress' ? 'desc' : 'asc';
+        const direction = dir || (mode === sortMode ? (sortDirection === 'asc' ? 'desc' : 'asc') : firstDir);
+        if (mode !== 'custom') setIsReordering(false);
+        applySort({ mode, direction });
+    };
+
+    const handleToggleGroupByType = () => {
+        if (!groupByType) setIsReordering(false);
+        applySort({ groupByType: !groupByType });
+    };
+
+    const handleTypePriorityChange = (priority: string[]) => {
+        applySort({ typePriority: priority, groupByType: true });
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -586,6 +583,8 @@ export function useClassRoom() {
                 dbService.updateAssignmentOrder(assignment.id, index)
             );
             await Promise.all(updates);
+            // 로컬 상태에도 반영해야 다른 정렬로 갔다가 '직접 설정'으로 돌아와도 새 순서가 유지됨
+            setAssignments(prev => prev.map((a, i) => ({ ...a, order: i })));
             toast.success("순서가 저장되었습니다.");
             setIsReordering(false); // Do not exit custom mode, just exit 'edit' state? 
             // Wait, isReordering just enables drag handles. 
@@ -602,7 +601,9 @@ export function useClassRoom() {
             // For now just toggle off. If they want to revert they can reload or we store prev state.
             setIsReordering(false);
         } else {
-            setSortMode('custom'); // Switch to custom automatically
+            // 직접 순서 변경은 유형별 묶기와 함께 쓸 수 없으므로 묶기를 끄고 진입
+            const sorted = applySort({ mode: 'custom', groupByType: false });
+            setOriginalOrder(sorted.map(a => a.id));
             setIsReordering(true);
         }
     };
@@ -717,6 +718,7 @@ export function useClassRoom() {
         isResetModalOpen, setIsResetModalOpen, resetTargetAssignment, resetSelectedStudents,
         approvalNeededCount, guidanceNeededCount,
         sortMode, sortDirection, isReordering, setIsReordering, originalOrder, setOriginalOrder,
+        groupByType, typePriority, handleToggleGroupByType, handleTypePriorityChange,
         selectedAssignments, setSelectedAssignments,
         isSplitModalOpen, setIsSplitModalOpen, splitTarget, setSplitTarget, splitOptions, setSplitOptions,
         isPrintModalOpen, setIsPrintModalOpen, printTitle, setPrintTitle, printStudentId, setPrintStudentId,
